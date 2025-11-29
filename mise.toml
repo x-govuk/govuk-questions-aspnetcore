@@ -1,2 +1,14 @@
 [tools]
-dotnet = "10"
+dotnet = "8.0.416"
+powershell = "latest"
+
+[tasks.build]
+description = "Build the solution"
+usage = '''
+flag "-c --configuration <configuration>" {
+  choices "Debug" "Release"
+  default "Release"
+}
+'''
+shell = "pwsh -nop -c"
+run = "dotnet build --configuration $env:usage_configuration"
