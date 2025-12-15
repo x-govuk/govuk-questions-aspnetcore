@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -10,9 +11,12 @@ namespace GovUk.Questions.Mvc;
 /// <summary>
 /// The unique ID of a journey instance.
 /// </summary>
+[DebuggerDisplay("{ToString(),nq}")]
 public sealed class JourneyInstanceId : IEquatable<JourneyInstanceId>, IParsable<JourneyInstanceId>
 {
-    private const string UriScheme = "fdc:x-govuk.org:questions";
+    private const string UriPrefix = "fdc:x-govuk.org:questions";
+
+    private string? _asString;
 
     /// <summary>
     /// The route values key for an instance's key.
@@ -35,7 +39,7 @@ public sealed class JourneyInstanceId : IEquatable<JourneyInstanceId>, IParsable
         }
 
         // Copy routeValues into a new dictionary to ensure they cannot be modified.
-        RouteValues = new ReadOnlyDictionary<string, object?>(routeValues);
+        RouteValues = new ReadOnlyDictionary<string, object?>(routeValues.ToDictionary(StringComparer.OrdinalIgnoreCase));
 
         JourneyName = journeyName;
     }
@@ -54,8 +58,6 @@ public sealed class JourneyInstanceId : IEquatable<JourneyInstanceId>, IParsable
     /// Gets the key for this instance.
     /// </summary>
     public Ulid Key => Ulid.Parse(RouteValues[KeyRouteValueName]!.ToString()!);
-
-    internal static StringComparer JourneyNameComparer { get; } = StringComparer.Ordinal;
 
     /// <summary>
     /// Parses a string into a <see cref="JourneyInstanceId"/>.
@@ -98,13 +100,14 @@ public sealed class JourneyInstanceId : IEquatable<JourneyInstanceId>, IParsable
             return false;
         }
 
-        if (!string.Equals(uri.Scheme, UriScheme, StringComparison.Ordinal))
+        var schemeAndPath = uri.GetLeftPart(UriPartial.Path);
+        if (!schemeAndPath.StartsWith(UriPrefix, StringComparison.Ordinal))
         {
             result = null;
             return false;
         }
 
-        var journeyName = Uri.UnescapeDataString(uri.AbsolutePath.TrimStart('/'));
+        var journeyName = Uri.UnescapeDataString(schemeAndPath[UriPrefix.Length..].TrimStart('/'));
 
         var queryString = QueryHelpers.ParseQuery(uri.Query);
         var routeValues = new RouteValueDictionary();
@@ -113,7 +116,7 @@ public sealed class JourneyInstanceId : IEquatable<JourneyInstanceId>, IParsable
             routeValues.Add(key, value);
         }
 
-        if (!routeValues.ContainsKey(KeyRouteValueName))
+        if (!routeValues.TryGetValue(KeyRouteValueName, out var keyRouteValue) || !Ulid.TryParse(keyRouteValue?.ToString(), out _))
         {
             result = null;
             return false;
@@ -136,7 +139,7 @@ public sealed class JourneyInstanceId : IEquatable<JourneyInstanceId>, IParsable
             return true;
         }
 
-        return JourneyNameComparer.Equals(JourneyName, other.JourneyName) && RouteValues.Equals(other.RouteValues);
+        return ToString().Equals(other.ToString(), StringComparison.Ordinal);
     }
 
     /// <inheritdoc />
@@ -148,8 +151,23 @@ public sealed class JourneyInstanceId : IEquatable<JourneyInstanceId>, IParsable
     /// <inheritdoc/>
     public override string ToString()
     {
-        var qs = RouteValues.Aggregate(new QueryString(), (q, kvp) => q.Add(kvp.Key, kvp.Value!.ToString()!));
-        return $"{UriScheme}/{Uri.EscapeDataString(JourneyName)}{qs.ToUriComponent()}";
+        if (_asString is not null)
+        {
+            return _asString;
+        }
+
+#pragma warning disable CA1308
+        // Ensure all the query parameters are in a consistent order and lower-cased for equality comparisons.
+        var qs = RouteValues
+            .Where(kvp => !kvp.Key.Equals(KeyRouteValueName, StringComparison.OrdinalIgnoreCase))
+            .OrderBy(kvp => kvp.Key)
+            .Aggregate(new QueryString(), (q, kvp) => q.Add(kvp.Key.ToLowerInvariant(), kvp.Value!.ToString()!));
+
+        // Add the key last, lower-cased
+        qs = qs.Add(KeyRouteValueName, Key.ToString().ToLowerInvariant());
+
+        return _asString = $"{UriPrefix}/{Uri.EscapeDataString(JourneyName.ToLowerInvariant())}{qs.ToUriComponent()}";
+#pragma warning restore CA1308
     }
 
     static JourneyInstanceId IParsable<JourneyInstanceId>.Parse(string s, IFormatProvider? provider) =>

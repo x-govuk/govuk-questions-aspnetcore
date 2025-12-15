@@ -16,8 +16,8 @@
     <Using Include="Xunit"/>
   </ItemGroup>
 
-    <ItemGroup>
-      <ProjectReference Include="..\..\src\GovUk.Questions.Mvc\GovUk.Questions.Mvc.csproj" />
-    </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\GovUk.Questions.Mvc\GovUk.Questions.Mvc.csproj" />
+  </ItemGroup>
 
 </Project>
