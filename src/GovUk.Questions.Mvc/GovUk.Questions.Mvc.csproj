@@ -17,4 +17,8 @@
     <PackageReference Include="NUlid" Version="1.7.3" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="GovUk.Questions.Mvc.Tests" />
+  </ItemGroup>
+
 </Project>
