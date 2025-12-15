@@ -8,6 +8,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		global.json = global.json
 		Directory.Build.props = Directory.Build.props
 		.editorconfig = .editorconfig
+		mise.toml = mise.toml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{E1D5AC06-DCB3-48A8-A592-216E9BCAB538}"

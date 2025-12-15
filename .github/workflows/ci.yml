@@ -27,3 +27,6 @@ jobs:
 
       - name: Build
         run: mise run build --configuration ${{ matrix.build-configuration }}
+
+      - name: Test
+        run: mise run test --configuration ${{ matrix.build-configuration }}

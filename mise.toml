@@ -12,3 +12,14 @@ flag "-c --configuration <configuration>" {
 '''
 shell = "pwsh -nop -c"
 run = "dotnet build --configuration $env:usage_configuration"
+
+[tasks.test]
+description = "Test the solution"
+usage = '''
+flag "-c --configuration <configuration>" {
+  choices "Debug" "Release"
+  default "Release"
+}
+'''
+shell = "pwsh -nop -c"
+run = "dotnet run --project tests/GovUk.Questions.Mvc.Tests --configuration $env:usage_configuration --no-build"
