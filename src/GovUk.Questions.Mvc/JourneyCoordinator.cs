@@ -8,8 +8,7 @@ namespace GovUk.Questions.Mvc;
 /// <summary>
 /// Base class for coordinating a journey's state and behavior.
 /// </summary>
-/// <typeparam name="TState">The type of the journey's state.</typeparam>
-public abstract class JourneyCoordinator<TState> where TState : class
+public abstract class JourneyCoordinator
 {
     private JourneyInstanceId? _instanceId;
     private JourneyDescriptor? _journey;
@@ -23,6 +22,7 @@ public abstract class JourneyCoordinator<TState> where TState : class
     public JourneyInstanceId InstanceId
     {
         get => _instanceId ?? throw new InvalidOperationException($"{nameof(InstanceId)} has not been initialized.");
+        // ReSharper disable once PropertyCanBeMadeInitOnly.Global
         internal set
         {
             ArgumentNullException.ThrowIfNull(value);
@@ -39,19 +39,9 @@ public abstract class JourneyCoordinator<TState> where TState : class
         internal set
         {
             ArgumentNullException.ThrowIfNull(value);
-            Debug.Assert(value.StateType == typeof(TState));
             _journey = value;
         }
     }
-
-    /// <summary>
-    /// The state for this journey instance.
-    /// </summary>
-    /// <remarks>
-    /// Any modifications to the state object returned by this property will not be persisted.
-    /// Use <see cref="UpdateState(Action{TState})"/> or <see cref="UpdateStateAsync(Func{TState, Task})"/> to persist changes.
-    /// </remarks>
-    public TState State => (TState)StateStorage.GetState(InstanceId)!.State;
 
     internal IJourneyStateStorage StateStorage
     {
@@ -64,17 +54,36 @@ public abstract class JourneyCoordinator<TState> where TState : class
     }
 
     /// <summary>
+    /// The state for this journey instance.
+    /// </summary>
+    /// <remarks>
+    /// Any modifications to the state object returned by this property will not be persisted.
+    /// Use <see cref="UpdateState(Func{object, object})"/> or <see cref="UpdateStateAsync(Func{object, Task{object}})"/> to persist changes.
+    /// </remarks>
+    public object State => StateStorage.GetState(InstanceId)!.State;
+
+    internal async Task<object> GetStartingStateSafeAsync(GetStartingStateContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        var state = await GetStartingStateAsync(context);
+        ThrowIfStateTypeIsInvalid(state.GetType());
+        return state;
+    }
+
+    /// <summary>
     /// Gets the initial state for a newly-started journey instance.
     /// </summary>
-    public virtual Task<TState> GetStartingStateAsync(GetStartingStateContext context)
+    // ReSharper disable once UnusedMember.Global
+    // ReSharper disable once VirtualMemberNeverOverridden.Global
+    public virtual Task<object> GetStartingStateAsync(GetStartingStateContext context)
     {
         Debug.Assert(_journey is not null);
         Debug.Assert(_instanceId is not null);
-        Debug.Assert(Journey.StateType == typeof(TState));
 
         ArgumentNullException.ThrowIfNull(context);
 
-        var stateType = typeof(TState);
+        var stateType = _journey.StateType;
         var defaultConstructor = stateType.GetConstructor(BindingFlags.Instance | BindingFlags.Public, []);
         if (defaultConstructor is null)
         {
@@ -83,7 +92,7 @@ public abstract class JourneyCoordinator<TState> where TState : class
                 $"Add a default constructor or override '{nameof(GetStartingStateAsync)}' on '{GetType().FullName}'.");
         }
 
-        var state = Activator.CreateInstance<TState>();
+        var state = Activator.CreateInstance(stateType)!;
         return Task.FromResult(state);
     }
 
@@ -102,30 +111,34 @@ public abstract class JourneyCoordinator<TState> where TState : class
     }
 
     /// <summary>
-    /// Updates the journey state by applying the specified <paramref name="updateAction"/> and persists the changes.
+    /// Updates the journey state by applying the specified <paramref name="getNewState"/> function and persists the changes.
     /// </summary>
-    public void UpdateState(Action<TState> updateAction)
+    // ReSharper disable once UnusedMember.Global
+    public void UpdateState(Func<object, object> getNewState)
     {
-        ArgumentNullException.ThrowIfNull(updateAction);
+        ArgumentNullException.ThrowIfNull(getNewState);
 
         ThrowIfDeleted();
 
         var state = State;
-        updateAction(state);
+        state = getNewState(state);
+        ThrowIfStateTypeIsInvalid(state.GetType());
         StateStorage.SetState(InstanceId, new() { State = state });
     }
 
     /// <summary>
-    /// Asynchronously updates the journey state by applying the specified <paramref name="updateAction"/> and persists the changes.
+    /// Updates the journey state by applying the specified asynchronous <paramref name="getNewState"/> function and persists the changes.
     /// </summary>
-    public async Task UpdateStateAsync(Func<TState, Task> updateAction)
+    // ReSharper disable once UnusedMember.Global
+    public async Task UpdateStateAsync(Func<object, Task<object>> getNewState)
     {
-        ArgumentNullException.ThrowIfNull(updateAction);
+        ArgumentNullException.ThrowIfNull(getNewState);
 
         ThrowIfDeleted();
 
         var state = State;
-        await updateAction(state);
+        state = await getNewState(state);
+        ThrowIfStateTypeIsInvalid(state.GetType());
         StateStorage.SetState(InstanceId, new() { State = state });
     }
 
@@ -135,5 +148,80 @@ public abstract class JourneyCoordinator<TState> where TState : class
         {
             throw new InvalidOperationException("Journey instance has been deleted.");
         }
+    }
+
+    private void ThrowIfStateTypeIsInvalid(Type type)
+    {
+        Debug.Assert(Journey is not null);
+
+        if (type != Journey.StateType)
+        {
+            throw new InvalidOperationException(
+                "State type is not valid; expected " +
+                $"'{Journey.StateType.FullName}', but was '{type.FullName}'.");
+        }
+    }
+}
+
+/// <inheritdoc/>
+/// <typeparam name="TState">The type of the journey's state.</typeparam>
+public abstract class JourneyCoordinator<TState> : JourneyCoordinator where TState : class
+{
+    /// <summary>
+    /// The <see cref="JourneyDescriptor"/> that describes the journey.
+    /// </summary>
+    public new JourneyDescriptor Journey
+    {
+        get => base.Journey;
+        // ReSharper disable once PropertyCanBeMadeInitOnly.Global
+        internal set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+
+            if (value.StateType != typeof(TState))
+            {
+                throw new InvalidOperationException(
+                    $"Journey state type '{value.StateType.FullName}' does not match the generic type parameter '{typeof(TState).FullName}' " +
+                    $"on '{GetType().FullName}'.");
+            }
+
+            base.Journey = value;
+        }
+    }
+
+    /// <summary>
+    /// The state for this journey instance.
+    /// </summary>
+    /// <remarks>
+    /// Any modifications to the state object returned by this property will not be persisted.
+    /// Use <see cref="UpdateState(Func{TState, TState})"/> or <see cref="UpdateStateAsync(Func{TState, Task{TState}})"/> to persist changes.
+    /// </remarks>
+    public new TState State => (TState)base.State;
+
+    /// <summary>
+    /// Gets the initial state for a newly-started journey instance.
+    /// </summary>
+    // ReSharper disable once VirtualMemberNeverOverridden.Global
+    public new virtual async Task<TState> GetStartingStateAsync(GetStartingStateContext context)
+    {
+        return (TState)await base.GetStartingStateAsync(context);
+    }
+
+    /// <inheritdoc cref="JourneyCoordinator.UpdateState"/>
+    // ReSharper disable once UnusedMember.Global
+    public void UpdateState(Func<TState, TState> getNewState)
+    {
+        ArgumentNullException.ThrowIfNull(getNewState);
+
+        base.UpdateState(state => getNewState((TState)state));
+    }
+
+    /// <inheritdoc cref="JourneyCoordinator.UpdateStateAsync"/>
+    // ReSharper disable once UnusedMethodReturnValue.Global
+    public Task UpdateStateAsync(Func<TState, Task<TState>> getNewState)
+    {
+        ArgumentNullException.ThrowIfNull(getNewState);
+
+        return base.UpdateStateAsync(async state => await getNewState((TState)state));
     }
 }

@@ -94,7 +94,7 @@ public class JourneyCoordinatorTests
         };
 
         // Act
-        coordinator.UpdateState(state => state.Foo = 42);
+        coordinator.UpdateState(state => state with { Foo = 42 });
 
         // Assert
         mockStateStorage.Verify(s => s.SetState(instanceId, It.Is<StateStorageEntry>(e => ((TestState)e.State).Foo == 42)), Times.Once);
@@ -122,7 +122,7 @@ public class JourneyCoordinatorTests
         await coordinator.UpdateStateAsync(async state =>
         {
             await Task.Yield();
-            state.Foo = 42;
+            return state with { Foo = 42 };
         });
 
         // Assert
