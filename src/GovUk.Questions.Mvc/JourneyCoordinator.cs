@@ -62,6 +62,28 @@ public abstract class JourneyCoordinator
     /// </remarks>
     public object State => StateStorage.GetState(InstanceId)!.State;
 
+    internal static bool IsActivatableJourneyCoordinator(Type type)
+    {
+        if (type.IsAbstract || !type.IsClass)
+        {
+            return false;
+        }
+
+        var t = type.BaseType;
+
+        while (t is not null)
+        {
+            if (t.IsGenericType && t.GetGenericTypeDefinition() == typeof(JourneyCoordinator<>))
+            {
+                return true;
+            }
+
+            t = t.BaseType;
+        }
+
+        return false;
+    }
+
     internal async Task<object> GetStartingStateSafeAsync(GetStartingStateContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
