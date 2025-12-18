@@ -1,3 +1,5 @@
+using Microsoft.Extensions.DependencyInjection;
+
 namespace GovUk.Questions.Mvc.Description;
 
 internal class JourneyInfoRegistry
@@ -35,8 +37,10 @@ internal class JourneyInfoRegistry
             throw new ArgumentException($"A journey with the name '{descriptor.JourneyName}' has already been registered.", nameof(descriptor));
         }
 
-        _journeys[descriptor.JourneyName] = new JourneyInfo(coordinatorType, descriptor);
+        var coordinatorFactory = ActivatorUtilities.CreateFactory(coordinatorType, []);
+
+        _journeys.Add(descriptor.JourneyName, new JourneyInfo(descriptor, coordinatorType, coordinatorFactory));
     }
 
-    private record JourneyInfo(Type CoordinatorType, JourneyDescriptor Descriptor);
+    private record JourneyInfo(JourneyDescriptor Descriptor, Type CoordinatorType, ObjectFactory CoordinatorFactory);
 }
