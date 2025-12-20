@@ -17,7 +17,7 @@ public class JourneyInfoRegistryTests
         // Assert
         var argumentException = Assert.IsType<ArgumentException>(ex);
         Assert.StartsWith("A journey with the name 'Test' has already been registered.", argumentException.Message);
-        Assert.Equal("descriptor", argumentException.ParamName);
+        Assert.Equal("journey", argumentException.ParamName);
     }
 
     [Fact]

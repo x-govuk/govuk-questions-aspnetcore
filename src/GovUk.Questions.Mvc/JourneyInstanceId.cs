@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using GovUk.Questions.Mvc.Description;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.WebUtilities;
@@ -39,7 +40,8 @@ public sealed class JourneyInstanceId : IEquatable<JourneyInstanceId>, IParsable
         }
 
         // Copy routeValues into a new dictionary to ensure they cannot be modified.
-        RouteValues = new ReadOnlyDictionary<string, object?>(routeValues.ToDictionary(StringComparer.OrdinalIgnoreCase));
+        RouteValues = new ReadOnlyDictionary<string, object>(
+            routeValues.ToDictionary(kvp => kvp.Key, kvp => kvp.Value ?? string.Empty, StringComparer.OrdinalIgnoreCase));
 
         JourneyName = journeyName;
     }
@@ -52,12 +54,12 @@ public sealed class JourneyInstanceId : IEquatable<JourneyInstanceId>, IParsable
     /// <summary>
     /// Gets the route values for this instance.
     /// </summary>
-    public IReadOnlyDictionary<string, object?> RouteValues { get; }
+    public IReadOnlyDictionary<string, object> RouteValues { get; }
 
     /// <summary>
     /// Gets the key for this instance.
     /// </summary>
-    public Ulid Key => Ulid.Parse(RouteValues[KeyRouteValueName]!.ToString()!);
+    public Ulid Key => Ulid.Parse(RouteValues[KeyRouteValueName].ToString()!);
 
     /// <summary>
     /// Parses a string into a <see cref="JourneyInstanceId"/>.
@@ -126,6 +128,59 @@ public sealed class JourneyInstanceId : IEquatable<JourneyInstanceId>, IParsable
         return true;
     }
 
+    internal static bool TryCreate(JourneyDescriptor journey, RouteValueDictionary routeValues, [NotNullWhen(true)] out JourneyInstanceId? result)
+    {
+        ArgumentNullException.ThrowIfNull(journey);
+        ArgumentNullException.ThrowIfNull(routeValues);
+
+        if (!routeValues.TryGetValue(KeyRouteValueName, out var keyValue) || !Ulid.TryParse(keyValue?.ToString(), out _))
+        {
+            result = null;
+            return false;
+        }
+
+        var sanitizedRouteValues = new RouteValueDictionary();
+
+        foreach (var key in journey.RouteValueKeys)
+        {
+            if (!routeValues.TryGetValue(key, out var value))
+            {
+                result = null;
+                return false;
+            }
+
+            sanitizedRouteValues.Add(key, value);
+        }
+
+        result = new JourneyInstanceId(journey.JourneyName, sanitizedRouteValues);
+        return true;
+    }
+
+    internal static bool TryCreateNew(JourneyDescriptor journey, RouteValueDictionary routeValues, [NotNullWhen(true)] out JourneyInstanceId? result)
+    {
+        ArgumentNullException.ThrowIfNull(journey);
+        ArgumentNullException.ThrowIfNull(routeValues);
+
+        var instanceKey = Ulid.NewUlid();
+
+        var sanitizedRouteValues = new RouteValueDictionary();
+        sanitizedRouteValues.Add(KeyRouteValueName, instanceKey.ToString());
+
+        foreach (var key in journey.RouteValueKeys)
+        {
+            if (!routeValues.TryGetValue(key, out var value))
+            {
+                result = null;
+                return false;
+            }
+
+            sanitizedRouteValues.Add(key, value);
+        }
+
+        result = new JourneyInstanceId(journey.JourneyName, sanitizedRouteValues);
+        return true;
+    }
+
     /// <inheritdoc cref="IEquatable{T}.Equals(T)" />
     public bool Equals(JourneyInstanceId? other)
     {
@@ -161,7 +216,7 @@ public sealed class JourneyInstanceId : IEquatable<JourneyInstanceId>, IParsable
         var qs = RouteValues
             .Where(kvp => !kvp.Key.Equals(KeyRouteValueName, StringComparison.OrdinalIgnoreCase))
             .OrderBy(kvp => kvp.Key)
-            .Aggregate(new QueryString(), (q, kvp) => q.Add(kvp.Key.ToLowerInvariant(), kvp.Value!.ToString()!));
+            .Aggregate(new QueryString(), (q, kvp) => q.Add(kvp.Key.ToLowerInvariant(), kvp.Value.ToString() ?? string.Empty));
 
         // Add the key last, lower-cased
         qs = qs.Add(KeyRouteValueName, Key.ToString().ToLowerInvariant());

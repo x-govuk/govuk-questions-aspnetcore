@@ -27,20 +27,33 @@ internal class JourneyInfoRegistry
             : null;
     }
 
-    public void RegisterJourney(Type coordinatorType, JourneyDescriptor descriptor)
+    public Func<IServiceProvider, JourneyCoordinator> GetCoordinatorFactory(JourneyDescriptor journey)
     {
-        ArgumentNullException.ThrowIfNull(coordinatorType);
-        ArgumentNullException.ThrowIfNull(descriptor);
+        ArgumentNullException.ThrowIfNull(journey);
 
-        if (_journeys.ContainsKey(descriptor.JourneyName))
-        {
-            throw new ArgumentException($"A journey with the name '{descriptor.JourneyName}' has already been registered.", nameof(descriptor));
-        }
-
-        var coordinatorFactory = ActivatorUtilities.CreateFactory(coordinatorType, []);
-
-        _journeys.Add(descriptor.JourneyName, new JourneyInfo(descriptor, coordinatorType, coordinatorFactory));
+        return _journeys.TryGetValue(journey.JourneyName, out var journeyInfo)
+            ? journeyInfo.CoordinatorFactory
+            : throw new ArgumentException($"No journey with the name '{journey.JourneyName}' is registered.", nameof(journey));
     }
 
-    private record JourneyInfo(JourneyDescriptor Descriptor, Type CoordinatorType, ObjectFactory CoordinatorFactory);
+    public void RegisterJourney(Type coordinatorType, JourneyDescriptor journey)
+    {
+        ArgumentNullException.ThrowIfNull(coordinatorType);
+        ArgumentNullException.ThrowIfNull(journey);
+
+        if (_journeys.ContainsKey(journey.JourneyName))
+        {
+            throw new ArgumentException($"A journey with the name '{journey.JourneyName}' has already been registered.", nameof(journey));
+        }
+
+        var coordinatorObjectFactory = ActivatorUtilities.CreateFactory(coordinatorType, []);
+
+        var journeyInfo = new JourneyInfo(journey, coordinatorType, CreateCoordinator);
+        _journeys.Add(journey.JourneyName, journeyInfo);
+
+        JourneyCoordinator CreateCoordinator(IServiceProvider serviceProvider) =>
+            (JourneyCoordinator)coordinatorObjectFactory(serviceProvider, []);
+    }
+
+    private record JourneyInfo(JourneyDescriptor Descriptor, Type CoordinatorType, Func<IServiceProvider, JourneyCoordinator> CoordinatorFactory);
 }

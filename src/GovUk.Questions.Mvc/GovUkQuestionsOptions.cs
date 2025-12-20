@@ -1,4 +1,5 @@
 using System.Text.Json;
+using GovUk.Questions.Mvc.Description;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace GovUk.Questions.Mvc;
@@ -13,19 +14,23 @@ public class GovUkQuestionsOptions
     /// </summary>
     public GovUkQuestionsOptions()
     {
+        Journeys = new JourneyInfoRegistry();
+
+        StateSerializerOptions = new JsonSerializerOptions(JsonSerializerDefaults.General);
+
         ValueProviderFactories =
         [
             new RouteValueProviderFactory(),
             new QueryStringValueProviderFactory()
         ];
-
-        StateSerializerOptions = new JsonSerializerOptions(JsonSerializerDefaults.General);
     }
-
-    internal IReadOnlyCollection<IValueProviderFactory> ValueProviderFactories { get; }
 
     /// <summary>
     /// Serializer options used to serialize and deserialize journey state.
     /// </summary>
     public JsonSerializerOptions StateSerializerOptions { get; }
+
+    internal JourneyInfoRegistry Journeys { get; }
+
+    internal IReadOnlyCollection<IValueProviderFactory> ValueProviderFactories { get; }
 }
