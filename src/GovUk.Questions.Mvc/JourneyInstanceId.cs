@@ -140,6 +140,7 @@ public sealed class JourneyInstanceId : IEquatable<JourneyInstanceId>, IParsable
         }
 
         var sanitizedRouteValues = new RouteValueDictionary();
+        sanitizedRouteValues.Add(KeyRouteValueName, keyValue!.ToString());
 
         foreach (var key in journey.RouteValueKeys)
         {
