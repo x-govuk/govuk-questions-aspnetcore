@@ -65,35 +65,6 @@ public class JourneyInfoRegistryTests
         Assert.Equal(descriptor, journey);
     }
 
-    [Fact]
-    public void FindJourneyByCoordinatorType_JourneyDoesNotExist_ReturnsNull()
-    {
-        // Arrange
-        var registry = new JourneyInfoRegistry();
-
-        // Act
-        var journey = registry.FindJourneyByCoordinatorType(typeof(TestJourneyCoordinator));
-
-        // Assert
-        Assert.Null(journey);
-    }
-
-    [Fact]
-    public void FindJourneyByCoordinatorType_ValidJourney_ReturnsJourneyDescriptor()
-    {
-        // Arrange
-        var registry = new JourneyInfoRegistry();
-        var descriptor = CreateDescriptor();
-        registry.RegisterJourney(typeof(TestJourneyCoordinator), descriptor);
-
-        // Act
-        var journey = registry.FindJourneyByCoordinatorType(typeof(TestJourneyCoordinator));
-
-        // Assert
-        Assert.NotNull(journey);
-        Assert.Equal(descriptor, journey);
-    }
-
     private JourneyDescriptor CreateDescriptor() => new("Test", [], typeof(TestState));
 
     private record TestState;
