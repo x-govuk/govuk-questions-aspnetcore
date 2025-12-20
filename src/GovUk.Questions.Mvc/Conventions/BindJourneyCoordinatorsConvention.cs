@@ -7,7 +7,7 @@ internal class BindJourneyCoordinatorsConvention : IPageApplicationModelConventi
 {
     void IPageApplicationModelConvention.Apply(PageApplicationModel model)
     {
-        var coordinatorProperties = model.HandlerProperties.Where(p => JourneyCoordinator.IsActivatableJourneyCoordinator(p.ParameterType));
+        var coordinatorProperties = model.HandlerProperties.Where(p => IsCoordinatorType(p.ParameterType));
 
         foreach (var property in coordinatorProperties)
         {
@@ -17,7 +17,7 @@ internal class BindJourneyCoordinatorsConvention : IPageApplicationModelConventi
 
     void IControllerModelConvention.Apply(ControllerModel controller)
     {
-        var coordinatorProperties = controller.ControllerProperties.Where(p => JourneyCoordinator.IsActivatableJourneyCoordinator(p.ParameterType));
+        var coordinatorProperties = controller.ControllerProperties.Where(p => IsCoordinatorType(p.ParameterType));
 
         foreach (var property in coordinatorProperties)
         {
@@ -27,11 +27,13 @@ internal class BindJourneyCoordinatorsConvention : IPageApplicationModelConventi
 
     void IActionModelConvention.Apply(ActionModel action)
     {
-        var coordinatorProperties = action.Parameters.Where(p => JourneyCoordinator.IsActivatableJourneyCoordinator(p.ParameterType));
+        var coordinatorProperties = action.Parameters.Where(p => IsCoordinatorType(p.ParameterType));
 
         foreach (var property in coordinatorProperties)
         {
             property.BindingInfo ??= new BindingInfo();
         }
     }
+
+    private static bool IsCoordinatorType(Type type) => typeof(JourneyCoordinator).IsAssignableFrom(type);
 }
