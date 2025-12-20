@@ -1,6 +1,6 @@
 namespace GovUk.Questions.Mvc.Description;
 
-internal sealed class StartsJourneyMetadata
+internal sealed record StartsJourneyMetadata
 {
     private StartsJourneyMetadata()
     {
