@@ -6,5 +6,5 @@ internal sealed record StartsJourneyMetadata
     {
     }
 
-    public static StartsJourneyAttribute Instance { get; } = new();
+    public static StartsJourneyMetadata Instance { get; } = new();
 }
