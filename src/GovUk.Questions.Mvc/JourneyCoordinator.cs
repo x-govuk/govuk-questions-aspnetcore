@@ -60,7 +60,7 @@ public abstract class JourneyCoordinator
     /// Any modifications to the state object returned by this property will not be persisted.
     /// Use <see cref="UpdateState(Func{object, object})"/> or <see cref="UpdateStateAsync(Func{object, Task{object}})"/> to persist changes.
     /// </remarks>
-    public object State => StateStorage.GetState(InstanceId)!.State;
+    public object State => StateStorage.GetState(InstanceId, Journey)!.State;
 
     internal static bool IsActivatableJourneyCoordinator(Type type)
     {
@@ -128,7 +128,7 @@ public abstract class JourneyCoordinator
             return;
         }
 
-        StateStorage.DeleteState(InstanceId);
+        StateStorage.DeleteState(InstanceId, Journey);
         _deleted = true;
     }
 
@@ -145,7 +145,7 @@ public abstract class JourneyCoordinator
         var state = State;
         state = getNewState(state);
         ThrowIfStateTypeIsInvalid(state.GetType());
-        StateStorage.SetState(InstanceId, new() { State = state });
+        StateStorage.SetState(InstanceId, Journey, new() { State = state });
     }
 
     /// <summary>
@@ -161,7 +161,7 @@ public abstract class JourneyCoordinator
         var state = State;
         state = await getNewState(state);
         ThrowIfStateTypeIsInvalid(state.GetType());
-        StateStorage.SetState(InstanceId, new() { State = state });
+        StateStorage.SetState(InstanceId, Journey, new() { State = state });
     }
 
     private void ThrowIfDeleted()

@@ -15,10 +15,12 @@ public class JourneyCoordinatorTests
         // Arrange
         var mockStateStorage = new Mock<IJourneyStateStorage>();
 
+        var journey = new JourneyDescriptor("test", [], typeof(TestState));
+
         var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, Ulid.NewUlid() } });
 
         var expectedState = new TestState() { Foo = 123 };
-        mockStateStorage.Setup(mock => mock.GetState(instanceId)).Returns(new StateStorageEntry() { State = expectedState });
+        mockStateStorage.Setup(mock => mock.GetState(instanceId, journey)).Returns(new StateStorageEntry() { State = expectedState });
 
         var coordinator = new TestJourneyCoordinator
         {
@@ -61,9 +63,11 @@ public class JourneyCoordinatorTests
         // Arrange
         var mockStateStorage = new Mock<IJourneyStateStorage>();
 
+        var journey = new JourneyDescriptor("test", [], typeof(TestState));
+
         var coordinator = new TestJourneyCoordinator
         {
-            Journey = new JourneyDescriptor("test", [], typeof(TestState)),
+            Journey = journey,
             InstanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, Ulid.NewUlid() } }),
             StateStorage = mockStateStorage.Object
         };
@@ -72,7 +76,7 @@ public class JourneyCoordinatorTests
         coordinator.Delete();
 
         // Assert
-        mockStateStorage.Verify(s => s.DeleteState(coordinator.InstanceId), Times.Once);
+        mockStateStorage.Verify(s => s.DeleteState(coordinator.InstanceId, coordinator.Journey), Times.Once);
     }
 
     [Fact]
@@ -81,10 +85,14 @@ public class JourneyCoordinatorTests
         // Arrange
         var mockStateStorage = new Mock<IJourneyStateStorage>();
 
+        var journey = new JourneyDescriptor("test", [], typeof(TestState));
+
         var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, Ulid.NewUlid() } });
 
         var initialState = new TestState();
-        mockStateStorage.Setup(mock => mock.GetState(instanceId)).Returns(new StateStorageEntry() { State = initialState });
+        mockStateStorage
+            .Setup(mock => mock.GetState(instanceId, journey))
+            .Returns(new StateStorageEntry() { State = initialState });
 
         var coordinator = new TestJourneyCoordinator
         {
@@ -97,7 +105,7 @@ public class JourneyCoordinatorTests
         coordinator.UpdateState(state => state with { Foo = 42 });
 
         // Assert
-        mockStateStorage.Verify(s => s.SetState(instanceId, It.Is<StateStorageEntry>(e => ((TestState)e.State).Foo == 42)), Times.Once);
+        mockStateStorage.Verify(s => s.SetState(instanceId, journey, It.Is<StateStorageEntry>(e => ((TestState)e.State).Foo == 42)), Times.Once);
     }
 
     [Fact]
@@ -106,10 +114,12 @@ public class JourneyCoordinatorTests
         // Arrange
         var mockStateStorage = new Mock<IJourneyStateStorage>();
 
+        var journey = new JourneyDescriptor("test", [], typeof(TestState));
+
         var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, Ulid.NewUlid() } });
 
         var initialState = new TestState();
-        mockStateStorage.Setup(mock => mock.GetState(instanceId)).Returns(new StateStorageEntry() { State = initialState });
+        mockStateStorage.Setup(mock => mock.GetState(instanceId, journey)).Returns(new StateStorageEntry() { State = initialState });
 
         var coordinator = new TestJourneyCoordinator
         {
@@ -126,7 +136,7 @@ public class JourneyCoordinatorTests
         });
 
         // Assert
-        mockStateStorage.Verify(s => s.SetState(instanceId, It.Is<StateStorageEntry>(e => ((TestState)e.State).Foo == 42)), Times.Once);
+        mockStateStorage.Verify(s => s.SetState(instanceId, journey, It.Is<StateStorageEntry>(e => ((TestState)e.State).Foo == 42)), Times.Once);
     }
 
     private class TestJourneyCoordinator : JourneyCoordinator<TestState>;
