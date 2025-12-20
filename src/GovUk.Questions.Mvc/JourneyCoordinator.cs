@@ -98,7 +98,7 @@ public abstract class JourneyCoordinator
     /// </summary>
     // ReSharper disable once UnusedMember.Global
     // ReSharper disable once VirtualMemberNeverOverridden.Global
-    public virtual Task<object> GetStartingStateAsync(GetStartingStateContext context)
+    public virtual object GetStartingState(GetStartingStateContext context)
     {
         Debug.Assert(_journey is not null);
         Debug.Assert(_instanceId is not null);
@@ -115,6 +115,19 @@ public abstract class JourneyCoordinator
         }
 
         var state = Activator.CreateInstance(stateType)!;
+        return state;
+    }
+
+    /// <summary>
+    /// Asynchronously gets the initial state for a newly-started journey instance.
+    /// </summary>
+    // ReSharper disable once UnusedMember.Global
+    // ReSharper disable once VirtualMemberNeverOverridden.Global
+    public virtual Task<object> GetStartingStateAsync(GetStartingStateContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        var state = GetStartingState(context);
         return Task.FromResult(state);
     }
 
@@ -221,12 +234,21 @@ public abstract class JourneyCoordinator<TState> : JourneyCoordinator where TSta
     public new TState State => (TState)base.State;
 
     /// <summary>
-    /// Gets the initial state for a newly-started journey instance.
+    /// Asynchronously gets the initial state for a newly-started journey instance.
     /// </summary>
     // ReSharper disable once VirtualMemberNeverOverridden.Global
     public new virtual async Task<TState> GetStartingStateAsync(GetStartingStateContext context)
     {
         return (TState)await base.GetStartingStateAsync(context);
+    }
+
+    /// <summary>
+    /// Gets the initial state for a newly-started journey instance.
+    /// </summary>
+    // ReSharper disable once VirtualMemberNeverOverridden.Global
+    public new virtual TState GetStartingState(GetStartingStateContext context)
+    {
+        return (TState)base.GetStartingState(context);
     }
 
     /// <inheritdoc cref="JourneyCoordinator.UpdateState"/>
