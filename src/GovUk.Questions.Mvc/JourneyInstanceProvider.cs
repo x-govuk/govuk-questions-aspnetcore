@@ -11,6 +11,8 @@ namespace GovUk.Questions.Mvc;
 
 internal class JourneyInstanceProvider(IJourneyStateStorage journeyStateStorage, JourneyFeature journeyFeature)
 {
+    private const string HttpContextItemKey = "GovUk.Questions.Mvc.JourneyCoordinator";
+
     private static readonly IValueProviderFactory[] _valueProviderFactories =
     [
         new RouteValueProviderFactory(),
@@ -20,6 +22,12 @@ internal class JourneyInstanceProvider(IJourneyStateStorage journeyStateStorage,
     public JourneyCoordinator? GetJourneyInstance(ActionContext actionContext)
     {
         ArgumentNullException.ThrowIfNull(actionContext);
+
+        if (actionContext.HttpContext.Items.TryGetValue(HttpContextItemKey, out var existingObj) &&
+            existingObj is JourneyCoordinator existingCoordinator)
+        {
+            return existingCoordinator;
+        }
 
         if (!TryGetJourneyName(actionContext, out var journeyName))
         {
@@ -52,12 +60,19 @@ internal class JourneyInstanceProvider(IJourneyStateStorage journeyStateStorage,
         coordinator.Journey = journey;
         coordinator.StateStorage = journeyStateStorage;
 
+        actionContext.HttpContext.Items[HttpContextItemKey] = coordinator;
+
         return coordinator;
     }
 
     public async Task<JourneyCoordinator?> TryCreateNewInstanceAsync(ActionContext actionContext)
     {
         ArgumentNullException.ThrowIfNull(actionContext);
+
+        if (actionContext.HttpContext.Items.ContainsKey(HttpContextItemKey))
+        {
+            throw new InvalidOperationException("A journey instance has already been created for this request.");
+        }
 
         if (!TryGetJourneyName(actionContext, out var journeyName))
         {
@@ -93,6 +108,8 @@ internal class JourneyInstanceProvider(IJourneyStateStorage journeyStateStorage,
         Debug.Assert(state.GetType() == journey.StateType);
         journeyStateStorage.SetState(instanceId, journey, new StateStorageEntry { State = state });
         coordinator.StateStorage = journeyStateStorage;
+
+        actionContext.HttpContext.Items[HttpContextItemKey] = coordinator;
 
         return coordinator;
     }
