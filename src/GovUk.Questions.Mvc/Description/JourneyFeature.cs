@@ -2,7 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace GovUk.Questions.Mvc.Description;
 
-internal class JourneyInfoRegistry
+internal class JourneyFeature
 {
     /// <summary>
     /// The collection of known journeys in the application, keyed by journey name.

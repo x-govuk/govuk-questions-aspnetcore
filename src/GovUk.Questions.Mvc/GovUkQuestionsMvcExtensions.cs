@@ -1,3 +1,4 @@
+using GovUk.Questions.Mvc.Description;
 using GovUk.Questions.Mvc.Filters;
 using GovUk.Questions.Mvc.State;
 using Microsoft.AspNetCore.Mvc;
@@ -43,10 +44,15 @@ public static class GovUkQuestionsMvcExtensions
         services.AddTransient<JourneyInstanceProvider>();
         services.AddTransient<ValidateJourneyFilter>();
 
-        services.Configure<MvcOptions>(options =>
-        {
-            options.Filters.Add(new ServiceFilterAttribute<ValidateJourneyFilter> { Order = ValidateJourneyFilter.Order });
-        });
+        services
+            .AddMvcCore(options =>
+            {
+                options.Filters.Add(new ServiceFilterAttribute<ValidateJourneyFilter> { Order = ValidateJourneyFilter.Order });
+            })
+            .ConfigureApplicationPartManager(partManager =>
+            {
+                partManager.FeatureProviders.Add(new JourneyCoordinatorFeatureProvider());
+            });
 
         services.Configure(configureOptions);
 

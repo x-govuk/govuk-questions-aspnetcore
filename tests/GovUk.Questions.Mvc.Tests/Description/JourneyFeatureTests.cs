@@ -2,13 +2,13 @@ using GovUk.Questions.Mvc.Description;
 
 namespace GovUk.Questions.Mvc.Tests.Description;
 
-public class JourneyInfoRegistryTests
+public class JourneyFeatureTests
 {
     [Fact]
     public void RegisterJourney_JourneyAlreadyExists_ThrowsArgumentException()
     {
         // Arrange
-        var registry = new JourneyInfoRegistry();
+        var registry = new JourneyFeature();
         registry.RegisterJourney(typeof(TestJourneyCoordinator), CreateDescriptor());
 
         // Act
@@ -24,7 +24,7 @@ public class JourneyInfoRegistryTests
     public void RegisterJourney_NewJourney_AddsJourneySuccessfully()
     {
         // Arrange
-        var registry = new JourneyInfoRegistry();
+        var registry = new JourneyFeature();
 
         // Act
         registry.RegisterJourney(typeof(TestJourneyCoordinator), CreateDescriptor());
@@ -40,7 +40,7 @@ public class JourneyInfoRegistryTests
     public void FindJourneyByName_JourneyDoesNotExist_ReturnsNull()
     {
         // Arrange
-        var registry = new JourneyInfoRegistry();
+        var registry = new JourneyFeature();
 
         // Act
         var journey = registry.FindJourneyByName("NonExistentJourney");
@@ -53,7 +53,7 @@ public class JourneyInfoRegistryTests
     public void FindJourneyByName_ValidJourney_ReturnsJourneyDescriptor()
     {
         // Arrange
-        var registry = new JourneyInfoRegistry();
+        var registry = new JourneyFeature();
         var descriptor = CreateDescriptor();
         registry.RegisterJourney(typeof(TestJourneyCoordinator), descriptor);
 

@@ -2,15 +2,21 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using GovUk.Questions.Mvc.Description;
 using GovUk.Questions.Mvc.State;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.Options;
 
 namespace GovUk.Questions.Mvc;
 
-internal class JourneyInstanceProvider(IJourneyStateStorage journeyStateStorage, IOptions<GovUkQuestionsOptions> optionsAccessor)
+internal class JourneyInstanceProvider(IJourneyStateStorage journeyStateStorage, JourneyFeature journeyFeature)
 {
+    private static readonly IValueProviderFactory[] _valueProviderFactories =
+    [
+        new RouteValueProviderFactory(),
+        new QueryStringValueProviderFactory()
+    ];
+
     public async Task<JourneyCoordinator?> GetJourneyInstanceAsync(ActionContext actionContext)
     {
         ArgumentNullException.ThrowIfNull(actionContext);
@@ -20,7 +26,7 @@ internal class JourneyInstanceProvider(IJourneyStateStorage journeyStateStorage,
             return null;
         }
 
-        var journey = optionsAccessor.Value.Journeys.FindJourneyByName(journeyName);
+        var journey = journeyFeature.FindJourneyByName(journeyName);
         if (journey is null)
         {
             throw new InvalidOperationException($"No journey found with name '{journeyName}'.");
@@ -40,7 +46,7 @@ internal class JourneyInstanceProvider(IJourneyStateStorage journeyStateStorage,
             return null;
         }
 
-        var coordinatorFactory = optionsAccessor.Value.Journeys.GetCoordinatorFactory(journey);
+        var coordinatorFactory = journeyFeature.GetCoordinatorFactory(journey);
         var coordinator = coordinatorFactory(actionContext.HttpContext.RequestServices);
         coordinator.InstanceId = instanceId;
         coordinator.Journey = journey;
@@ -63,7 +69,7 @@ internal class JourneyInstanceProvider(IJourneyStateStorage journeyStateStorage,
             return null;
         }
 
-        var journey = optionsAccessor.Value.Journeys.FindJourneyByName(journeyName);
+        var journey = journeyFeature.FindJourneyByName(journeyName);
         if (journey is null)
         {
             throw new InvalidOperationException($"No journey found with name '{journeyName}'.");
@@ -77,7 +83,7 @@ internal class JourneyInstanceProvider(IJourneyStateStorage journeyStateStorage,
             return null;
         }
 
-        var coordinatorFactory = optionsAccessor.Value.Journeys.GetCoordinatorFactory(journey);
+        var coordinatorFactory = journeyFeature.GetCoordinatorFactory(journey);
         var coordinator = coordinatorFactory(actionContext.HttpContext.RequestServices);
         coordinator.InstanceId = instanceId;
         coordinator.Journey = journey;
@@ -139,7 +145,7 @@ internal class JourneyInstanceProvider(IJourneyStateStorage journeyStateStorage,
     {
         var valueProviderFactoryContext = new ValueProviderFactoryContext(actionContext);
 
-        foreach (var valueProviderFactory in optionsAccessor.Value.ValueProviderFactories)
+        foreach (var valueProviderFactory in _valueProviderFactories)
         {
             await valueProviderFactory.CreateValueProviderAsync(valueProviderFactoryContext);
         }
