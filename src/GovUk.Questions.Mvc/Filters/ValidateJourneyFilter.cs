@@ -11,8 +11,7 @@ internal class ValidateJourneyFilter(JourneyInstanceProvider instanceProvider, L
 
     public async Task OnResourceExecutionAsync(ResourceExecutingContext context, ResourceExecutionDelegate next)
     {
-        if (instanceProvider.TryGetJourneyName(context, out _) &&
-            await instanceProvider.GetJourneyInstanceAsync(context) is null)
+        if (instanceProvider.TryGetJourneyName(context, out _) && instanceProvider.GetJourneyInstance(context) is null)
         {
             if (await instanceProvider.TryCreateNewInstanceAsync(context) is JourneyCoordinator coordinator)
             {

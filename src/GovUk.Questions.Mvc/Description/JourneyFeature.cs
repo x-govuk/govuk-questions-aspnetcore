@@ -18,6 +18,8 @@ internal class JourneyFeature
             : null;
     }
 
+    public IReadOnlyCollection<Type> GetAllCoordinatorFactoryTypes() => _journeys.Values.Select(v => v.CoordinatorType).ToList().AsReadOnly();
+
     public Func<IServiceProvider, JourneyCoordinator> GetCoordinatorFactory(JourneyDescriptor journey)
     {
         ArgumentNullException.ThrowIfNull(journey);

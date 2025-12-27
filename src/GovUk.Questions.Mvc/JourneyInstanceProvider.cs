@@ -17,7 +17,7 @@ internal class JourneyInstanceProvider(IJourneyStateStorage journeyStateStorage,
         new QueryStringValueProviderFactory()
     ];
 
-    public async Task<JourneyCoordinator?> GetJourneyInstanceAsync(ActionContext actionContext)
+    public JourneyCoordinator? GetJourneyInstance(ActionContext actionContext)
     {
         ArgumentNullException.ThrowIfNull(actionContext);
 
@@ -32,7 +32,7 @@ internal class JourneyInstanceProvider(IJourneyStateStorage journeyStateStorage,
             throw new InvalidOperationException($"No journey found with name '{journeyName}'.");
         }
 
-        var valueProvider = await CreateValueProviderAsync(actionContext);
+        var valueProvider = CreateValueProvider(actionContext);
         var routeValues = GetRouteValues(journey, valueProvider);
 
         if (!JourneyInstanceId.TryCreate(journey, routeValues, out var instanceId))
@@ -75,7 +75,7 @@ internal class JourneyInstanceProvider(IJourneyStateStorage journeyStateStorage,
             throw new InvalidOperationException($"No journey found with name '{journeyName}'.");
         }
 
-        var valueProvider = await CreateValueProviderAsync(actionContext);
+        var valueProvider = CreateValueProvider(actionContext);
         var routeValues = GetRouteValues(journey, valueProvider);
 
         if (!JourneyInstanceId.TryCreateNew(journey, routeValues, out var instanceId))
@@ -141,13 +141,16 @@ internal class JourneyInstanceProvider(IJourneyStateStorage journeyStateStorage,
         return routeValues;
     }
 
-    private async Task<CompositeValueProvider> CreateValueProviderAsync(ActionContext actionContext)
+    private CompositeValueProvider CreateValueProvider(ActionContext actionContext)
     {
         var valueProviderFactoryContext = new ValueProviderFactoryContext(actionContext);
 
         foreach (var valueProviderFactory in _valueProviderFactories)
         {
-            await valueProviderFactory.CreateValueProviderAsync(valueProviderFactoryContext);
+#pragma warning disable VSTHRD002
+            // Both the value providers we use here have synchronous implementations
+            valueProviderFactory.CreateValueProviderAsync(valueProviderFactoryContext).GetAwaiter().GetResult();
+#pragma warning restore VSTHRD002
         }
 
         return new CompositeValueProvider(valueProviderFactoryContext.ValueProviders);

@@ -1,7 +1,9 @@
 using GovUk.Questions.Mvc.Description;
 using GovUk.Questions.Mvc.Filters;
 using GovUk.Questions.Mvc.State;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -40,6 +42,7 @@ public static class GovUkQuestionsMvcExtensions
         ArgumentNullException.ThrowIfNull(configureOptions);
 
         services.AddHttpContextAccessor();
+        services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
         services.TryAddSingleton<IJourneyStateStorage, SessionJourneyStateStorage>();
         services.AddTransient<JourneyInstanceProvider>();
         services.AddTransient<ValidateJourneyFilter>();
@@ -52,10 +55,45 @@ public static class GovUkQuestionsMvcExtensions
             .ConfigureApplicationPartManager(partManager =>
             {
                 partManager.FeatureProviders.Add(new JourneyCoordinatorFeatureProvider());
-            });
+            })
+            .AddJourneyCoordinators();
 
         services.Configure(configureOptions);
 
         return services;
+    }
+
+    private static IMvcCoreBuilder AddJourneyCoordinators(this IMvcCoreBuilder builder)
+    {
+        var feature = new JourneyFeature();
+        builder.PartManager.PopulateFeature(feature);
+
+        var nonGenericCoordinatorType = typeof(JourneyCoordinator);
+
+        foreach (var coordinatorType in feature.GetAllCoordinatorFactoryTypes().Append(nonGenericCoordinatorType))
+        {
+            builder.Services.TryAddTransient(
+                coordinatorType,
+                sp =>
+                {
+                    var instanceProvider = sp.GetRequiredService<JourneyInstanceProvider>();
+
+                    var actionContext = sp.GetRequiredService<IActionContextAccessor>().ActionContext ??
+                        throw new InvalidOperationException("No ActionContext is available.");
+
+                    var coordinator = instanceProvider.GetJourneyInstance(actionContext);
+
+                    if (coordinator is null || !coordinator.GetType().IsAssignableTo(coordinatorType))
+                    {
+                        throw new InvalidOperationException($"Could not resolve journey for '{coordinatorType.FullName}'.");
+                    }
+
+                    return coordinator;
+                });
+        }
+
+        builder.Services.AddSingleton(feature);
+
+        return builder;
     }
 }
