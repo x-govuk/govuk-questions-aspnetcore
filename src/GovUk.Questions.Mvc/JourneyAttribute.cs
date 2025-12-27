@@ -7,7 +7,7 @@ namespace GovUk.Questions.Mvc;
 /// <param name="routeValueKeys">The route value keys bound to the journey instance.</param>
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
 #pragma warning disable CA1019
-public sealed class JourneyAttribute(string name, IEnumerable<string> routeValueKeys) : Attribute
+public sealed class JourneyAttribute(string name, string[] routeValueKeys) : Attribute
 #pragma warning restore CA1019
 {
     /// <summary>
