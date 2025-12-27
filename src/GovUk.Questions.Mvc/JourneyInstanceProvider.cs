@@ -91,7 +91,7 @@ internal class JourneyInstanceProvider(IJourneyStateStorage journeyStateStorage,
         return coordinator;
     }
 
-    public static bool TryGetJourneyName(ActionContext actionContext, [NotNullWhen(true)] out string? journeyName)
+    public bool TryGetJourneyName(ActionContext actionContext, [NotNullWhen(true)] out string? journeyName)
     {
         if (actionContext.ActionDescriptor.Properties.TryGetValue(
                 ActionDescriptorPropertiesKeys.JourneyName,
