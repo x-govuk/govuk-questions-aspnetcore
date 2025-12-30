@@ -9,4 +9,6 @@ namespace GovUk.Questions.Mvc.Description;
 public sealed record JourneyDescriptor(string JourneyName, IReadOnlyCollection<string> RouteValueKeys, Type StateType)
 {
     internal static StringComparer JourneyNameComparer { get; } = StringComparer.OrdinalIgnoreCase;
+
+    internal bool IsStateTypeValid(Type type) => type.IsAssignableTo(StateType);
 }

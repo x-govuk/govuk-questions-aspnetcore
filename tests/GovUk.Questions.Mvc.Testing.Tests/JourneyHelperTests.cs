@@ -145,6 +145,30 @@ public class JourneyHelperTests
         Assert.NotNull(coordinator.Dependency);
     }
 
+    [Fact]
+    public void CreateInstance_WithInvalidStateType_ThrowsArgumentException()
+    {
+        // Arrange
+        var journeyRegistry = new JourneyRegistry();
+        var journeyStateStorage = new InMemoryJourneyStateStorage(Options.Create<GovUkQuestionsOptions>(new()));
+        var journeyHelper = new JourneyHelper(journeyRegistry, journeyStateStorage);
+
+        var journeyDescriptor = new JourneyDescriptor("TestJourney", ["id"], typeof(TestState));
+
+        journeyRegistry.RegisterJourney(typeof(TestJourneyCoordinator), journeyDescriptor);
+
+        var routeValues = new RouteValueDictionary { { "id", 123 } };
+        var invalidState = new { Bar = "Invalid" }; // Anonymous type, not TestState
+
+        // Act
+        var ex = Record.Exception(() => journeyHelper.CreateInstance<TestJourneyCoordinator>(
+            routeValues,
+            invalidState));
+
+        // Assert
+        Assert.IsType<ArgumentException>(ex);
+    }
+
     private class TestJourneyCoordinator : JourneyCoordinator<TestState>;
 
     private class TestJourneyCoordinatorWithDependency(Dependency dependency) : JourneyCoordinator<TestState>

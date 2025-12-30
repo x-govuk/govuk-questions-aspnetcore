@@ -90,6 +90,7 @@ public class JourneyHelper
     {
         ArgumentNullException.ThrowIfNull(journey);
         ArgumentNullException.ThrowIfNull(routeValues);
+        ArgumentNullException.ThrowIfNull(state);
 
         serviceProvider ??= _emptyServiceProvider;
 
@@ -98,7 +99,14 @@ public class JourneyHelper
             throw new ArgumentException("Could not create a new JourneyInstanceId with the provided route values.", nameof(routeValues));
         }
 
-        // TODO Validate state type
+        var stateType = state.GetType();
+        if (!journey.IsStateTypeValid(stateType))
+        {
+            throw new ArgumentException(
+                "State type is not valid; expected " +
+                $"'{journey.StateType.FullName}', but got '{stateType.FullName}'.",
+                nameof(state));
+        }
 
         _journeyStateStorage.SetState(instanceId, journey, new StateStorageEntry { State = state });
 

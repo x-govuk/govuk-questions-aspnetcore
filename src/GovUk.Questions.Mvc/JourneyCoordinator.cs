@@ -215,11 +215,11 @@ public abstract class JourneyCoordinator
     {
         Debug.Assert(Journey is not null);
 
-        if (type != Journey.StateType)
+        if (!Journey.IsStateTypeValid(type))
         {
             throw new InvalidOperationException(
                 "State type is not valid; expected " +
-                $"'{Journey.StateType.FullName}', but was '{type.FullName}'.");
+                $"'{Journey.StateType.FullName}', but got '{type.FullName}'.");
         }
     }
 }
