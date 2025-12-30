@@ -1,0 +1,7 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\GovUk.Questions.Mvc\GovUk.Questions.Mvc.csproj"/>
+  </ItemGroup>
+
+</Project>

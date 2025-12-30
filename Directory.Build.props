@@ -1,10 +1,20 @@
 <Project>
   <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>12.0</LangVersion>
     <TreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</TreatWarningsAsErrors>
     <RepoRoot>$([MSBuild]::EnsureTrailingSlash('$(MSBuildThisFileDirectory)'))</RepoRoot>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <PackageOutputPath>$([MSBuild]::NormalizeDirectory('$(RepoRoot)', 'packages'))</PackageOutputPath>
+
+    <IsShipping>true</IsShipping>
+    <IsShipping Condition="$(MSBuildProjectName.EndsWith('Tests'))">false</IsShipping>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(IsShipping)' == 'true'">
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <AnalysisMode>All</AnalysisMode>
   </PropertyGroup>
 </Project>

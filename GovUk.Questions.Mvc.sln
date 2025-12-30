@@ -19,6 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GovUk.Questions.Mvc.Tests",
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{B3E26B05-642C-40CC-ABFC-843779B84938}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GovUk.Questions.Mvc.Testing", "src\GovUk.Questions.Mvc.Testing\GovUk.Questions.Mvc.Testing.csproj", "{3ED72761-B742-4B64-89C6-AA404F56212D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -36,9 +38,14 @@ Global
 		{ABB18E22-BB9F-4C88-B8E4-5BC9FB24868D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{ABB18E22-BB9F-4C88-B8E4-5BC9FB24868D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{ABB18E22-BB9F-4C88-B8E4-5BC9FB24868D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3ED72761-B742-4B64-89C6-AA404F56212D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3ED72761-B742-4B64-89C6-AA404F56212D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3ED72761-B742-4B64-89C6-AA404F56212D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3ED72761-B742-4B64-89C6-AA404F56212D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{77C06041-6303-4871-9634-AB8F761082C2} = {E1D5AC06-DCB3-48A8-A592-216E9BCAB538}
 		{ABB18E22-BB9F-4C88-B8E4-5BC9FB24868D} = {B3E26B05-642C-40CC-ABFC-843779B84938}
+		{3ED72761-B742-4B64-89C6-AA404F56212D} = {E1D5AC06-DCB3-48A8-A592-216E9BCAB538}
 	EndGlobalSection
 EndGlobal
