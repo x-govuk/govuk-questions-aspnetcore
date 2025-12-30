@@ -144,5 +144,5 @@ public class JourneyCoordinatorTests
     private record TestState
     {
         public int Foo { get; set; }
-    };
+    }
 }

@@ -9,6 +9,13 @@ internal class JourneyRegistry
     /// </summary>
     private readonly Dictionary<string, JourneyInfo> _journeys = new(JourneyDescriptor.JourneyNameComparer);
 
+    public JourneyDescriptor? FindJourneyByCoordinatorType(Type coordinatorType)
+    {
+        ArgumentNullException.ThrowIfNull(coordinatorType);
+
+        return _journeys.Values.SingleOrDefault(j => j.CoordinatorType == coordinatorType)?.Descriptor;
+    }
+
     public JourneyDescriptor? FindJourneyByName(string journeyName)
     {
         ArgumentNullException.ThrowIfNull(journeyName);

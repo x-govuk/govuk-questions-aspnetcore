@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="GovUk.Questions.Mvc.Testing" />
+    <InternalsVisibleTo Include="GovUk.Questions.Mvc.Testing.Tests" />
     <InternalsVisibleTo Include="GovUk.Questions.Mvc.Tests" />
   </ItemGroup>
 

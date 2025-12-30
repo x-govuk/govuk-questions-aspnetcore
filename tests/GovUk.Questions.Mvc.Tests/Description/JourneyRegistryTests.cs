@@ -37,6 +37,35 @@ public class JourneyRegistryTests
     }
 
     [Fact]
+    public void FindJourneyByCoordinatorType_JourneyDoesNotExist_ReturnsNull()
+    {
+        // Arrange
+        var registry = new JourneyRegistry();
+
+        // Act
+        var journey = registry.FindJourneyByCoordinatorType(typeof(TestJourneyCoordinator));
+
+        // Assert
+        Assert.Null(journey);
+    }
+
+    [Fact]
+    public void FindJourneyByCoordinatorType_ValidJourney_ReturnsJourneyDescriptor()
+    {
+        // Arrange
+        var registry = new JourneyRegistry();
+        var descriptor = CreateDescriptor();
+        registry.RegisterJourney(typeof(TestJourneyCoordinator), descriptor);
+
+        // Act
+        var journey = registry.FindJourneyByCoordinatorType(typeof(TestJourneyCoordinator));
+
+        // Assert
+        Assert.NotNull(journey);
+        Assert.Equal(descriptor, journey);
+    }
+
+    [Fact]
     public void FindJourneyByName_JourneyDoesNotExist_ReturnsNull()
     {
         // Arrange

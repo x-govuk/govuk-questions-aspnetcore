@@ -1,7 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
+  
   <ItemGroup>
     <ProjectReference Include="..\GovUk.Questions.Mvc\GovUk.Questions.Mvc.csproj"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="GovUk.Questions.Mvc.Testing.Tests" />
   </ItemGroup>
 
 </Project>
