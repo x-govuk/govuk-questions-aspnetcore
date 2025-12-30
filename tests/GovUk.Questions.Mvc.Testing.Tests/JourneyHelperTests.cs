@@ -2,6 +2,7 @@ using GovUk.Questions.Mvc.Description;
 using GovUk.Questions.Mvc.Testing.State;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace GovUk.Questions.Mvc.Testing.Tests;
 
@@ -12,7 +13,7 @@ public class JourneyHelperTests
     {
         // Arrange
         var journeyRegistry = new JourneyRegistry();
-        var journeyStateStorage = new InMemoryJourneyStateStorage();
+        var journeyStateStorage = new InMemoryJourneyStateStorage(Options.Create<GovUkQuestionsOptions>(new()));
         var journeyHelper = new JourneyHelper(journeyRegistry, journeyStateStorage);
 
         var journeyDescriptor = new JourneyDescriptor("TestJourney", ["id"], typeof(TestState));
@@ -34,7 +35,7 @@ public class JourneyHelperTests
     {
         // Arrange
         var journeyRegistry = new JourneyRegistry();
-        var journeyStateStorage = new InMemoryJourneyStateStorage();
+        var journeyStateStorage = new InMemoryJourneyStateStorage(Options.Create<GovUkQuestionsOptions>(new()));
         var journeyHelper = new JourneyHelper(journeyRegistry, journeyStateStorage);
 
         var journeyDescriptor = new JourneyDescriptor("TestJourney", ["id"], typeof(TestState));
@@ -62,7 +63,7 @@ public class JourneyHelperTests
     {
         // Arrange
         var journeyRegistry = new JourneyRegistry();
-        var journeyStateStorage = new InMemoryJourneyStateStorage();
+        var journeyStateStorage = new InMemoryJourneyStateStorage(Options.Create<GovUkQuestionsOptions>(new()));
         var journeyHelper = new JourneyHelper(journeyRegistry, journeyStateStorage);
 
         var journeyDescriptor = new JourneyDescriptor("TestJourney", ["id"], typeof(TestState));
@@ -91,7 +92,7 @@ public class JourneyHelperTests
     {
         // Arrange
         var journeyRegistry = new JourneyRegistry();
-        var journeyStateStorage = new InMemoryJourneyStateStorage();
+        var journeyStateStorage = new InMemoryJourneyStateStorage(Options.Create<GovUkQuestionsOptions>(new()));
         var journeyHelper = new JourneyHelper(journeyRegistry, journeyStateStorage);
 
         var journeyDescriptor = new JourneyDescriptor("TestJourney", ["id"], typeof(TestState));
@@ -119,7 +120,7 @@ public class JourneyHelperTests
     {
         // Arrange
         var journeyRegistry = new JourneyRegistry();
-        var journeyStateStorage = new InMemoryJourneyStateStorage();
+        var journeyStateStorage = new InMemoryJourneyStateStorage(Options.Create<GovUkQuestionsOptions>(new()));
         var journeyHelper = new JourneyHelper(journeyRegistry, journeyStateStorage);
 
         var services = new ServiceCollection()
