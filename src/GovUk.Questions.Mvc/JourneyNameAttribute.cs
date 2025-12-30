@@ -17,16 +17,31 @@ public sealed class JourneyNameAttribute(string name) : Attribute, IPageApplicat
 
     void IPageApplicationModelConvention.Apply(PageApplicationModel model)
     {
-        model.Properties[ActionDescriptorPropertiesKeys.JourneyName] = new JourneyNameMetadata(Name);
+        model.EndpointMetadata.Add(new JourneyNameMetadata(Name));
     }
 
     void IControllerModelConvention.Apply(ControllerModel controller)
     {
-        controller.Properties[ActionDescriptorPropertiesKeys.JourneyName] = new JourneyNameMetadata(Name);
+        foreach (var action in controller.Actions)
+        {
+            foreach (var selector in action.Selectors)
+            {
+                if (selector.EndpointMetadata.OfType<JourneyNameMetadata>().Any())
+                {
+                    // An action-level JourneyNameAttribute takes precedence over a controller-level one.
+                    continue;
+                }
+
+                selector.EndpointMetadata.Add(new JourneyNameMetadata(Name));
+            }
+        }
     }
 
     void IActionModelConvention.Apply(ActionModel action)
     {
-        action.Properties[ActionDescriptorPropertiesKeys.JourneyName] = new JourneyNameMetadata(Name);
+        foreach (var selector in action.Selectors)
+        {
+            selector.EndpointMetadata.Add(new JourneyNameMetadata(Name));
+        }
     }
 }

@@ -3,7 +3,6 @@ using GovUk.Questions.Mvc.Filters;
 using GovUk.Questions.Mvc.State;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -42,7 +41,6 @@ public static class GovUkQuestionsMvcExtensions
         ArgumentNullException.ThrowIfNull(configureOptions);
 
         services.AddHttpContextAccessor();
-        services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
         services.TryAddSingleton<IJourneyStateStorage, SessionJourneyStateStorage>();
         services.AddTransient<JourneyInstanceProvider>();
         services.AddTransient<ValidateJourneyFilter>();
@@ -78,10 +76,10 @@ public static class GovUkQuestionsMvcExtensions
                 {
                     var instanceProvider = sp.GetRequiredService<JourneyInstanceProvider>();
 
-                    var actionContext = sp.GetRequiredService<IActionContextAccessor>().ActionContext ??
-                        throw new InvalidOperationException("No ActionContext is available.");
+                    var httpContext = sp.GetRequiredService<IHttpContextAccessor>().HttpContext ??
+                        throw new InvalidOperationException("No HttpContext is available.");
 
-                    var coordinator = instanceProvider.GetJourneyInstance(actionContext);
+                    var coordinator = instanceProvider.GetJourneyInstance(httpContext);
 
                     if (coordinator is null || !coordinator.GetType().IsAssignableTo(coordinatorType))
                     {

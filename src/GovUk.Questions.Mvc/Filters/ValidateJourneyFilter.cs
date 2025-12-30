@@ -11,9 +11,11 @@ internal class ValidateJourneyFilter(JourneyInstanceProvider instanceProvider, L
 
     public async Task OnResourceExecutionAsync(ResourceExecutingContext context, ResourceExecutionDelegate next)
     {
-        if (instanceProvider.TryGetJourneyName(context, out _) && instanceProvider.GetJourneyInstance(context) is null)
+        var httpContext = context.HttpContext;
+
+        if (instanceProvider.TryGetJourneyName(httpContext, out _) && instanceProvider.GetJourneyInstance(httpContext) is null)
         {
-            if (await instanceProvider.TryCreateNewInstanceAsync(context) is JourneyCoordinator coordinator)
+            if (await instanceProvider.TryCreateNewInstanceAsync(httpContext) is JourneyCoordinator coordinator)
             {
                 // Issue a redirect back to the same action that includes the new instance's Key in the query string
                 var allRouteValues = context.RouteData.Values;

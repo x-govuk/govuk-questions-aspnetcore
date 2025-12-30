@@ -1,14 +1,14 @@
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 
 namespace GovUk.Questions.Mvc;
 
 /// <summary>
 /// A context that contains information for getting the initial state for a newly-started journey instance.
 /// </summary>
-public class GetStartingStateContext(ActionContext actionContext)
+public class GetStartingStateContext(HttpContext httpContext)
 {
     /// <summary>
-    /// Gets the <see cref="ActionContext"/>.
+    /// Gets the <see cref="HttpContext"/>.
     /// </summary>
-    public ActionContext ActionContext { get; } = actionContext;
+    public HttpContext HttpContext { get; } = httpContext;
 }

@@ -27,7 +27,7 @@ internal class JourneyCoordinatorFeatureProvider : IApplicationFeatureProvider<J
         Type stateType = null!;
         journey = null;
 
-        if (type.GetCustomAttribute<JourneyAttribute>() is not {} journeyAttribute)
+        if (type.GetCustomAttribute<JourneyAttribute>() is not { } journeyAttribute)
         {
             return false;
         }

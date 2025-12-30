@@ -2,8 +2,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using GovUk.Questions.Mvc.Description;
 using GovUk.Questions.Mvc.State;
-using Microsoft.AspNetCore.Http.Features;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Routing;
 
@@ -13,23 +12,17 @@ internal class JourneyInstanceProvider(IJourneyStateStorage journeyStateStorage,
 {
     private const string HttpContextItemKey = "GovUk.Questions.Mvc.JourneyCoordinator";
 
-    private static readonly IValueProviderFactory[] _valueProviderFactories =
-    [
-        new RouteValueProviderFactory(),
-        new QueryStringValueProviderFactory()
-    ];
-
-    public JourneyCoordinator? GetJourneyInstance(ActionContext actionContext)
+    public JourneyCoordinator? GetJourneyInstance(HttpContext httpContext)
     {
-        ArgumentNullException.ThrowIfNull(actionContext);
+        ArgumentNullException.ThrowIfNull(httpContext);
 
-        if (actionContext.HttpContext.Items.TryGetValue(HttpContextItemKey, out var existingObj) &&
+        if (httpContext.Items.TryGetValue(HttpContextItemKey, out var existingObj) &&
             existingObj is JourneyCoordinator existingCoordinator)
         {
             return existingCoordinator;
         }
 
-        if (!TryGetJourneyName(actionContext, out var journeyName))
+        if (!TryGetJourneyName(httpContext, out var journeyName))
         {
             return null;
         }
@@ -40,7 +33,7 @@ internal class JourneyInstanceProvider(IJourneyStateStorage journeyStateStorage,
             throw new InvalidOperationException($"No journey found with name '{journeyName}'.");
         }
 
-        var valueProvider = CreateValueProvider(actionContext);
+        var valueProvider = CreateValueProvider(httpContext);
         var routeValues = GetRouteValues(journey, valueProvider);
 
         if (!JourneyInstanceId.TryCreate(journey, routeValues, out var instanceId))
@@ -55,31 +48,31 @@ internal class JourneyInstanceProvider(IJourneyStateStorage journeyStateStorage,
         }
 
         var coordinatorFactory = journeyFeature.GetCoordinatorFactory(journey);
-        var coordinator = coordinatorFactory(actionContext.HttpContext.RequestServices);
+        var coordinator = coordinatorFactory(httpContext.RequestServices);
         coordinator.InstanceId = instanceId;
         coordinator.Journey = journey;
         coordinator.StateStorage = journeyStateStorage;
 
-        actionContext.HttpContext.Items[HttpContextItemKey] = coordinator;
+        httpContext.Items[HttpContextItemKey] = coordinator;
 
         return coordinator;
     }
 
-    public async Task<JourneyCoordinator?> TryCreateNewInstanceAsync(ActionContext actionContext)
+    public async Task<JourneyCoordinator?> TryCreateNewInstanceAsync(HttpContext httpContext)
     {
-        ArgumentNullException.ThrowIfNull(actionContext);
+        ArgumentNullException.ThrowIfNull(httpContext);
 
-        if (actionContext.HttpContext.Items.ContainsKey(HttpContextItemKey))
+        if (httpContext.Items.ContainsKey(HttpContextItemKey))
         {
             throw new InvalidOperationException("A journey instance has already been created for this request.");
         }
 
-        if (!TryGetJourneyName(actionContext, out var journeyName))
+        if (!TryGetJourneyName(httpContext, out var journeyName))
         {
             return null;
         }
 
-        if (!ActionStartsJourney(actionContext))
+        if (!ActionStartsJourney(httpContext))
         {
             return null;
         }
@@ -90,7 +83,7 @@ internal class JourneyInstanceProvider(IJourneyStateStorage journeyStateStorage,
             throw new InvalidOperationException($"No journey found with name '{journeyName}'.");
         }
 
-        var valueProvider = CreateValueProvider(actionContext);
+        var valueProvider = CreateValueProvider(httpContext);
         var routeValues = GetRouteValues(journey, valueProvider);
 
         if (!JourneyInstanceId.TryCreateNew(journey, routeValues, out var instanceId))
@@ -99,44 +92,49 @@ internal class JourneyInstanceProvider(IJourneyStateStorage journeyStateStorage,
         }
 
         var coordinatorFactory = journeyFeature.GetCoordinatorFactory(journey);
-        var coordinator = coordinatorFactory(actionContext.HttpContext.RequestServices);
+        var coordinator = coordinatorFactory(httpContext.RequestServices);
         coordinator.InstanceId = instanceId;
         coordinator.Journey = journey;
         // Don't assign StateStorage yet; we don't want GetStartingState*() implementations to be manipulating state
 
-        var state = await coordinator.GetStartingStateSafeAsync(new GetStartingStateContext(actionContext));
+        var state = await coordinator.GetStartingStateSafeAsync(new GetStartingStateContext(httpContext));
         Debug.Assert(state.GetType() == journey.StateType);
         journeyStateStorage.SetState(instanceId, journey, new StateStorageEntry { State = state });
         coordinator.StateStorage = journeyStateStorage;
 
-        actionContext.HttpContext.Items[HttpContextItemKey] = coordinator;
+        httpContext.Items[HttpContextItemKey] = coordinator;
 
         return coordinator;
     }
 
-    public bool TryGetJourneyName(ActionContext actionContext, [NotNullWhen(true)] out string? journeyName)
+    public bool TryGetJourneyName(HttpContext httpContext, [NotNullWhen(true)] out string? journeyName)
     {
-        if (actionContext.ActionDescriptor.Properties.TryGetValue(
-                ActionDescriptorPropertiesKeys.JourneyName,
-                out var journeyNameMetadataObj) &&
-            journeyNameMetadataObj is JourneyNameMetadata journeyNameMetadata)
+        journeyName = null;
+
+        var endpoint = httpContext.GetEndpoint();
+        if (endpoint is null)
+        {
+            return false;
+        }
+
+        if (endpoint.Metadata.GetMetadata<JourneyNameMetadata>() is { } journeyNameMetadata)
         {
             journeyName = journeyNameMetadata.JourneyName;
             return true;
         }
-        else
-        {
-            journeyName = null;
-            return false;
-        }
+
+        return false;
     }
 
-    private static bool ActionStartsJourney(ActionContext actionContext)
+    private static bool ActionStartsJourney(HttpContext httpContext)
     {
-        return actionContext.ActionDescriptor.Properties.TryGetValue(
-               ActionDescriptorPropertiesKeys.StartsJourney,
-               out var startsJourneyMetadataObj) &&
-           startsJourneyMetadataObj is StartsJourneyMetadata;
+        var endpoint = httpContext.GetEndpoint();
+        if (endpoint is null)
+        {
+            return false;
+        }
+
+        return endpoint.Metadata.GetMetadata<StartsJourneyMetadata>() is not null;
     }
 
     private static RouteValueDictionary GetRouteValues(JourneyDescriptor journey, CompositeValueProvider valueProvider)
@@ -158,18 +156,17 @@ internal class JourneyInstanceProvider(IJourneyStateStorage journeyStateStorage,
         return routeValues;
     }
 
-    private CompositeValueProvider CreateValueProvider(ActionContext actionContext)
+    private CompositeValueProvider CreateValueProvider(HttpContext httpContext)
     {
-        var valueProviderFactoryContext = new ValueProviderFactoryContext(actionContext);
+        var routeValueProviderFactory = new RouteValueProvider(
+            BindingSource.Path,
+            httpContext.GetRouteData().Values);
 
-        foreach (var valueProviderFactory in _valueProviderFactories)
-        {
-#pragma warning disable VSTHRD002
-            // Both the value providers we use here have synchronous implementations
-            valueProviderFactory.CreateValueProviderAsync(valueProviderFactoryContext).GetAwaiter().GetResult();
-#pragma warning restore VSTHRD002
-        }
+        var queryStringValueProvider = new QueryStringValueProvider(
+            BindingSource.Query,
+            httpContext.Request.Query,
+            System.Globalization.CultureInfo.InvariantCulture);
 
-        return new CompositeValueProvider(valueProviderFactoryContext.ValueProviders);
+        return new CompositeValueProvider([routeValueProviderFactory, queryStringValueProvider]);
     }
 }

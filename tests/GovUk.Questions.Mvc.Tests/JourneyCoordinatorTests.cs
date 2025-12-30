@@ -1,6 +1,6 @@
 using GovUk.Questions.Mvc.Description;
 using GovUk.Questions.Mvc.State;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Moq;
 using NUlid;
@@ -46,9 +46,9 @@ public class JourneyCoordinatorTests
             InstanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, Ulid.NewUlid() } })
         };
 
-        var actionContext = new ActionContext();
+        var httpContext = new DefaultHttpContext();
 
-        var context = new GetStartingStateContext(actionContext);
+        var context = new GetStartingStateContext(httpContext);
 
         // Act
         var state = await coordinator.GetStartingStateAsync(context);

@@ -7,15 +7,18 @@ namespace GovUk.Questions.Mvc;
 /// Indicates that this action or page handler starts a new journey instance.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
-public sealed class StartsJourneyAttribute : Attribute, IActionModelConvention, IPageHandlerModelConvention
+public sealed class StartsJourneyAttribute : Attribute, IActionModelConvention, IPageApplicationModelConvention
 {
     void IActionModelConvention.Apply(ActionModel action)
     {
-        action.Properties[ActionDescriptorPropertiesKeys.StartsJourney] = StartsJourneyMetadata.Instance;
+        foreach (var selector in action.Selectors)
+        {
+            selector.EndpointMetadata.Add(StartsJourneyMetadata.Instance);
+        }
     }
 
-    void IPageHandlerModelConvention.Apply(PageHandlerModel model)
+    void IPageApplicationModelConvention.Apply(PageApplicationModel model)
     {
-        model.Properties[ActionDescriptorPropertiesKeys.StartsJourney] = StartsJourneyMetadata.Instance;
+        model.EndpointMetadata.Add(StartsJourneyMetadata.Instance);
     }
 }
