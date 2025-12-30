@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Routing;
 
 namespace GovUk.Questions.Mvc;
 
-internal class JourneyInstanceProvider(IJourneyStateStorage journeyStateStorage, JourneyFeature journeyFeature)
+internal class JourneyInstanceProvider(IJourneyStateStorage journeyStateStorage, JourneyRegistry journeyRegistry)
 {
     private const string HttpContextItemKey = "GovUk.Questions.Mvc.JourneyCoordinator";
 
@@ -27,7 +27,7 @@ internal class JourneyInstanceProvider(IJourneyStateStorage journeyStateStorage,
             return null;
         }
 
-        var journey = journeyFeature.FindJourneyByName(journeyName);
+        var journey = journeyRegistry.FindJourneyByName(journeyName);
         if (journey is null)
         {
             throw new InvalidOperationException($"No journey found with name '{journeyName}'.");
@@ -47,7 +47,7 @@ internal class JourneyInstanceProvider(IJourneyStateStorage journeyStateStorage,
             return null;
         }
 
-        var coordinatorFactory = journeyFeature.GetCoordinatorFactory(journey);
+        var coordinatorFactory = journeyRegistry.GetCoordinatorFactory(journey);
         var coordinator = coordinatorFactory(httpContext.RequestServices);
         coordinator.InstanceId = instanceId;
         coordinator.Journey = journey;
@@ -77,7 +77,7 @@ internal class JourneyInstanceProvider(IJourneyStateStorage journeyStateStorage,
             return null;
         }
 
-        var journey = journeyFeature.FindJourneyByName(journeyName);
+        var journey = journeyRegistry.FindJourneyByName(journeyName);
         if (journey is null)
         {
             throw new InvalidOperationException($"No journey found with name '{journeyName}'.");
@@ -91,7 +91,7 @@ internal class JourneyInstanceProvider(IJourneyStateStorage journeyStateStorage,
             return null;
         }
 
-        var coordinatorFactory = journeyFeature.GetCoordinatorFactory(journey);
+        var coordinatorFactory = journeyRegistry.GetCoordinatorFactory(journey);
         var coordinator = coordinatorFactory(httpContext.RequestServices);
         coordinator.InstanceId = instanceId;
         coordinator.Journey = journey;

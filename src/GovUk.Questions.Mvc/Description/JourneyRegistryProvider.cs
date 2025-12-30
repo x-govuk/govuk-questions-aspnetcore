@@ -4,20 +4,27 @@ using Microsoft.AspNetCore.Mvc.ApplicationParts;
 
 namespace GovUk.Questions.Mvc.Description;
 
-internal class JourneyCoordinatorFeatureProvider : IApplicationFeatureProvider<JourneyFeature>
+internal class JourneyRegistryProvider
 {
-    public void PopulateFeature(IEnumerable<ApplicationPart> parts, JourneyFeature feature)
+    public JourneyRegistry CreateRegistry(ApplicationPartManager partManager)
     {
+        ArgumentNullException.ThrowIfNull(partManager);
+
+        var parts = partManager.ApplicationParts;
+        var journeyRegistry = new JourneyRegistry();
+
         foreach (var part in parts.OfType<IApplicationPartTypeProvider>())
         {
             foreach (var type in part.Types)
             {
                 if (IsJourneyCoordinator(type.AsType(), out var journey))
                 {
-                    feature.RegisterJourney(type, journey);
+                    journeyRegistry.RegisterJourney(type, journey);
                 }
             }
         }
+
+        return journeyRegistry;
     }
 
     private bool IsJourneyCoordinator(

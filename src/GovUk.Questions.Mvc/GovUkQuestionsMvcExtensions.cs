@@ -50,25 +50,21 @@ public static class GovUkQuestionsMvcExtensions
             {
                 options.Filters.Add(new ServiceFilterAttribute<ValidateJourneyFilter> { Order = ValidateJourneyFilter.Order });
             })
-            .ConfigureApplicationPartManager(partManager =>
-            {
-                partManager.FeatureProviders.Add(new JourneyCoordinatorFeatureProvider());
-            })
-            .AddJourneyCoordinators();
+            .AddJourneys();
 
         services.Configure(configureOptions);
 
         return services;
     }
 
-    private static IMvcCoreBuilder AddJourneyCoordinators(this IMvcCoreBuilder builder)
+    private static IMvcCoreBuilder AddJourneys(this IMvcCoreBuilder builder)
     {
-        var feature = new JourneyFeature();
-        builder.PartManager.PopulateFeature(feature);
+        var journeyRegistryProvider = new JourneyRegistryProvider();
+        var journeyRegistry = journeyRegistryProvider.CreateRegistry(builder.PartManager);
 
         var nonGenericCoordinatorType = typeof(JourneyCoordinator);
 
-        foreach (var coordinatorType in feature.GetAllCoordinatorFactoryTypes().Append(nonGenericCoordinatorType))
+        foreach (var coordinatorType in journeyRegistry.GetAllCoordinatorFactoryTypes().Append(nonGenericCoordinatorType))
         {
             builder.Services.TryAddTransient(
                 coordinatorType,
@@ -90,7 +86,7 @@ public static class GovUkQuestionsMvcExtensions
                 });
         }
 
-        builder.Services.AddSingleton(feature);
+        builder.Services.AddSingleton(journeyRegistry);
 
         return builder;
     }
