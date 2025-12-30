@@ -142,7 +142,22 @@ public abstract class JourneyCoordinator
     }
 
     /// <summary>
-    /// Updates the journey state by applying the specified <paramref name="getNewState"/> function and persists the changes.
+    /// Updates the journey state by applying the specified <paramref name="updateState"/> function and persisting the changes.
+    /// </summary>
+    // ReSharper disable once UnusedMember.Global
+    public void UpdateState(Action<object> updateState)
+    {
+        ArgumentNullException.ThrowIfNull(updateState);
+
+        UpdateState(state =>
+        {
+            updateState(state);
+            return state;
+        });
+    }
+
+    /// <summary>
+    /// Updates the journey state by applying the specified <paramref name="getNewState"/> function and persisting the result.
     /// </summary>
     // ReSharper disable once UnusedMember.Global
     public void UpdateState(Func<object, object> getNewState)
@@ -158,7 +173,22 @@ public abstract class JourneyCoordinator
     }
 
     /// <summary>
-    /// Updates the journey state by applying the specified asynchronous <paramref name="getNewState"/> function and persists the changes.
+    /// Updates the journey state by applying the specified asynchronous <paramref name="updateState"/> function and persisting the changes.
+    /// </summary>
+    // ReSharper disable once UnusedMember.Global
+    public Task UpdateStateAsync(Func<object, Task> updateState)
+    {
+        ArgumentNullException.ThrowIfNull(updateState);
+
+        return UpdateStateAsync(async s =>
+        {
+            await updateState(s);
+            return s;
+        });
+    }
+
+    /// <summary>
+    /// Updates the journey state by applying the specified asynchronous <paramref name="getNewState"/> function and persisting the result.
     /// </summary>
     // ReSharper disable once UnusedMember.Global
     public async Task UpdateStateAsync(Func<object, Task<object>> getNewState)
@@ -252,7 +282,20 @@ public abstract class JourneyCoordinator<TState> : JourneyCoordinator where TSta
         return await GetStartingStateAsync(context);
     }
 
-    /// <inheritdoc cref="JourneyCoordinator.UpdateState"/>
+    /// <inheritdoc cref="JourneyCoordinator.UpdateState(Action{object})"/>
+    // ReSharper disable once UnusedMember.Global
+    public void UpdateState(Action<TState> updateState)
+    {
+        ArgumentNullException.ThrowIfNull(updateState);
+
+        UpdateState(state =>
+        {
+            updateState(state);
+            return state;
+        });
+    }
+
+    /// <inheritdoc cref="JourneyCoordinator.UpdateState(Func{object, object})"/>
     // ReSharper disable once UnusedMember.Global
     public void UpdateState(Func<TState, TState> getNewState)
     {
@@ -261,7 +304,20 @@ public abstract class JourneyCoordinator<TState> : JourneyCoordinator where TSta
         base.UpdateState(state => getNewState((TState)state));
     }
 
-    /// <inheritdoc cref="JourneyCoordinator.UpdateStateAsync"/>
+    /// <inheritdoc cref="JourneyCoordinator.UpdateStateAsync(Func{object, Task})"/>
+    // ReSharper disable once UnusedMember.Global
+    public Task UpdateStateAsync(Func<TState, Task> updateState)
+    {
+        ArgumentNullException.ThrowIfNull(updateState);
+
+        return UpdateStateAsync(async s =>
+        {
+            await updateState(s);
+            return s;
+        });
+    }
+
+    /// <inheritdoc cref="JourneyCoordinator.UpdateStateAsync(Func{object, Task{object}})"/>
     // ReSharper disable once UnusedMethodReturnValue.Global
     public Task UpdateStateAsync(Func<TState, Task<TState>> getNewState)
     {

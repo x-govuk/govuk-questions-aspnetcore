@@ -117,7 +117,7 @@ public class IntegrationTestFixture : IAsyncLifetime
 
 public record IntegrationTestJourneyState
 {
-    public required int Foo { get; init; }
+    public required int Foo { get; set; }
 }
 
 [Journey("IntegrationTestJourney", ["id"])]
@@ -140,7 +140,7 @@ public class IntegrationTestController(IntegrationTestJourneyCoordinator coordin
     [HttpPost("first")]
     public IActionResult FirstPagePost([FromForm] int foo)
     {
-        coordinator.UpdateState(s => s with { Foo = foo });
+        coordinator.UpdateState(s => s.Foo = foo);
         return RedirectToAction("SecondPage", coordinator.InstanceId.RouteValues);
     }
 
