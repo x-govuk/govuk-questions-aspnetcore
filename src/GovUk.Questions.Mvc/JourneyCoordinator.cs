@@ -88,7 +88,7 @@ public abstract class JourneyCoordinator
     {
         ArgumentNullException.ThrowIfNull(context);
 
-        var state = await GetStartingStateAsync(context);
+        var state = await GetStartingStateCoreAsync(context);
         ThrowIfStateTypeIsInvalid(state.GetType());
         return state;
     }
@@ -96,9 +96,7 @@ public abstract class JourneyCoordinator
     /// <summary>
     /// Gets the initial state for a newly-started journey instance.
     /// </summary>
-    // ReSharper disable once UnusedMember.Global
-    // ReSharper disable once VirtualMemberNeverOverridden.Global
-    public virtual object GetStartingState(GetStartingStateContext context)
+    private protected virtual object GetStartingStateCore(GetStartingStateContext context)
     {
         Debug.Assert(_journey is not null);
         Debug.Assert(_instanceId is not null);
@@ -111,7 +109,7 @@ public abstract class JourneyCoordinator
         {
             throw new InvalidOperationException(
                 $"No default constructor found on type '{stateType.FullName}'. " +
-                $"Add a default constructor or override '{nameof(GetStartingStateAsync)}' on '{GetType().FullName}'.");
+                $"Add a default constructor or override '{nameof(GetStartingStateCoreAsync)}' on '{GetType().FullName}'.");
         }
 
         var state = Activator.CreateInstance(stateType)!;
@@ -121,13 +119,11 @@ public abstract class JourneyCoordinator
     /// <summary>
     /// Asynchronously gets the initial state for a newly-started journey instance.
     /// </summary>
-    // ReSharper disable once UnusedMember.Global
-    // ReSharper disable once VirtualMemberNeverOverridden.Global
-    public virtual Task<object> GetStartingStateAsync(GetStartingStateContext context)
+    private protected virtual Task<object> GetStartingStateCoreAsync(GetStartingStateContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
 
-        var state = GetStartingState(context);
+        var state = GetStartingStateCore(context);
         return Task.FromResult(state);
     }
 
@@ -237,18 +233,23 @@ public abstract class JourneyCoordinator<TState> : JourneyCoordinator where TSta
     /// Asynchronously gets the initial state for a newly-started journey instance.
     /// </summary>
     // ReSharper disable once VirtualMemberNeverOverridden.Global
-    public new virtual async Task<TState> GetStartingStateAsync(GetStartingStateContext context)
+    public virtual Task<TState> GetStartingStateAsync(GetStartingStateContext context)
     {
-        return (TState)await base.GetStartingStateAsync(context);
+        return Task.FromResult(GetStartingState(context));
     }
 
     /// <summary>
     /// Gets the initial state for a newly-started journey instance.
     /// </summary>
     // ReSharper disable once VirtualMemberNeverOverridden.Global
-    public new virtual TState GetStartingState(GetStartingStateContext context)
+    public virtual TState GetStartingState(GetStartingStateContext context)
     {
-        return (TState)base.GetStartingState(context);
+        return (TState)base.GetStartingStateCore(context);
+    }
+
+    private protected override async Task<object> GetStartingStateCoreAsync(GetStartingStateContext context)
+    {
+        return await GetStartingStateAsync(context);
     }
 
     /// <inheritdoc cref="JourneyCoordinator.UpdateState"/>
