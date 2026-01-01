@@ -78,7 +78,7 @@ public class JourneyCoordinatorTests
     }
 
     [Fact]
-    public void Delete_CallsDeleteOnStateStorage()
+    public void DeleteInstance_CallsDeleteOnStateStorage()
     {
         // Arrange
         var mockStateStorage = new Mock<IJourneyStateStorage>();
@@ -98,7 +98,7 @@ public class JourneyCoordinatorTests
         var coordinator = new TestJourneyCoordinator { Context = context };
 
         // Act
-        coordinator.Delete();
+        coordinator.DeleteInstance();
 
         // Assert
         mockStateStorage.Verify(s => s.DeleteState(coordinator.InstanceId, coordinator.Journey), Times.Once);

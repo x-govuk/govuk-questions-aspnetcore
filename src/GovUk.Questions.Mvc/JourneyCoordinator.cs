@@ -198,7 +198,7 @@ public abstract class JourneyCoordinator
     /// <summary>
     /// Deletes the journey instance and its associated state.
     /// </summary>
-    public void Delete()
+    public void DeleteInstance()
     {
         if (_deleted)
         {

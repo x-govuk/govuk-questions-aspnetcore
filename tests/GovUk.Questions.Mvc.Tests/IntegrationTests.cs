@@ -164,7 +164,7 @@ public class IntegrationTestController(IntegrationTestJourneyCoordinator coordin
     [HttpPost("final")]
     public IActionResult FinalPagePost()
     {
-        coordinator.Delete();
+        coordinator.DeleteInstance();
         return NoContent();
     }
 
