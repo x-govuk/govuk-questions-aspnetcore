@@ -26,3 +26,11 @@ run = [
   "dotnet run --project tests/GovUk.Questions.Mvc.Tests --configuration $env:usage_configuration --no-build",
   "dotnet run --project tests/GovUk.Questions.Mvc.Testing.Tests --configuration $env:usage_configuration --no-build"
 ]
+
+[tasks.format]
+description = "Format the solution"
+run = "dotnet format"
+
+[tasks.format-check]
+description = "Check code format"
+run = "dotnet format --verify-no-changes"

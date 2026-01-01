@@ -25,6 +25,9 @@ jobs:
 
       - uses: jdx/mise-action@v3
 
+      - name: Check format
+        run: mise run format-check
+
       - name: Build
         run: mise run build --configuration ${{ matrix.build-configuration }}
 
