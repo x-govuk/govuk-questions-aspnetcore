@@ -131,7 +131,7 @@ public record IntegrationTestJourneyState
 [Journey("IntegrationTestJourney", ["id"])]
 public class IntegrationTestJourneyCoordinator : JourneyCoordinator<IntegrationTestJourneyState>
 {
-    public override IntegrationTestJourneyState GetStartingState(GetStartingStateContext context)
+    public override IntegrationTestJourneyState GetStartingState()
     {
         return new IntegrationTestJourneyState { Foo = 42 };
     }

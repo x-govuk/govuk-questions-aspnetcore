@@ -65,12 +65,8 @@ public class JourneyCoordinatorTests
 
         var coordinator = new TestJourneyCoordinator { Context = coordinatorContext };
 
-        var httpContext = new DefaultHttpContext();
-
-        var context = new GetStartingStateContext(httpContext);
-
         // Act
-        var state = await coordinator.GetStartingStateAsync(context);
+        var state = await coordinator.GetStartingStateAsync();
 
         // Assert
         Assert.NotNull(state);

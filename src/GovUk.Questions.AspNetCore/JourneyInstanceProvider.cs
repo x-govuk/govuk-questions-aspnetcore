@@ -111,7 +111,7 @@ internal class JourneyInstanceProvider(IJourneyStateStorage journeyStateStorage,
         };
         var coordinator = coordinatorFactory(httpContext.RequestServices, coordinatorContext);
 
-        var state = await coordinator.GetStartingStateSafeAsync(new GetStartingStateContext(httpContext));
+        var state = await coordinator.GetStartingStateSafeAsync();
         Debug.Assert(state.GetType() == journey.StateType);
         journeyStateStorage.SetState(instanceId, journey, new StateStorageEntry { State = state, Path = path });
 
