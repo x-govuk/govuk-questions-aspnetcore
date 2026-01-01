@@ -3,7 +3,6 @@ using GovUk.Questions.Mvc.State;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Moq;
-using NUlid;
 
 namespace GovUk.Questions.Mvc.Tests;
 
@@ -17,7 +16,7 @@ public class JourneyCoordinatorTests
 
         var journey = new JourneyDescriptor("test", [], typeof(TestState));
 
-        var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, Ulid.NewUlid() } });
+        var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, UUID.New().ToUrlSafeString() } });
 
         var path = new JourneyPath([new JourneyPathStep("/step1")]);
 
@@ -54,7 +53,7 @@ public class JourneyCoordinatorTests
 
         var journey = new JourneyDescriptor("test", [], typeof(TestState));
 
-        var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, Ulid.NewUlid() } });
+        var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, UUID.New().ToUrlSafeString() } });
 
         var coordinatorContext = new CoordinatorContext
         {
@@ -85,7 +84,7 @@ public class JourneyCoordinatorTests
 
         var journey = new JourneyDescriptor("test", [], typeof(TestState));
 
-        var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, Ulid.NewUlid() } });
+        var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, UUID.New().ToUrlSafeString() } });
 
         var context = new CoordinatorContext
         {
@@ -112,7 +111,7 @@ public class JourneyCoordinatorTests
 
         var journey = new JourneyDescriptor("test", [], typeof(TestState));
 
-        var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, Ulid.NewUlid() } });
+        var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, UUID.New().ToUrlSafeString() } });
 
         var path = new JourneyPath([new JourneyPathStep("/step1"), new JourneyPathStep("/step2")]);
 
@@ -147,7 +146,7 @@ public class JourneyCoordinatorTests
 
         var journey = new JourneyDescriptor("test", [], typeof(TestState));
 
-        var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, Ulid.NewUlid() } });
+        var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, UUID.New().ToUrlSafeString() } });
 
         var path = new JourneyPath([new JourneyPathStep("/step1"), new JourneyPathStep("/step2")]);
 
@@ -181,7 +180,7 @@ public class JourneyCoordinatorTests
 
         var journey = new JourneyDescriptor("test", [], typeof(TestState));
 
-        var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, Ulid.NewUlid() } });
+        var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, UUID.New().ToUrlSafeString() } });
 
         var path = new JourneyPath([new JourneyPathStep("/step1"), new JourneyPathStep("/step2")]);
 
@@ -215,7 +214,7 @@ public class JourneyCoordinatorTests
 
         var journey = new JourneyDescriptor("test", [], typeof(TestState));
 
-        var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, Ulid.NewUlid() } });
+        var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, UUID.New().ToUrlSafeString() } });
 
         var path = new JourneyPath([new JourneyPathStep("/step1")]);
 
@@ -251,7 +250,7 @@ public class JourneyCoordinatorTests
 
         var journey = new JourneyDescriptor("test", [], typeof(TestState));
 
-        var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, Ulid.NewUlid() } });
+        var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, UUID.New().ToUrlSafeString() } });
 
         var path = new JourneyPath([new JourneyPathStep("/step1")]);
 
@@ -285,7 +284,7 @@ public class JourneyCoordinatorTests
 
         var journey = new JourneyDescriptor("test", [], typeof(TestState));
 
-        var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, Ulid.NewUlid() } });
+        var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, UUID.New().ToUrlSafeString() } });
 
         var path = new JourneyPath([new JourneyPathStep("/step1")]);
 

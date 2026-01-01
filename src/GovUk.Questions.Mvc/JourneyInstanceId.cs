@@ -5,7 +5,6 @@ using GovUk.Questions.Mvc.Description;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.WebUtilities;
-using NUlid;
 
 namespace GovUk.Questions.Mvc;
 
@@ -118,7 +117,7 @@ public sealed class JourneyInstanceId : IEquatable<JourneyInstanceId>, IParsable
             routeValues.Add(key, value);
         }
 
-        if (!routeValues.TryGetValue(KeyRouteValueName, out var keyRouteValue) || !Ulid.TryParse(keyRouteValue?.ToString(), out _))
+        if (!routeValues.TryGetValue(KeyRouteValueName, out var keyRouteValue) || !UUID.TryFromUrlSafeString(keyRouteValue?.ToString()!, out _))
         {
             result = null;
             return false;
@@ -133,7 +132,7 @@ public sealed class JourneyInstanceId : IEquatable<JourneyInstanceId>, IParsable
         ArgumentNullException.ThrowIfNull(journey);
         ArgumentNullException.ThrowIfNull(routeValues);
 
-        if (!routeValues.TryGetValue(KeyRouteValueName, out var keyValue) || !Ulid.TryParse(keyValue?.ToString(), out _))
+        if (!routeValues.TryGetValue(KeyRouteValueName, out var keyValue) || !UUID.TryFromUrlSafeString(keyValue?.ToString()!, out _))
         {
             result = null;
             return false;
@@ -162,10 +161,10 @@ public sealed class JourneyInstanceId : IEquatable<JourneyInstanceId>, IParsable
         ArgumentNullException.ThrowIfNull(journey);
         ArgumentNullException.ThrowIfNull(routeValues);
 
-        var instanceKey = Ulid.NewUlid();
+        var instanceKey = UUID.New();
 
         var sanitizedRouteValues = new RouteValueDictionary();
-        sanitizedRouteValues.Add(KeyRouteValueName, instanceKey.ToString());
+        sanitizedRouteValues.Add(KeyRouteValueName, instanceKey.ToUrlSafeString());
 
         foreach (var key in journey.RouteValueKeys)
         {
@@ -220,7 +219,7 @@ public sealed class JourneyInstanceId : IEquatable<JourneyInstanceId>, IParsable
             .Aggregate(new QueryString(), (q, kvp) => q.Add(kvp.Key.ToLowerInvariant(), kvp.Value.ToString() ?? string.Empty));
 
         // Add the key last, lower-cased
-        qs = qs.Add(KeyRouteValueName, Key.ToString().ToLowerInvariant());
+        qs = qs.Add(KeyRouteValueName, Key.ToLowerInvariant());
 
         return _asString = $"{UriPrefix}/{Uri.EscapeDataString(JourneyName.ToLowerInvariant())}{qs.ToUriComponent()}";
 #pragma warning restore CA1308

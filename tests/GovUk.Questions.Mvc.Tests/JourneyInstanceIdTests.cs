@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Routing;
-using NUlid;
 
 namespace GovUk.Questions.Mvc.Tests;
 
@@ -41,7 +40,7 @@ public class JourneyInstanceIdTests
     {
         // Arrange
         var journeyName = "test-journey";
-        var key = Ulid.NewUlid().ToString();
+        var key = UUID.New().ToUrlSafeString();
         var routeValues = new RouteValueDictionary
         {
             { JourneyInstanceId.KeyRouteValueName, key },
@@ -63,7 +62,7 @@ public class JourneyInstanceIdTests
     {
         // Arrange
         var journeyName = "test-journey";
-        var key = Ulid.NewUlid().ToString();
+        var key = UUID.New().ToUrlSafeString();
         var routeValues1 = new RouteValueDictionary
         {
             { JourneyInstanceId.KeyRouteValueName, key },
@@ -91,7 +90,7 @@ public class JourneyInstanceIdTests
         // Arrange
         var journeyName1 = "test-journey";
         var journeyName2 = "TEST-JOURNEY";
-        var key = Ulid.NewUlid().ToString();
+        var key = UUID.New().ToUrlSafeString();
         var routeValues1 = new RouteValueDictionary
         {
             { JourneyInstanceId.KeyRouteValueName, key },
@@ -118,8 +117,8 @@ public class JourneyInstanceIdTests
     {
         // Arrange
         var journeyName = "test-journey";
-        var key1 = Ulid.NewUlid().ToString();
-        var key2 = Ulid.NewUlid().ToString();
+        var key1 = UUID.New().ToUrlSafeString();
+        var key2 = UUID.New().ToUrlSafeString();
         var routeValues1 = new RouteValueDictionary
         {
             { JourneyInstanceId.KeyRouteValueName, key1 },
@@ -146,7 +145,7 @@ public class JourneyInstanceIdTests
     {
         // Arrange
         var journeyName = "test-journey";
-        var key = Ulid.NewUlid().ToString();
+        var key = UUID.New().ToUrlSafeString();
         var input = $"fdc:x-govuk.org:questions/{journeyName}?foo=42&bar=b%26az&_jid={key}";
 
         // Act
@@ -157,8 +156,8 @@ public class JourneyInstanceIdTests
         Assert.NotNull(result);
         Assert.Equal(journeyName, result.JourneyName);
         Assert.Equal(key, result.Key);
-        Assert.Equal("42", result.RouteValues["foo"]?.ToString());
-        Assert.Equal("b&az", result.RouteValues["bar"]?.ToString());
+        Assert.Equal("42", result.RouteValues["foo"].ToString());
+        Assert.Equal("b&az", result.RouteValues["bar"].ToString());
     }
 }
 

@@ -11,7 +11,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="NUlid" Version="1.7.3" />
+    <PackageReference Include="UUID" Version="1.1.1" />
   </ItemGroup>
 
   <ItemGroup>
