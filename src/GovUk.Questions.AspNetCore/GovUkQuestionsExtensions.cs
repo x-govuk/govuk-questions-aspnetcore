@@ -11,7 +11,7 @@ namespace GovUk.Questions.AspNetCore;
 /// <summary>
 /// Extension methods for setting up GovUk.Questions.AspNetCore.
 /// </summary>
-public static class GovUkQuestionsMvcExtensions
+public static class GovUkQuestionsExtensions
 {
     /// <summary>
     /// Adds GovUk.Questions.AspNetCore services to the specified <see cref="IServiceCollection"/>.
@@ -53,6 +53,20 @@ public static class GovUkQuestionsMvcExtensions
             .AddJourneys();
 
         services.Configure(configureOptions);
+
+        return services;
+    }
+
+    /// <summary>
+    /// Adds an implementation of <see cref="IJourneyStateStorage"/> that uses the local filesystem.
+    /// </summary>
+    /// <param name="services">The <see cref="IServiceCollection"/> to add services to.</param>
+    /// <returns>The <see cref="IServiceCollection"/> so that additional calls can be chained.</returns>
+    public static IServiceCollection AddDevelopmentJourneyStateStorage(this IServiceCollection services)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+
+        services.AddSingleton<IJourneyStateStorage, DevelopmentJourneyStateStorage>();
 
         return services;
     }
