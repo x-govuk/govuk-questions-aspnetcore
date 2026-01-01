@@ -44,6 +44,14 @@ public class IntegrationTests(IntegrationTestFixture fixture) : IClassFixture<In
         Assert.Equal(StatusCodes.Status200OK, (int)secondPageResponse.StatusCode);
         await AssertStateAsync(secondPageResponse, 69);
 
+        // Advance to final step
+        var secondPagePostResponse = await HttpClient.PostAsync(
+            "/integration-test/123/second?_jid=" + journeyInstanceKey,
+            new FormUrlEncodedContent([]),
+            TestContext.Current.CancellationToken);
+        Assert.Equal(StatusCodes.Status302Found, (int)secondPagePostResponse.StatusCode);
+        Assert.Equal($"/integration-test/123/final?_jid={journeyInstanceKey}", secondPagePostResponse.Headers.Location?.ToString());
+
         // End the journey
         var finalPagePostResponse = await HttpClient.PostAsync(
             "/integration-test/123/final?_jid=" + journeyInstanceKey,

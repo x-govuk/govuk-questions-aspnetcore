@@ -33,6 +33,16 @@ public class JourneyPath
     public IReadOnlyCollection<JourneyPathStep> Steps { get; }
 
     /// <summary>
+    /// Determines whether the journey path contains the specified step.
+    /// </summary>
+    public bool ContainsStep(JourneyPathStep step)
+    {
+        ArgumentNullException.ThrowIfNull(step);
+
+        return Steps.Any(s => _stepComparer.Equals(s, step));
+    }
+
+    /// <summary>
     /// Adds a new step onto the journey path relative to the specified current step.
     /// </summary>
     /// <param name="step">The step to add.</param>

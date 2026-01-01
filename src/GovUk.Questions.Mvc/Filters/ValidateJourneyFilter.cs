@@ -12,18 +12,33 @@ internal class ValidateJourneyFilter(JourneyInstanceProvider instanceProvider) :
     {
         var httpContext = context.HttpContext;
 
-        if (instanceProvider.TryGetJourneyName(httpContext, out _) && instanceProvider.GetJourneyInstance(httpContext) is null)
+        if (!instanceProvider.TryGetJourneyName(httpContext, out _))
         {
-            if (await instanceProvider.TryCreateNewInstanceAsync(httpContext) is JourneyCoordinator coordinator)
-            {
-                context.Result = new RedirectResult(coordinator.Path.Steps.First().Url);
-            }
-            else
-            {
-                // TODO Make this configurable
-                context.Result = new BadRequestResult();
-            }
+            // Endpoint is not part of a journey
+            await next();
+            return;
+        }
 
+        if (instanceProvider.GetJourneyInstance(httpContext) is { } coordinator)
+        {
+            var currentStep = JourneyPathStep.FromHttpContext(context.HttpContext);
+
+            if (!coordinator.StepIsValid(currentStep))
+            {
+                context.Result = coordinator.OnInvalidStep();
+                return;
+            }
+        }
+        else if (await instanceProvider.TryCreateNewInstanceAsync(httpContext) is JourneyCoordinator newInstanceCoordinator)
+        {
+            context.Result = new RedirectResult(newInstanceCoordinator.Path.Steps.First().Url);
+            return;
+        }
+        else
+        {
+            // Unable to get a journey instance
+            // TODO Make this configurable
+            context.Result = new BadRequestResult();
             return;
         }
 

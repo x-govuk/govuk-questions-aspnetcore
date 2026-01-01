@@ -210,6 +210,29 @@ public abstract class JourneyCoordinator
     }
 
     /// <summary>
+    /// Invoked when the current step is not valid for the journey instance.
+    /// </summary>
+    /// <remarks>
+    /// The default implementation redirects to the last step in the journey path.
+    /// </remarks>
+    public virtual IActionResult OnInvalidStep()
+    {
+        return new RedirectResult(Path.Steps.Last().Url);
+    }
+
+    /// <summary>
+    /// Determines whether the specified <paramref name="step"/> is valid for the current journey path.
+    /// </summary>
+#pragma warning disable CA1716
+    public virtual bool StepIsValid(JourneyPathStep step)
+#pragma warning restore CA1716
+    {
+        ArgumentNullException.ThrowIfNull(step);
+
+        return Path.ContainsStep(step);
+    }
+
+    /// <summary>
     /// Updates the journey state by applying the specified <paramref name="updateState"/> function and persisting the changes.
     /// </summary>
     // ReSharper disable once UnusedMember.Global

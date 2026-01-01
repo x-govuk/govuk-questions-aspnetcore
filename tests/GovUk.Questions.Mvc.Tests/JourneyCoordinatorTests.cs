@@ -105,6 +105,109 @@ public class JourneyCoordinatorTests
     }
 
     [Fact]
+    public void OnInvalidStep_ReturnsRedirectToLastStep()
+    {
+        // Arrange
+        var mockStateStorage = new Mock<IJourneyStateStorage>();
+
+        var journey = new JourneyDescriptor("test", [], typeof(TestState));
+
+        var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, Ulid.NewUlid() } });
+
+        var path = new JourneyPath([new JourneyPathStep("/step1"), new JourneyPathStep("/step2")]);
+
+        var initialState = new TestState();
+        mockStateStorage
+            .Setup(mock => mock.GetState(instanceId, journey))
+            .Returns(new StateStorageEntry { State = initialState, Path = path });
+
+        var context = new CoordinatorContext
+        {
+            InstanceId = instanceId,
+            Journey = journey,
+            JourneyStateStorage = mockStateStorage.Object,
+            HttpContext = new DefaultHttpContext()
+        };
+
+        var coordinator = new TestJourneyCoordinator { Context = context };
+
+        // Act
+        var result = coordinator.OnInvalidStep();
+
+        // Assert
+        var redirectResult = Assert.IsType<Microsoft.AspNetCore.Mvc.RedirectResult>(result);
+        Assert.Equal("/step2", redirectResult.Url);
+    }
+
+    [Fact]
+    public void StepIsValid_ReturnsTrueForValidStep()
+    {
+        // Arrange
+        var mockStateStorage = new Mock<IJourneyStateStorage>();
+
+        var journey = new JourneyDescriptor("test", [], typeof(TestState));
+
+        var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, Ulid.NewUlid() } });
+
+        var path = new JourneyPath([new JourneyPathStep("/step1"), new JourneyPathStep("/step2")]);
+
+        var initialState = new TestState();
+        mockStateStorage
+            .Setup(mock => mock.GetState(instanceId, journey))
+            .Returns(new StateStorageEntry { State = initialState, Path = path });
+
+        var context = new CoordinatorContext
+        {
+            InstanceId = instanceId,
+            Journey = journey,
+            JourneyStateStorage = mockStateStorage.Object,
+            HttpContext = new DefaultHttpContext()
+        };
+
+        var coordinator = new TestJourneyCoordinator { Context = context };
+
+        // Act
+        var result = coordinator.StepIsValid(new JourneyPathStep("/step1"));
+
+        // Assert
+        Assert.True(result);
+    }
+
+    [Fact]
+    public void StepIsValid_ReturnsFalseForInvalidStep()
+    {
+        // Arrange
+        var mockStateStorage = new Mock<IJourneyStateStorage>();
+
+        var journey = new JourneyDescriptor("test", [], typeof(TestState));
+
+        var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, Ulid.NewUlid() } });
+
+        var path = new JourneyPath([new JourneyPathStep("/step1"), new JourneyPathStep("/step2")]);
+
+        var initialState = new TestState();
+        mockStateStorage
+            .Setup(mock => mock.GetState(instanceId, journey))
+            .Returns(new StateStorageEntry { State = initialState, Path = path });
+
+        var context = new CoordinatorContext
+        {
+            InstanceId = instanceId,
+            Journey = journey,
+            JourneyStateStorage = mockStateStorage.Object,
+            HttpContext = new DefaultHttpContext()
+        };
+
+        var coordinator = new TestJourneyCoordinator { Context = context };
+
+        // Act
+        var result = coordinator.StepIsValid(new JourneyPathStep("/step3"));
+
+        // Assert
+        Assert.False(result);
+    }
+
+    [Fact]
     public void UpdateState_InvokesActionWithCurrentStateAndPersistsChanges()
     {
         // Arrange

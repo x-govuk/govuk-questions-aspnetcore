@@ -3,6 +3,46 @@ namespace GovUk.Questions.Mvc.Tests;
 public class JourneyPathTests
 {
     [Fact]
+    public void ContainsStep_StepExistsInPath_ReturnsTrue()
+    {
+        // Arrange
+        var initialSteps = new List<JourneyPathStep>
+        {
+            new("/step-1"),
+            new("/step-2"),
+            new("/step-3")
+        };
+        var journeyPath = new JourneyPath(initialSteps);
+        var stepToCheck = new JourneyPathStep("/step-2");
+
+        // Act
+        var result = journeyPath.ContainsStep(stepToCheck);
+
+        // Assert
+        Assert.True(result);
+    }
+
+    [Fact]
+    public void ContainsStep_StepDoesNotExistInPath_ReturnsFalse()
+    {
+        // Arrange
+        var initialSteps = new List<JourneyPathStep>
+        {
+            new("/step-1"),
+            new("/step-2"),
+            new("/step-3")
+        };
+        var journeyPath = new JourneyPath(initialSteps);
+        var stepToCheck = new JourneyPathStep("/step-4");
+
+        // Act
+        var result = journeyPath.ContainsStep(stepToCheck);
+
+        // Assert
+        Assert.False(result);
+    }
+
+    [Fact]
     public void PushStep_CurrentStepDoesNotExistInPath_ThrowsInvalidOperationException()
     {
         // Arrange
