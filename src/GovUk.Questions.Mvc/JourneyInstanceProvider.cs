@@ -3,8 +3,10 @@ using System.Diagnostics.CodeAnalysis;
 using GovUk.Questions.Mvc.Description;
 using GovUk.Questions.Mvc.State;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.AspNetCore.WebUtilities;
 
 namespace GovUk.Questions.Mvc;
 
@@ -95,7 +97,8 @@ internal class JourneyInstanceProvider(IJourneyStateStorage journeyStateStorage,
             return null;
         }
 
-        var firstStep = JourneyPathStep.FromHttpContext(httpContext);
+        var firstStepUrl = QueryHelpers.AddQueryString(httpContext.Request.GetEncodedPathAndQuery(), JourneyInstanceId.KeyRouteValueName, instanceId.Key);
+        var firstStep = new JourneyPathStep(firstStepUrl);
         var path = new JourneyPath([firstStep]);
 
         var coordinatorFactory = journeyRegistry.GetCoordinatorActivator(journey);

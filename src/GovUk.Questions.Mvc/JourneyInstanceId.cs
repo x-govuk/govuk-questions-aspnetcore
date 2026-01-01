@@ -59,7 +59,7 @@ public sealed class JourneyInstanceId : IEquatable<JourneyInstanceId>, IParsable
     /// <summary>
     /// Gets the key for this instance.
     /// </summary>
-    public Ulid Key => Ulid.Parse(RouteValues[KeyRouteValueName].ToString()!);
+    public string Key => RouteValues[KeyRouteValueName].ToString()!;
 
     /// <summary>
     /// Parses a string into a <see cref="JourneyInstanceId"/>.

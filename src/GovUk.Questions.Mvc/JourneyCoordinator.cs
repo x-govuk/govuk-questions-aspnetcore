@@ -2,12 +2,15 @@ using System.Diagnostics;
 using System.Reflection;
 using GovUk.Questions.Mvc.Description;
 using GovUk.Questions.Mvc.State;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 
 namespace GovUk.Questions.Mvc;
 
 /// <summary>
 /// Base class for coordinating a journey's state and behavior.
 /// </summary>
+#pragma warning disable CA1054
 public abstract class JourneyCoordinator
 {
     private CoordinatorContext? _context;
@@ -21,30 +24,136 @@ public abstract class JourneyCoordinator
     }
 
     /// <summary>
-    /// The unique identifier for this journey instance.
+    /// Gets the unique identifier for this journey instance.
     /// </summary>
     public JourneyInstanceId InstanceId => Context.InstanceId;
 
     /// <summary>
-    /// The <see cref="JourneyDescriptor"/> that describes the journey.
+    /// Gets the <see cref="JourneyDescriptor"/> for this journey.
     /// </summary>
     public JourneyDescriptor Journey => Context.Journey;
+
+    /// <summary>
+    /// Gets the <see cref="HttpContext"/> for the current request.
+    /// </summary>
+    public HttpContext HttpContext => Context.HttpContext;
+
+    /// <summary>
+    /// Gets the current path for this journey instance.
+    /// </summary>
+    public JourneyPath Path => GetStateStorageEntry().Path;
 
     internal IJourneyStateStorage StateStorage => Context.JourneyStateStorage;
 
     /// <summary>
-    /// The state for this journey instance.
+    /// Gets the state for this journey instance.
     /// </summary>
     /// <remarks>
     /// Any modifications to the state object returned by this property will not be persisted.
-    /// Use <see cref="UpdateState(Func{object, object})"/> or <see cref="UpdateStateAsync(Func{object, Task{object}})"/> to persist changes.
     /// </remarks>
     public object State => GetStateStorageEntry().State;
 
     /// <summary>
-    /// Gets the <see cref="JourneyPath"/> for this journey instance.
+    /// Advances the journey to the specified <paramref name="nextStepUrl"/> without modifying the state.
     /// </summary>
-    public JourneyPath Path => GetStateStorageEntry().Path;
+    public IActionResult Advance(
+        string nextStepUrl,
+        PushStepOptions pushStepOptions = default)
+    {
+        ArgumentNullException.ThrowIfNull(nextStepUrl);
+
+        var vt = AdvanceCoreAsync(
+            nextStepUrl,
+            ValueTask.FromResult,
+            pushStepOptions);
+        Debug.Assert(vt.IsCompleted);
+#pragma warning disable VSTHRD002
+        return vt.GetAwaiter().GetResult();
+#pragma warning restore VSTHRD002
+    }
+
+    /// <summary>
+    /// Advances the journey to the specified <paramref name="nextStepUrl"/>, updating the state using the provided <paramref name="updateState"/> action.
+    /// </summary>
+    public IActionResult Advance(
+        string nextStepUrl,
+        Action<object> updateState,
+        PushStepOptions pushStepOptions = default)
+    {
+        ArgumentNullException.ThrowIfNull(nextStepUrl);
+        ArgumentNullException.ThrowIfNull(updateState);
+
+        var vt = AdvanceCoreAsync(
+            nextStepUrl,
+            s =>
+            {
+                updateState(s);
+                return ValueTask.FromResult(s);
+            },
+            pushStepOptions);
+        Debug.Assert(vt.IsCompleted);
+#pragma warning disable VSTHRD002
+        return vt.GetAwaiter().GetResult();
+#pragma warning restore VSTHRD002
+    }
+
+    /// <summary>
+    /// Advances the journey to the specified <paramref name="nextStepUrl"/>, updating the state using the provided <paramref name="getNewState"/> function.
+    /// </summary>
+    public IActionResult Advance(
+        string nextStepUrl,
+        Func<object, object> getNewState,
+        PushStepOptions pushStepOptions = default)
+    {
+        ArgumentNullException.ThrowIfNull(nextStepUrl);
+        ArgumentNullException.ThrowIfNull(getNewState);
+
+        var vt = AdvanceCoreAsync(nextStepUrl, s => ValueTask.FromResult(getNewState(s)), pushStepOptions);
+        Debug.Assert(vt.IsCompleted);
+#pragma warning disable VSTHRD002
+        return vt.GetAwaiter().GetResult();
+#pragma warning restore VSTHRD002
+    }
+
+    /// <summary>
+    /// Advances the journey to the specified <paramref name="nextStepUrl"/>, updating the state using the provided <paramref name="updateState"/> function.
+    /// </summary>
+    public Task<IActionResult> AdvanceAsync(
+        string nextStepUrl,
+        Func<object, Task> updateState,
+        PushStepOptions pushStepOptions = default)
+    {
+        ArgumentNullException.ThrowIfNull(nextStepUrl);
+        ArgumentNullException.ThrowIfNull(updateState);
+
+        return AdvanceCoreAsync(
+                nextStepUrl,
+                async s =>
+                {
+                    await updateState(s);
+                    return s;
+                },
+                pushStepOptions)
+            .AsTask();
+    }
+
+    /// <summary>
+    /// Advances the journey to the specified <paramref name="nextStepUrl"/>, updating the state using the provided <paramref name="getNewState"/> function.
+    /// </summary>
+    public Task<IActionResult> AdvanceAsync(
+        string nextStepUrl,
+        Func<object, Task<object>> getNewState,
+        PushStepOptions pushStepOptions = default)
+    {
+        ArgumentNullException.ThrowIfNull(nextStepUrl);
+        ArgumentNullException.ThrowIfNull(getNewState);
+
+        return AdvanceCoreAsync(
+                nextStepUrl,
+                async s => await getNewState(s),
+                pushStepOptions)
+            .AsTask();
+    }
 
     internal async Task<object> GetStartingStateSafeAsync(GetStartingStateContext context)
     {
@@ -108,11 +217,16 @@ public abstract class JourneyCoordinator
     {
         ArgumentNullException.ThrowIfNull(updateState);
 
-        UpdateState(state =>
+        var vt = UpdateStateStorageEntryCoreAsync(e =>
         {
+            var state = e.State;
             updateState(state);
-            return state;
+            return ValueTask.FromResult(e with { State = state });
         });
+        Debug.Assert(vt.IsCompleted);
+#pragma warning disable VSTHRD002
+        vt.GetAwaiter().GetResult();
+#pragma warning restore VSTHRD002
     }
 
     /// <summary>
@@ -123,13 +237,11 @@ public abstract class JourneyCoordinator
     {
         ArgumentNullException.ThrowIfNull(getNewState);
 
-        ThrowIfDeleted();
-
-        var stateStorageEntry = GetStateStorageEntry();
-        var state = stateStorageEntry.State;
-        state = getNewState(state);
-        ThrowIfStateTypeIsInvalid(state.GetType());
-        StateStorage.SetState(InstanceId, Journey, stateStorageEntry with { State = state });
+        var vt = UpdateStateStorageEntryCoreAsync(e => ValueTask.FromResult(e with { State = getNewState(e.State) }));
+        Debug.Assert(vt.IsCompleted);
+#pragma warning disable VSTHRD002
+        vt.GetAwaiter().GetResult();
+#pragma warning restore VSTHRD002
     }
 
     /// <summary>
@@ -140,31 +252,61 @@ public abstract class JourneyCoordinator
     {
         ArgumentNullException.ThrowIfNull(updateState);
 
-        return UpdateStateAsync(async s =>
+        return UpdateStateStorageEntryCoreAsync(async e =>
         {
-            await updateState(s);
-            return s;
-        });
+            var state = e.State;
+            await updateState(state);
+            return e with { State = state };
+        }).AsTask();
     }
 
     /// <summary>
     /// Updates the journey state by applying the specified asynchronous <paramref name="getNewState"/> function and persisting the result.
     /// </summary>
     // ReSharper disable once UnusedMember.Global
-    public async Task UpdateStateAsync(Func<object, Task<object>> getNewState)
+    public Task UpdateStateAsync(Func<object, Task<object>> getNewState)
     {
         ArgumentNullException.ThrowIfNull(getNewState);
+
+        return UpdateStateStorageEntryCoreAsync(async e => e with { State = await getNewState(e.State) }).AsTask();
+    }
+
+    private async ValueTask<IActionResult> AdvanceCoreAsync(
+        string nextStepUrl,
+        Func<object, ValueTask<object>> getNewState,
+        PushStepOptions pushStepOptions = default)
+    {
+        ArgumentNullException.ThrowIfNull(nextStepUrl);
+        ArgumentNullException.ThrowIfNull(getNewState);
+
+        await UpdateStateStorageEntryCoreAsync(async e =>
+        {
+            var currentStep = JourneyPathStep.FromHttpContext(HttpContext);
+            var nextStep = new JourneyPathStep(nextStepUrl);
+            var newPath = e.Path.PushStep(nextStep, currentStep, pushStepOptions);
+
+            var newState = await getNewState(e.State);
+
+            return new StateStorageEntry { State = newState, Path = newPath };
+        });
+
+        return new RedirectResult(nextStepUrl);
+    }
+
+    private StateStorageEntry GetStateStorageEntry() => StateStorage.GetState(InstanceId, Journey)!;
+
+    private async ValueTask UpdateStateStorageEntryCoreAsync(
+        Func<StateStorageEntry, ValueTask<StateStorageEntry>> getNewEntry)
+    {
+        ArgumentNullException.ThrowIfNull(getNewEntry);
 
         ThrowIfDeleted();
 
         var stateStorageEntry = GetStateStorageEntry();
-        var state = stateStorageEntry.State;
-        state = await getNewState(state);
-        ThrowIfStateTypeIsInvalid(state.GetType());
-        StateStorage.SetState(InstanceId, Journey, stateStorageEntry with { State = state });
+        var newEntry = await getNewEntry(stateStorageEntry);
+        ThrowIfStateTypeIsInvalid(newEntry.State.GetType());
+        StateStorage.SetState(InstanceId, Journey, newEntry);
     }
-
-    private StateStorageEntry GetStateStorageEntry() => StateStorage.GetState(InstanceId, Journey)!;
 
     private void ThrowIfDeleted()
     {
@@ -196,9 +338,68 @@ public abstract class JourneyCoordinator<TState> : JourneyCoordinator where TSta
     /// </summary>
     /// <remarks>
     /// Any modifications to the state object returned by this property will not be persisted.
-    /// Use <see cref="UpdateState(Func{TState, TState})"/> or <see cref="UpdateStateAsync(Func{TState, Task{TState}})"/> to persist changes.
     /// </remarks>
     public new TState State => (TState)base.State;
+
+    /// <inheritdoc cref="JourneyCoordinator.Advance(string, Action{object}, PushStepOptions)"/>
+    public IActionResult Advance(
+        string nextStepUrl,
+        Action<TState> updateState,
+        PushStepOptions pushStepOptions = default)
+    {
+        ArgumentNullException.ThrowIfNull(nextStepUrl);
+        ArgumentNullException.ThrowIfNull(updateState);
+
+        return base.Advance(
+            nextStepUrl,
+            state => updateState((TState)state),
+            pushStepOptions);
+    }
+
+    /// <inheritdoc cref="JourneyCoordinator.Advance(string, Func{object, object}, PushStepOptions)"/>
+    public IActionResult Advance(
+        string nextStepUrl,
+        Func<TState, TState> getNewState,
+        PushStepOptions pushStepOptions = default)
+    {
+        ArgumentNullException.ThrowIfNull(nextStepUrl);
+        ArgumentNullException.ThrowIfNull(getNewState);
+
+        return base.Advance(
+            nextStepUrl,
+            state => getNewState((TState)state),
+            pushStepOptions);
+    }
+
+    /// <inheritdoc cref="JourneyCoordinator.AdvanceAsync(string, Func{object, Task}, PushStepOptions)"/>
+    public Task<IActionResult> AdvanceAsync(
+        string nextStepUrl,
+        Func<TState, Task> updateState,
+        PushStepOptions pushStepOptions = default)
+    {
+        ArgumentNullException.ThrowIfNull(nextStepUrl);
+        ArgumentNullException.ThrowIfNull(updateState);
+
+        return base.AdvanceAsync(
+            nextStepUrl,
+            async state => await updateState((TState)state),
+            pushStepOptions);
+    }
+
+    /// <inheritdoc cref="JourneyCoordinator.AdvanceAsync(string, Func{object, Task{object}}, PushStepOptions)"/>
+    public Task<IActionResult> AdvanceAsync(
+        string nextStepUrl,
+        Func<TState, Task<TState>> getNewState,
+        PushStepOptions pushStepOptions = default)
+    {
+        ArgumentNullException.ThrowIfNull(nextStepUrl);
+        ArgumentNullException.ThrowIfNull(getNewState);
+
+        return base.AdvanceAsync(
+            nextStepUrl,
+            async state => await getNewState((TState)state),
+            pushStepOptions);
+    }
 
     /// <summary>
     /// Asynchronously gets the initial state for a newly-started journey instance.
@@ -267,3 +468,4 @@ public abstract class JourneyCoordinator<TState> : JourneyCoordinator where TSta
         return base.UpdateStateAsync(async state => await getNewState((TState)state));
     }
 }
+#pragma warning restore CA1054

@@ -25,15 +25,15 @@ public class JourneyInstanceIdTests
     {
         // Arrange
         var journeyName = "test-journey";
-        var ulid = Ulid.NewUlid();
-        var routeValues = new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, ulid.ToString() } };
+        var guid = Guid.NewGuid().ToString();
+        var routeValues = new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, guid } };
         var journeyInstanceId = new JourneyInstanceId(journeyName, routeValues);
 
         // Act
         var key = journeyInstanceId.Key;
 
         // Assert
-        Assert.Equal(ulid, key);
+        Assert.Equal(guid, key);
     }
 
     [Fact]
@@ -41,10 +41,10 @@ public class JourneyInstanceIdTests
     {
         // Arrange
         var journeyName = "test-journey";
-        var key = Ulid.NewUlid();
+        var key = Ulid.NewUlid().ToString();
         var routeValues = new RouteValueDictionary
         {
-            { JourneyInstanceId.KeyRouteValueName, key.ToString() },
+            { JourneyInstanceId.KeyRouteValueName, key },
             { "foo", "42" },
             { "bar", "b&az" }
         };
@@ -55,7 +55,7 @@ public class JourneyInstanceIdTests
         var str = journeyInstanceId.ToString();
 
         // Assert
-        Assert.Equal($"fdc:x-govuk.org:questions/{journeyName}?bar=b%26az&foo=42&_jid={key.ToString().ToLowerInvariant()}", str);
+        Assert.Equal($"fdc:x-govuk.org:questions/{journeyName}?bar=b%26az&foo=42&_jid={key.ToLowerInvariant()}", str);
     }
 
     [Fact]
@@ -63,15 +63,15 @@ public class JourneyInstanceIdTests
     {
         // Arrange
         var journeyName = "test-journey";
-        var key = Ulid.NewUlid();
+        var key = Ulid.NewUlid().ToString();
         var routeValues1 = new RouteValueDictionary
         {
-            { JourneyInstanceId.KeyRouteValueName, key.ToString() },
+            { JourneyInstanceId.KeyRouteValueName, key },
             { "foo", "42" }
         };
         var routeValues2 = new RouteValueDictionary
         {
-            { JourneyInstanceId.KeyRouteValueName, key.ToString() },
+            { JourneyInstanceId.KeyRouteValueName, key },
             { "foo", "42" }
         };
 
@@ -91,15 +91,15 @@ public class JourneyInstanceIdTests
         // Arrange
         var journeyName1 = "test-journey";
         var journeyName2 = "TEST-JOURNEY";
-        var key = Ulid.NewUlid();
+        var key = Ulid.NewUlid().ToString();
         var routeValues1 = new RouteValueDictionary
         {
-            { JourneyInstanceId.KeyRouteValueName, key.ToString() },
+            { JourneyInstanceId.KeyRouteValueName, key },
             { "foo", "42" }
         };
         var routeValues2 = new RouteValueDictionary
         {
-            { JourneyInstanceId.KeyRouteValueName.ToUpper(), key.ToString() },
+            { JourneyInstanceId.KeyRouteValueName.ToUpper(), key },
             { "FOO", "42" }
         };
 
@@ -118,16 +118,16 @@ public class JourneyInstanceIdTests
     {
         // Arrange
         var journeyName = "test-journey";
-        var key1 = Ulid.NewUlid();
-        var key2 = Ulid.NewUlid();
+        var key1 = Ulid.NewUlid().ToString();
+        var key2 = Ulid.NewUlid().ToString();
         var routeValues1 = new RouteValueDictionary
         {
-            { JourneyInstanceId.KeyRouteValueName, key1.ToString() },
+            { JourneyInstanceId.KeyRouteValueName, key1 },
             { "foo", "42" }
         };
         var routeValues2 = new RouteValueDictionary
         {
-            { JourneyInstanceId.KeyRouteValueName, key2.ToString() },
+            { JourneyInstanceId.KeyRouteValueName, key2 },
             { "foo", "42" }
         };
 
@@ -146,8 +146,8 @@ public class JourneyInstanceIdTests
     {
         // Arrange
         var journeyName = "test-journey";
-        var key = Ulid.NewUlid();
-        var input = $"fdc:x-govuk.org:questions/{journeyName}?foo=42&bar=b%26az&_jid={key.ToString().ToLowerInvariant()}";
+        var key = Ulid.NewUlid().ToString();
+        var input = $"fdc:x-govuk.org:questions/{journeyName}?foo=42&bar=b%26az&_jid={key}";
 
         // Act
         var success = JourneyInstanceId.TryParse(input, out var result);

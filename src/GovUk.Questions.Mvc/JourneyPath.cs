@@ -16,8 +16,6 @@ public class JourneyPath
     private static readonly IEqualityComparer<JourneyPathStep> _stepComparer = EqualityComparer<JourneyPathStep>.Default;
 #pragma warning restore CA1859
 
-    private readonly List<JourneyPathStep> _steps;
-
     /// <summary>
     /// Creates a new instance of <see cref="JourneyPath"/>.
     /// </summary>
@@ -26,13 +24,13 @@ public class JourneyPath
     {
         ArgumentNullException.ThrowIfNull(steps);
 
-        _steps = steps.ToList();
+        Steps = steps.ToList().AsReadOnly();
     }
 
     /// <summary>
     /// Gets the sequence of steps in the journey path.
     /// </summary>
-    public IReadOnlyList<JourneyPathStep> Steps => _steps.AsReadOnly();
+    public IReadOnlyCollection<JourneyPathStep> Steps { get; }
 
     /// <summary>
     /// Adds a new step onto the journey path relative to the specified current step.
@@ -40,25 +38,25 @@ public class JourneyPath
     /// <param name="step">The step to add.</param>
     /// <param name="currentStep">The current step.</param>
     /// <param name="options">Options to control how adjacent steps to the added step are modified.</param>
-    /// <returns><see langword="true"/> if the steps were modified; otherwise, <see langword="false"/>.</returns>
-    public bool PushStep(JourneyPathStep step, JourneyPathStep currentStep, PushStepOptions options = default)
+    /// <returns>A new <see cref="JourneyPath"/> with the new step added.</returns>
+    public JourneyPath PushStep(JourneyPathStep step, JourneyPathStep currentStep, PushStepOptions options = default)
     {
         ArgumentNullException.ThrowIfNull(step);
 
-        var currentStepIndex = _steps.FindIndex(0, s => _stepComparer.Equals(s, currentStep));
+        var newSteps = new List<JourneyPathStep>(Steps);
+
+        var currentStepIndex = newSteps.FindIndex(0, s => _stepComparer.Equals(s, currentStep));
         if (currentStepIndex == -1)
         {
             throw new InvalidOperationException("The specified current step does not exist in the journey path.");
         }
 
         // Check if the step already exists in the path
-        var stepIndex = _steps.FindIndex(s => _stepComparer.Equals(s, step));
+        var stepIndex = newSteps.FindIndex(s => _stepComparer.Equals(s, step));
         if (stepIndex != -1 && stepIndex < currentStepIndex)
         {
             throw new InvalidOperationException("Cannot push a step that exists before the current step in the journey path.");
         }
-
-        var stepsUpdated = false;
 
         if (stepIndex == currentStepIndex + 1 || stepIndex == currentStepIndex)
         {
@@ -67,25 +65,22 @@ public class JourneyPath
         else
         {
             // Remove any steps after the current step and add the new step
-            _steps.RemoveRange(currentStepIndex + 1, _steps.Count - (currentStepIndex + 1));
-            _steps.Add(step);
-            stepIndex = _steps.Count - 1;
-            stepsUpdated = true;
+            newSteps.RemoveRange(currentStepIndex + 1, newSteps.Count - (currentStepIndex + 1));
+            newSteps.Add(step);
+            stepIndex = newSteps.Count - 1;
         }
 
         if (options.SetAsFirstStep)
         {
-            _steps.RemoveRange(0, stepIndex);
-            stepsUpdated = true;
+            newSteps.RemoveRange(0, stepIndex);
         }
 
         if (options.SetAsLastStep)
         {
-            _steps.RemoveRange(stepIndex + 1, _steps.Count - (stepIndex + 1));
-            stepsUpdated = true;
+            newSteps.RemoveRange(stepIndex + 1, newSteps.Count - (stepIndex + 1));
         }
 
-        return stepsUpdated;
+        return new JourneyPath(newSteps);
     }
 }
 

@@ -138,17 +138,17 @@ public class IntegrationTestController(IntegrationTestJourneyCoordinator coordin
     public IActionResult FirstPage() => GetState();
 
     [HttpPost("first")]
-    public IActionResult FirstPagePost([FromForm] int foo)
-    {
-        coordinator.UpdateState(s => s.Foo = foo);
-        return RedirectToAction("SecondPage", coordinator.InstanceId.RouteValues);
-    }
+    public IActionResult FirstPagePost([FromForm] int foo) =>
+        coordinator.Advance(
+            Url.Action("SecondPage", coordinator.InstanceId.RouteValues)!,
+            s => s.Foo = foo);
 
     [HttpGet("second")]
     public IActionResult SecondPage() => GetState();
 
     [HttpPost("second")]
-    public IActionResult SecondPagePost() => RedirectToAction("FinalPage", coordinator.InstanceId.RouteValues);
+    public IActionResult SecondPagePost() =>
+        coordinator.Advance(Url.Action("FinalPage", coordinator.InstanceId.RouteValues)!);
 
     [HttpGet("final")]
     public IActionResult FinalPage() => GetState();

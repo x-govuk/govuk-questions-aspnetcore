@@ -24,7 +24,7 @@ public class JourneyPathTests
     }
 
     [Fact]
-    public void PushStep_NewStepIsNotPartOfPathAndCurrentStepIsLastStep_AddsStepAndReturnsTrue()
+    public void PushStep_NewStepIsNotPartOfPathAndCurrentStepIsLastStep_AddsStep()
     {
         // Arrange
         var initialSteps = new List<JourneyPathStep>
@@ -39,16 +39,15 @@ public class JourneyPathTests
         var result = journeyPath.PushStep(newStep, currentStep: initialSteps[1]);
 
         // Assert
-        Assert.True(result);
         Assert.Collection(
-            journeyPath.Steps,
+            result.Steps,
             step => Assert.Equal("/step-1", step.Url),
             step => Assert.Equal("/step-2", step.Url),
             step => Assert.Equal("/step-3", step.Url));
     }
 
     [Fact]
-    public void PushStep_NewStepIsNotPartOfPathAndCurrentStepIsNotLastStep_RemovesTrailingStepsAddsStepAndReturnsTrue()
+    public void PushStep_NewStepIsNotPartOfPathAndCurrentStepIsNotLastStep_RemovesTrailingStepsAddsStep()
     {
         // Arrange
         var initialSteps = new List<JourneyPathStep>
@@ -64,16 +63,15 @@ public class JourneyPathTests
         var result = journeyPath.PushStep(newStep, currentStep: initialSteps[1]);
 
         // Assert
-        Assert.True(result);
         Assert.Collection(
-            journeyPath.Steps,
+            result.Steps,
             step => Assert.Equal("/step-1", step.Url),
             step => Assert.Equal("/step-2", step.Url),
             step => Assert.Equal("/step-4", step.Url));
     }
 
     [Fact]
-    public void PushStep_StepIsLastStepInPath_DoesNotModifyPathAndReturnsFalse()
+    public void PushStep_StepIsLastStepInPath_DoesNotModifyPath()
     {
         // Arrange
         var initialSteps = new List<JourneyPathStep>
@@ -88,15 +86,14 @@ public class JourneyPathTests
         var result = journeyPath.PushStep(existingStep, currentStep: initialSteps[1]);
 
         // Assert
-        Assert.False(result);
         Assert.Collection(
-            journeyPath.Steps,
+            result.Steps,
             step => Assert.Equal("/step-1", step.Url),
             step => Assert.Equal("/step-2", step.Url));
     }
 
     [Fact]
-    public void PushStep_StepExistsInPathImmediatelyAfterCurrentStepAndSetAsLastStepIsFalse_DoesNotModifyPathAndReturnsFalse()
+    public void PushStep_StepExistsInPathImmediatelyAfterCurrentStepAndSetAsLastStepIsFalse_DoesNotModifyPath()
     {
         // Arrange
         var initialSteps = new List<JourneyPathStep>
@@ -112,16 +109,15 @@ public class JourneyPathTests
         var result = journeyPath.PushStep(existingStep, currentStep: initialSteps[0], new PushStepOptions { SetAsLastStep = false });
 
         // Assert
-        Assert.False(result);
         Assert.Collection(
-            journeyPath.Steps,
+            result.Steps,
             step => Assert.Equal("/step-1", step.Url),
             step => Assert.Equal("/step-2", step.Url),
             step => Assert.Equal("/step-3", step.Url));
     }
 
     [Fact]
-    public void PushStep_StepExistsInPathImmediatelyAfterCurrentStepAndSetAsLastStepIsTrue_RemovesTrailingStepsAndReturnsTrue()
+    public void PushStep_StepExistsInPathImmediatelyAfterCurrentStepAndSetAsLastStepIsTrue_RemovesTrailingSteps()
     {
         // Arrange
         var initialSteps = new List<JourneyPathStep>
@@ -137,9 +133,8 @@ public class JourneyPathTests
         var result = journeyPath.PushStep(existingStep, currentStep: initialSteps[0], new PushStepOptions { SetAsLastStep = true });
 
         // Assert
-        Assert.True(result);
         Assert.Collection(
-            journeyPath.Steps,
+            result.Steps,
             step => Assert.Equal("/step-1", step.Url),
             step => Assert.Equal("/step-2", step.Url));
     }
@@ -166,7 +161,7 @@ public class JourneyPathTests
     }
 
     [Fact]
-    public void PushStep_StepExistsInPathAfterCurrentStep_RemovesTrailingStepsAddsStepAndReturnsTrue()
+    public void PushStep_StepExistsInPathAfterCurrentStep_RemovesTrailingStepsAddsStep()
     {
         // Arrange
         var initialSteps = new List<JourneyPathStep>
@@ -183,15 +178,14 @@ public class JourneyPathTests
         var result = journeyPath.PushStep(existingStep, currentStep: initialSteps[0]);
 
         // Assert
-        Assert.True(result);
         Assert.Collection(
-            journeyPath.Steps,
+            result.Steps,
             step => Assert.Equal("/step-1", step.Url),
             step => Assert.Equal("/step-3", step.Url));
     }
 
     [Fact]
-    public void PushStep_NewStepIsNotPartOfPathAndSetAsFirstStepTrue_AddsNewStepRemovesPrecedingStepsAndReturnsTrue()
+    public void PushStep_NewStepIsNotPartOfPathAndSetAsFirstStepTrue_AddsNewStepRemovesPrecedingSteps()
     {
         // Arrange
         var initialSteps = new List<JourneyPathStep>
@@ -206,14 +200,13 @@ public class JourneyPathTests
         var result = journeyPath.PushStep(newStep, currentStep: initialSteps[1], new PushStepOptions { SetAsFirstStep = true });
 
         // Assert
-        Assert.True(result);
         Assert.Collection(
-            journeyPath.Steps,
+            result.Steps,
             step => Assert.Equal("/step-3", step.Url));
     }
 
     [Fact]
-    public void PushStep_NewStepIsPartOfPathAndSetAsFirstStepTrue_AddsNewStepRemovesPrecedingStepsAndReturnsTrue()
+    public void PushStep_NewStepIsPartOfPathAndSetAsFirstStepTrue_AddsNewStepRemovesPrecedingSteps()
     {
         // Arrange
         var initialSteps = new List<JourneyPathStep>
@@ -228,9 +221,8 @@ public class JourneyPathTests
         var result = journeyPath.PushStep(newStep, currentStep: initialSteps[1], new PushStepOptions { SetAsFirstStep = true });
 
         // Assert
-        Assert.True(result);
         Assert.Collection(
-            journeyPath.Steps,
+            result.Steps,
             step => Assert.Equal("/step-2", step.Url));
     }
 }
