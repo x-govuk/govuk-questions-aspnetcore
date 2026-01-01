@@ -7,7 +7,7 @@ namespace GovUk.Questions.AspNetCore.Testing;
 /// <summary>
 /// Extension methods for setting up test helpers for GovUk.Questions.AspNetCore.
 /// </summary>
-public static class GovUkQuestionsMvcTestingExtensions
+public static class GovUkQuestionsTestingExtensions
 {
     /// <summary>
     /// Adds an in-memory implementation of <see cref="IJourneyStateStorage"/> to the specified <see cref="IServiceCollection"/>.
