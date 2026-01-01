@@ -60,7 +60,12 @@ public abstract class JourneyCoordinator
     /// Any modifications to the state object returned by this property will not be persisted.
     /// Use <see cref="UpdateState(Func{object, object})"/> or <see cref="UpdateStateAsync(Func{object, Task{object}})"/> to persist changes.
     /// </remarks>
-    public object State => StateStorage.GetState(InstanceId, Journey)!.State;
+    public object State => GetStateStorageEntry().State;
+
+    /// <summary>
+    /// Gets the <see cref="JourneyPath"/> for this journey instance.
+    /// </summary>
+    public JourneyPath Path => GetStateStorageEntry().Path;
 
     internal async Task<object> GetStartingStateSafeAsync(GetStartingStateContext context)
     {
@@ -144,10 +149,11 @@ public abstract class JourneyCoordinator
 
         ThrowIfDeleted();
 
-        var state = State;
+        var stateStorageEntry = GetStateStorageEntry();
+        var state = stateStorageEntry.State;
         state = getNewState(state);
         ThrowIfStateTypeIsInvalid(state.GetType());
-        StateStorage.SetState(InstanceId, Journey, new() { State = state });
+        StateStorage.SetState(InstanceId, Journey, stateStorageEntry with { State = state });
     }
 
     /// <summary>
@@ -175,11 +181,14 @@ public abstract class JourneyCoordinator
 
         ThrowIfDeleted();
 
-        var state = State;
+        var stateStorageEntry = GetStateStorageEntry();
+        var state = stateStorageEntry.State;
         state = await getNewState(state);
         ThrowIfStateTypeIsInvalid(state.GetType());
-        StateStorage.SetState(InstanceId, Journey, new() { State = state });
+        StateStorage.SetState(InstanceId, Journey, stateStorageEntry with { State = state });
     }
+
+    private StateStorageEntry GetStateStorageEntry() => StateStorage.GetState(InstanceId, Journey)!;
 
     private void ThrowIfDeleted()
     {

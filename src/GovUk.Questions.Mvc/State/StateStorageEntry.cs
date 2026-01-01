@@ -9,4 +9,9 @@ public sealed record StateStorageEntry
     /// The journey instance state.
     /// </summary>
     public required object State { get; init; }
+
+    /// <summary>
+    /// The <see cref="JourneyPath"/>.
+    /// </summary>
+    public required JourneyPath Path { get; init; }
 }

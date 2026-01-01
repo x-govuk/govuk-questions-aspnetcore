@@ -1,9 +1,15 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Extensions;
+
 namespace GovUk.Questions.Mvc;
 
 #pragma warning disable CA1054, CA1056
 /// <summary>
 /// Represents the sequence of steps in a journey that are valid for the user to visit.
 /// </summary>
+[JsonConverter(typeof(JourneyPathJsonConverter))]
 public class JourneyPath
 {
 #pragma warning disable CA1859
@@ -87,7 +93,20 @@ public class JourneyPath
 /// Represents a step in a journey path.
 /// </summary>
 /// <param name="Url">The URL of the step.</param>
-public record JourneyPathStep(string Url);
+public record JourneyPathStep(string Url)
+{
+    /// <summary>
+    /// Creates a new instance of <see cref="JourneyPathStep"/> from the specified <see cref="HttpContext"/>.
+    /// </summary>
+    /// <param name="httpContext">The <see cref="HttpContext"/>.</param>
+    public static JourneyPathStep FromHttpContext(HttpContext httpContext)
+    {
+        ArgumentNullException.ThrowIfNull(httpContext);
+
+        var url = httpContext.Request.GetEncodedPathAndQuery();
+        return new JourneyPathStep(url);
+    }
+}
 
 /// <summary>
 /// Options for configuring the <see cref="JourneyPath.PushStep"/> method.
@@ -103,6 +122,20 @@ public record struct PushStepOptions
     /// Whether the new step should be set as the last step in the journey path.
     /// </summary>
     public bool SetAsLastStep { get; set; }
+}
+
+internal class JourneyPathJsonConverter : JsonConverter<JourneyPath>
+{
+    public override JourneyPath? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        var steps = JsonSerializer.Deserialize<List<JourneyPathStep>>(ref reader, options);
+        return steps is not null ? new JourneyPath(steps) : null;
+    }
+
+    public override void Write(Utf8JsonWriter writer, JourneyPath value, JsonSerializerOptions options)
+    {
+        JsonSerializer.Serialize(writer, value.Steps, options);
+    }
 }
 
 #pragma warning restore CA1054, CA1056

@@ -19,8 +19,12 @@ public class JourneyCoordinatorTests
 
         var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, Ulid.NewUlid() } });
 
-        var expectedState = new TestState() { Foo = 123 };
-        mockStateStorage.Setup(mock => mock.GetState(instanceId, journey)).Returns(new StateStorageEntry() { State = expectedState });
+        var path = new JourneyPath([new JourneyPathStep("/step1")]);
+
+        var expectedState = new TestState { Foo = 123 };
+        mockStateStorage
+            .Setup(mock => mock.GetState(instanceId, journey))
+            .Returns(new StateStorageEntry { State = expectedState, Path = path });
 
         var coordinator = new TestJourneyCoordinator
         {
@@ -89,10 +93,12 @@ public class JourneyCoordinatorTests
 
         var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, Ulid.NewUlid() } });
 
+        var path = new JourneyPath([new JourneyPathStep("/step1")]);
+
         var initialState = new TestState();
         mockStateStorage
             .Setup(mock => mock.GetState(instanceId, journey))
-            .Returns(new StateStorageEntry() { State = initialState });
+            .Returns(new StateStorageEntry { State = initialState, Path = path });
 
         var coordinator = new TestJourneyCoordinator
         {
@@ -118,8 +124,12 @@ public class JourneyCoordinatorTests
 
         var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, Ulid.NewUlid() } });
 
+        var path = new JourneyPath([new JourneyPathStep("/step1")]);
+
         var initialState = new TestState();
-        mockStateStorage.Setup(mock => mock.GetState(instanceId, journey)).Returns(new StateStorageEntry() { State = initialState });
+        mockStateStorage
+            .Setup(mock => mock.GetState(instanceId, journey))
+            .Returns(new StateStorageEntry { State = initialState, Path = path });
 
         var coordinator = new TestJourneyCoordinator
         {

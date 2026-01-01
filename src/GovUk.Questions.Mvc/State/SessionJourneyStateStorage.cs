@@ -50,7 +50,7 @@ public class SessionJourneyStateStorage(IHttpContextAccessor httpContextAccessor
             throw new InvalidOperationException($"Could not load type '{wrapper.StateTypeName}' from assembly.");
         var state = wrapper.State.Deserialize(stateType, options.Value.StateSerializerOptions);
 
-        return state is not null ? new StateStorageEntry { State = state } : null;
+        return state is not null ? new StateStorageEntry { State = state, Path = wrapper.Path } : null;
     }
 
     /// <inheritdoc cref="IJourneyStateStorage.SetState"/>
@@ -66,7 +66,8 @@ public class SessionJourneyStateStorage(IHttpContextAccessor httpContextAccessor
         var key = GetSessionKey(instanceId);
         var wrapper = new SerializableStateEntry(
             journey.StateType.AssemblyQualifiedName!,
-            JsonSerializer.SerializeToElement(stateEntry.State, options.Value.StateSerializerOptions));
+            JsonSerializer.SerializeToElement(stateEntry.State, options.Value.StateSerializerOptions),
+            stateEntry.Path);
         var data = JsonSerializer.SerializeToUtf8Bytes(wrapper);
         httpContext.Session.Set(key, data);
     }
@@ -74,5 +75,5 @@ public class SessionJourneyStateStorage(IHttpContextAccessor httpContextAccessor
     private static string GetSessionKey(JourneyInstanceId instanceId) =>
         $"_guq:{instanceId}";
 
-    private record SerializableStateEntry(string StateTypeName, JsonElement State);
+    private record SerializableStateEntry(string StateTypeName, JsonElement State, JourneyPath Path);
 }

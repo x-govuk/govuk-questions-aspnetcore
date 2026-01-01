@@ -32,13 +32,18 @@ public class JourneyHelper
     public TCoordinator CreateInstance<TCoordinator>(
         RouteValueDictionary routeValues,
         object state,
+        IEnumerable<string> pathUrls,
         IServiceProvider? serviceProvider = null)
         where TCoordinator : JourneyCoordinator
     {
+        ArgumentNullException.ThrowIfNull(routeValues);
+        ArgumentNullException.ThrowIfNull(state);
+        ArgumentNullException.ThrowIfNull(pathUrls);
+
         var journey = _journeyRegistry.FindJourneyByCoordinatorType(typeof(TCoordinator)) ??
             throw new ArgumentException($"No journey is registered for the coordinator type '{typeof(TCoordinator).FullName}'.", nameof(TCoordinator));
 
-        return (TCoordinator)CreateInstance(journey, routeValues, state, serviceProvider);
+        return (TCoordinator)CreateInstance(journey, routeValues, state, pathUrls, serviceProvider);
     }
 
     /// <summary>
@@ -48,14 +53,16 @@ public class JourneyHelper
         string journeyName,
         RouteValueDictionary routeValues,
         object state,
+        IEnumerable<string> pathUrls,
         IServiceProvider? serviceProvider = null)
         where TCoordinator : JourneyCoordinator
     {
         ArgumentNullException.ThrowIfNull(journeyName);
         ArgumentNullException.ThrowIfNull(routeValues);
         ArgumentNullException.ThrowIfNull(state);
+        ArgumentNullException.ThrowIfNull(pathUrls);
 
-        var coordinator = CreateInstance(journeyName, routeValues, state, serviceProvider);
+        var coordinator = CreateInstance(journeyName, routeValues, state, pathUrls, serviceProvider);
 
         return (TCoordinator)coordinator;
     }
@@ -67,6 +74,7 @@ public class JourneyHelper
         string journeyName,
         RouteValueDictionary routeValues,
         object state,
+        IEnumerable<string> pathUrls,
         IServiceProvider? serviceProvider = null)
     {
         ArgumentNullException.ThrowIfNull(journeyName);
@@ -76,7 +84,7 @@ public class JourneyHelper
         var journey = _journeyRegistry.FindJourneyByName(journeyName) ??
             throw new ArgumentException($"No journey with the name '{journeyName}' is registered.", nameof(journeyName));
 
-        return CreateInstance(journey, routeValues, state, serviceProvider);
+        return CreateInstance(journey, routeValues, state, pathUrls, serviceProvider);
     }
 
     /// <summary>
@@ -86,11 +94,13 @@ public class JourneyHelper
         JourneyDescriptor journey,
         RouteValueDictionary routeValues,
         object state,
+        IEnumerable<string> pathUrls,
         IServiceProvider? serviceProvider = null)
     {
         ArgumentNullException.ThrowIfNull(journey);
         ArgumentNullException.ThrowIfNull(routeValues);
         ArgumentNullException.ThrowIfNull(state);
+        ArgumentNullException.ThrowIfNull(pathUrls);
 
         serviceProvider ??= _emptyServiceProvider;
 
@@ -108,7 +118,9 @@ public class JourneyHelper
                 nameof(state));
         }
 
-        _journeyStateStorage.SetState(instanceId, journey, new StateStorageEntry { State = state });
+        var path = new JourneyPath(pathUrls.Select(url => new JourneyPathStep(url)));
+
+        _journeyStateStorage.SetState(instanceId, journey, new StateStorageEntry { State = state, Path = path });
 
         // TODO Consolidate this with what's in JourneyInstanceProvider
         var coordinatorFactory = _journeyRegistry.GetCoordinatorFactory(journey);

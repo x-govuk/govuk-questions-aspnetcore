@@ -23,8 +23,10 @@ public class JourneyHelperTests
         var routeValues = new RouteValueDictionary(); // Missing required "id"
         var state = new TestState { Foo = 42 };
 
+        string[] pathUrls = ["/step1"];
+
         // Act
-        var ex = Record.Exception(() => journeyHelper.CreateInstance<TestJourneyCoordinator>(routeValues, state));
+        var ex = Record.Exception(() => journeyHelper.CreateInstance<TestJourneyCoordinator>(routeValues, state, pathUrls));
 
         // Assert
         Assert.IsType<ArgumentException>(ex);
@@ -45,10 +47,10 @@ public class JourneyHelperTests
         var routeValues = new RouteValueDictionary { { "id", 123 } };
         var state = new TestState { Foo = 42 };
 
+        string[] pathUrls = ["/step1"];
+
         // Act
-        var coordinator = journeyHelper.CreateInstance<TestJourneyCoordinator>(
-            routeValues,
-            state);
+        var coordinator = journeyHelper.CreateInstance<TestJourneyCoordinator>(routeValues, state, pathUrls);
 
         // Assert
         Assert.NotNull(coordinator);
@@ -73,11 +75,10 @@ public class JourneyHelperTests
         var routeValues = new RouteValueDictionary { { "id", 123 } };
         var state = new TestState { Foo = 42 };
 
+        string[] pathUrls = ["/step1"];
+
         // Act
-        var coordinator = journeyHelper.CreateInstance<TestJourneyCoordinator>(
-            "TestJourney",
-            routeValues,
-            state);
+        var coordinator = journeyHelper.CreateInstance<TestJourneyCoordinator>("TestJourney", routeValues, state, pathUrls);
 
         // Assert
         Assert.NotNull(coordinator);
@@ -102,10 +103,10 @@ public class JourneyHelperTests
         var routeValues = new RouteValueDictionary { { "id", 123 } };
         var state = new TestState { Foo = 42 };
 
+        string[] pathUrls = ["/step1"];
+
         // Act
-        var coordinator = journeyHelper.CreateInstance<TestJourneyCoordinator>(
-            routeValues,
-            state);
+        var coordinator = journeyHelper.CreateInstance<TestJourneyCoordinator>(routeValues, state, pathUrls);
 
         // Assert
         Assert.NotNull(coordinator);
@@ -134,11 +135,10 @@ public class JourneyHelperTests
         var routeValues = new RouteValueDictionary { { "id", 123 } };
         var state = new TestState { Foo = 42 };
 
+        string[] pathUrls = ["/step1"];
+
         // Act
-        var coordinator = journeyHelper.CreateInstance<TestJourneyCoordinatorWithDependency>(
-            routeValues,
-            state,
-            services);
+        var coordinator = journeyHelper.CreateInstance<TestJourneyCoordinatorWithDependency>(routeValues, state, pathUrls, services);
 
         // Assert
         Assert.NotNull(coordinator);
@@ -160,10 +160,10 @@ public class JourneyHelperTests
         var routeValues = new RouteValueDictionary { { "id", 123 } };
         var invalidState = new { Bar = "Invalid" }; // Anonymous type, not TestState
 
+        string[] pathUrls = ["/step1"];
+
         // Act
-        var ex = Record.Exception(() => journeyHelper.CreateInstance<TestJourneyCoordinator>(
-            routeValues,
-            invalidState));
+        var ex = Record.Exception(() => journeyHelper.CreateInstance<TestJourneyCoordinator>(routeValues, invalidState, pathUrls));
 
         // Assert
         Assert.IsType<ArgumentException>(ex);
