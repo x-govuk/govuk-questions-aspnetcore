@@ -38,7 +38,7 @@ public static class GovUkQuestionsTestingExtensions
     /// </summary>
     /// <param name="services">The <see cref="IServiceCollection"/> to add services to.</param>
     /// <returns>The <see cref="IServiceCollection"/> so that additional calls can be chained.</returns>
-    public static IServiceCollection AddJourneyTestingServices(this IServiceCollection services)
+    public static IServiceCollection AddGovUkQuestionsTestingServices(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);
 
