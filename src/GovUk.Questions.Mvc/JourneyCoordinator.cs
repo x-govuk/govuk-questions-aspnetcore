@@ -237,6 +237,20 @@ public abstract class JourneyCoordinator
     }
 
     /// <summary>
+    /// Sets the journey path steps directly, bypassing any validation.
+    /// </summary>
+    public void UnsafeSetPathSteps(IEnumerable<JourneyPathStep> steps)
+    {
+        ArgumentNullException.ThrowIfNull(steps);
+
+        var vt = UpdateStateStorageEntryCoreAsync(e => ValueTask.FromResult(e with { Path = new JourneyPath(steps) }));
+        Debug.Assert(vt.IsCompleted);
+#pragma warning disable VSTHRD002
+        vt.GetAwaiter().GetResult();
+#pragma warning restore VSTHRD002
+    }
+
+    /// <summary>
     /// Updates the journey state by applying the specified <paramref name="updateState"/> function and persisting the changes.
     /// </summary>
     // ReSharper disable once UnusedMember.Global

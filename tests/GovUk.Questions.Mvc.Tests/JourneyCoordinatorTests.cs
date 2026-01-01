@@ -208,6 +208,42 @@ public class JourneyCoordinatorTests
     }
 
     [Fact]
+    public void UnsafeSetPathSteps_UpdatesPathInStateStorage()
+    {
+        // Arrange
+        var mockStateStorage = new Mock<IJourneyStateStorage>();
+
+        var journey = new JourneyDescriptor("test", [], typeof(TestState));
+
+        var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, Ulid.NewUlid() } });
+
+        var path = new JourneyPath([new JourneyPathStep("/step1")]);
+
+        var initialState = new TestState();
+        mockStateStorage
+            .Setup(mock => mock.GetState(instanceId, journey))
+            .Returns(new StateStorageEntry { State = initialState, Path = path });
+
+        var context = new CoordinatorContext
+        {
+            InstanceId = instanceId,
+            Journey = journey,
+            JourneyStateStorage = mockStateStorage.Object,
+            HttpContext = new DefaultHttpContext()
+        };
+
+        var coordinator = new TestJourneyCoordinator { Context = context };
+
+        var newPathSteps = new[] { new JourneyPathStep("/step1"), new JourneyPathStep("/step2") };
+
+        // Act
+        coordinator.UnsafeSetPathSteps(newPathSteps);
+
+        // Assert
+        mockStateStorage.Verify(s => s.SetState(instanceId, journey, It.Is<StateStorageEntry>(e => e.Path.Steps.SequenceEqual(newPathSteps))), Times.Once);
+    }
+
+    [Fact]
     public void UpdateState_InvokesActionWithCurrentStateAndPersistsChanges()
     {
         // Arrange
