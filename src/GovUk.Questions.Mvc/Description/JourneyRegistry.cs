@@ -27,12 +27,12 @@ internal class JourneyRegistry
 
     public IReadOnlyCollection<Type> GetAllCoordinatorFactoryTypes() => _journeys.Values.Select(v => v.CoordinatorType).ToList().AsReadOnly();
 
-    public Func<IServiceProvider, JourneyCoordinator> GetCoordinatorFactory(JourneyDescriptor journey)
+    public Func<IServiceProvider, CoordinatorContext, JourneyCoordinator> GetCoordinatorActivator(JourneyDescriptor journey)
     {
         ArgumentNullException.ThrowIfNull(journey);
 
         return _journeys.TryGetValue(journey.JourneyName, out var journeyInfo)
-            ? journeyInfo.CoordinatorFactory
+            ? journeyInfo.CoordinatorActivator
             : throw new ArgumentException($"No journey with the name '{journey.JourneyName}' is registered.", nameof(journey));
     }
 
@@ -48,12 +48,19 @@ internal class JourneyRegistry
 
         var coordinatorObjectFactory = ActivatorUtilities.CreateFactory(coordinatorType, []);
 
-        var journeyInfo = new JourneyInfo(journey, coordinatorType, CreateCoordinator);
+        var journeyInfo = new JourneyInfo(journey, coordinatorType, ActivateCoordinator);
         _journeys.Add(journey.JourneyName, journeyInfo);
 
-        JourneyCoordinator CreateCoordinator(IServiceProvider serviceProvider) =>
-            (JourneyCoordinator)coordinatorObjectFactory(serviceProvider, []);
+        JourneyCoordinator ActivateCoordinator(IServiceProvider serviceProvider, CoordinatorContext context)
+        {
+            var coordinator = (JourneyCoordinator)coordinatorObjectFactory(serviceProvider, []);
+            coordinator.Context = context;
+            return coordinator;
+        }
     }
 
-    private record JourneyInfo(JourneyDescriptor Descriptor, Type CoordinatorType, Func<IServiceProvider, JourneyCoordinator> CoordinatorFactory);
+    private record JourneyInfo(
+        JourneyDescriptor Descriptor,
+        Type CoordinatorType,
+        Func<IServiceProvider, CoordinatorContext, JourneyCoordinator> CoordinatorActivator);
 }

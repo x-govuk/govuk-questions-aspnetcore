@@ -1,5 +1,6 @@
 using GovUk.Questions.Mvc.Description;
 using GovUk.Questions.Mvc.State;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -33,7 +34,8 @@ public class JourneyHelper
         RouteValueDictionary routeValues,
         object state,
         IEnumerable<string> pathUrls,
-        IServiceProvider? serviceProvider = null)
+        IServiceProvider? serviceProvider = null,
+        HttpContext? httpContext = null)
         where TCoordinator : JourneyCoordinator
     {
         ArgumentNullException.ThrowIfNull(routeValues);
@@ -54,7 +56,8 @@ public class JourneyHelper
         RouteValueDictionary routeValues,
         object state,
         IEnumerable<string> pathUrls,
-        IServiceProvider? serviceProvider = null)
+        IServiceProvider? serviceProvider = null,
+        HttpContext? httpContext = null)
         where TCoordinator : JourneyCoordinator
     {
         ArgumentNullException.ThrowIfNull(journeyName);
@@ -75,7 +78,8 @@ public class JourneyHelper
         RouteValueDictionary routeValues,
         object state,
         IEnumerable<string> pathUrls,
-        IServiceProvider? serviceProvider = null)
+        IServiceProvider? serviceProvider = null,
+        HttpContext? httpContext = null)
     {
         ArgumentNullException.ThrowIfNull(journeyName);
         ArgumentNullException.ThrowIfNull(routeValues);
@@ -95,7 +99,8 @@ public class JourneyHelper
         RouteValueDictionary routeValues,
         object state,
         IEnumerable<string> pathUrls,
-        IServiceProvider? serviceProvider = null)
+        IServiceProvider? serviceProvider = null,
+        HttpContext? httpContext = null)
     {
         ArgumentNullException.ThrowIfNull(journey);
         ArgumentNullException.ThrowIfNull(routeValues);
@@ -122,12 +127,15 @@ public class JourneyHelper
 
         _journeyStateStorage.SetState(instanceId, journey, new StateStorageEntry { State = state, Path = path });
 
-        // TODO Consolidate this with what's in JourneyInstanceProvider
-        var coordinatorFactory = _journeyRegistry.GetCoordinatorFactory(journey);
-        var coordinator = coordinatorFactory(serviceProvider);
-        coordinator.InstanceId = instanceId;
-        coordinator.Journey = journey;
-        coordinator.StateStorage = _journeyStateStorage;
+        var coordinatorFactory = _journeyRegistry.GetCoordinatorActivator(journey);
+        var coordinatorContext = new CoordinatorContext
+        {
+            InstanceId = instanceId,
+            Journey = journey,
+            JourneyStateStorage = _journeyStateStorage,
+            HttpContext = httpContext ?? new DefaultHttpContext()
+        };
+        var coordinator = coordinatorFactory(serviceProvider, coordinatorContext);
 
         return coordinator;
     }

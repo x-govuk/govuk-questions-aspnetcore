@@ -10,48 +10,27 @@ namespace GovUk.Questions.Mvc;
 /// </summary>
 public abstract class JourneyCoordinator
 {
-    private JourneyInstanceId? _instanceId;
-    private JourneyDescriptor? _journey;
-    private IJourneyStateStorage? _stateStorage;
+    private CoordinatorContext? _context;
 
     private bool _deleted;
+
+    internal CoordinatorContext Context
+    {
+        get => _context ?? throw new InvalidOperationException("Coordinator context has not been initialized.");
+        set => _context = value;
+    }
 
     /// <summary>
     /// The unique identifier for this journey instance.
     /// </summary>
-    public JourneyInstanceId InstanceId
-    {
-        get => _instanceId ?? throw new InvalidOperationException($"{nameof(InstanceId)} has not been initialized.");
-        // ReSharper disable once PropertyCanBeMadeInitOnly.Global
-        internal set
-        {
-            ArgumentNullException.ThrowIfNull(value);
-            _instanceId = value;
-        }
-    }
+    public JourneyInstanceId InstanceId => Context.InstanceId;
 
     /// <summary>
     /// The <see cref="JourneyDescriptor"/> that describes the journey.
     /// </summary>
-    public JourneyDescriptor Journey
-    {
-        get => _journey ?? throw new InvalidOperationException($"{nameof(Journey)} has not been initialized.");
-        internal set
-        {
-            ArgumentNullException.ThrowIfNull(value);
-            _journey = value;
-        }
-    }
+    public JourneyDescriptor Journey => Context.Journey;
 
-    internal IJourneyStateStorage StateStorage
-    {
-        get => _stateStorage ?? throw new InvalidOperationException($"{nameof(StateStorage)} has not been initialized.");
-        set
-        {
-            ArgumentNullException.ThrowIfNull(value);
-            _stateStorage = value;
-        }
-    }
+    internal IJourneyStateStorage StateStorage => Context.JourneyStateStorage;
 
     /// <summary>
     /// The state for this journey instance.
@@ -81,12 +60,9 @@ public abstract class JourneyCoordinator
     /// </summary>
     private protected virtual object GetStartingStateCore(GetStartingStateContext context)
     {
-        Debug.Assert(_journey is not null);
-        Debug.Assert(_instanceId is not null);
-
         ArgumentNullException.ThrowIfNull(context);
 
-        var stateType = _journey.StateType;
+        var stateType = Context.Journey.StateType;
         var defaultConstructor = stateType.GetConstructor(BindingFlags.Instance | BindingFlags.Public, []);
         if (defaultConstructor is null)
         {
@@ -215,28 +191,6 @@ public abstract class JourneyCoordinator
 /// <typeparam name="TState">The type of the journey's state.</typeparam>
 public abstract class JourneyCoordinator<TState> : JourneyCoordinator where TState : class
 {
-    /// <summary>
-    /// The <see cref="JourneyDescriptor"/> that describes the journey.
-    /// </summary>
-    public new JourneyDescriptor Journey
-    {
-        get => base.Journey;
-        // ReSharper disable once PropertyCanBeMadeInitOnly.Global
-        internal set
-        {
-            ArgumentNullException.ThrowIfNull(value);
-
-            if (value.StateType != typeof(TState))
-            {
-                throw new InvalidOperationException(
-                    $"Journey state type '{value.StateType.FullName}' does not match the generic type parameter '{typeof(TState).FullName}' " +
-                    $"on '{GetType().FullName}'.");
-            }
-
-            base.Journey = value;
-        }
-    }
-
     /// <summary>
     /// The state for this journey instance.
     /// </summary>

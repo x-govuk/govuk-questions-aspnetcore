@@ -47,11 +47,15 @@ internal class JourneyInstanceProvider(IJourneyStateStorage journeyStateStorage,
             return null;
         }
 
-        var coordinatorFactory = journeyRegistry.GetCoordinatorFactory(journey);
-        var coordinator = coordinatorFactory(httpContext.RequestServices);
-        coordinator.InstanceId = instanceId;
-        coordinator.Journey = journey;
-        coordinator.StateStorage = journeyStateStorage;
+        var coordinatorFactory = journeyRegistry.GetCoordinatorActivator(journey);
+        var coordinatorContext = new CoordinatorContext
+        {
+            InstanceId = instanceId,
+            Journey = journey,
+            JourneyStateStorage = journeyStateStorage,
+            HttpContext = httpContext
+        };
+        var coordinator = coordinatorFactory(httpContext.RequestServices, coordinatorContext);
 
         httpContext.Items[HttpContextItemKey] = coordinator;
 
@@ -94,16 +98,19 @@ internal class JourneyInstanceProvider(IJourneyStateStorage journeyStateStorage,
         var firstStep = JourneyPathStep.FromHttpContext(httpContext);
         var path = new JourneyPath([firstStep]);
 
-        var coordinatorFactory = journeyRegistry.GetCoordinatorFactory(journey);
-        var coordinator = coordinatorFactory(httpContext.RequestServices);
-        coordinator.InstanceId = instanceId;
-        coordinator.Journey = journey;
-        // Don't assign StateStorage yet; we don't want GetStartingState*() implementations to be manipulating state
+        var coordinatorFactory = journeyRegistry.GetCoordinatorActivator(journey);
+        var coordinatorContext = new CoordinatorContext
+        {
+            InstanceId = instanceId,
+            Journey = journey,
+            JourneyStateStorage = journeyStateStorage,
+            HttpContext = httpContext
+        };
+        var coordinator = coordinatorFactory(httpContext.RequestServices, coordinatorContext);
 
         var state = await coordinator.GetStartingStateSafeAsync(new GetStartingStateContext(httpContext));
         Debug.Assert(state.GetType() == journey.StateType);
         journeyStateStorage.SetState(instanceId, journey, new StateStorageEntry { State = state, Path = path });
-        coordinator.StateStorage = journeyStateStorage;
 
         httpContext.Items[HttpContextItemKey] = coordinator;
 

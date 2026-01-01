@@ -26,11 +26,17 @@ public class JourneyCoordinatorTests
             .Setup(mock => mock.GetState(instanceId, journey))
             .Returns(new StateStorageEntry { State = expectedState, Path = path });
 
+        var context = new CoordinatorContext
+        {
+            InstanceId = instanceId,
+            Journey = journey,
+            JourneyStateStorage = mockStateStorage.Object,
+            HttpContext = new DefaultHttpContext()
+        };
+
         var coordinator = new TestJourneyCoordinator
         {
-            Journey = new JourneyDescriptor("test", [], typeof(TestState)),
-            InstanceId = instanceId,
-            StateStorage = mockStateStorage.Object
+            Context = context
         };
 
         // Act
@@ -44,11 +50,21 @@ public class JourneyCoordinatorTests
     public async Task GetStartingStateAsync_CallsDefaultConstructorAndReturnsNewInstance()
     {
         // Arrange
-        var coordinator = new TestJourneyCoordinator
+        var mockStateStorage = new Mock<IJourneyStateStorage>();
+
+        var journey = new JourneyDescriptor("test", [], typeof(TestState));
+
+        var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, Ulid.NewUlid() } });
+
+        var coordinatorContext = new CoordinatorContext
         {
-            Journey = new JourneyDescriptor("test", [], typeof(TestState)),
-            InstanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, Ulid.NewUlid() } })
+            InstanceId = instanceId,
+            Journey = journey,
+            JourneyStateStorage = mockStateStorage.Object,
+            HttpContext = new DefaultHttpContext()
         };
+
+        var coordinator = new TestJourneyCoordinator { Context = coordinatorContext };
 
         var httpContext = new DefaultHttpContext();
 
@@ -69,12 +85,17 @@ public class JourneyCoordinatorTests
 
         var journey = new JourneyDescriptor("test", [], typeof(TestState));
 
-        var coordinator = new TestJourneyCoordinator
+        var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, Ulid.NewUlid() } });
+
+        var context = new CoordinatorContext
         {
+            InstanceId = instanceId,
             Journey = journey,
-            InstanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, Ulid.NewUlid() } }),
-            StateStorage = mockStateStorage.Object
+            JourneyStateStorage = mockStateStorage.Object,
+            HttpContext = new DefaultHttpContext()
         };
+
+        var coordinator = new TestJourneyCoordinator { Context = context };
 
         // Act
         coordinator.Delete();
@@ -100,12 +121,15 @@ public class JourneyCoordinatorTests
             .Setup(mock => mock.GetState(instanceId, journey))
             .Returns(new StateStorageEntry { State = initialState, Path = path });
 
-        var coordinator = new TestJourneyCoordinator
+        var context = new CoordinatorContext
         {
-            Journey = new JourneyDescriptor("test", [], typeof(TestState)),
             InstanceId = instanceId,
-            StateStorage = mockStateStorage.Object
+            Journey = journey,
+            JourneyStateStorage = mockStateStorage.Object,
+            HttpContext = new DefaultHttpContext()
         };
+
+        var coordinator = new TestJourneyCoordinator { Context = context };
 
         // Act
         coordinator.UpdateState(state => state with { Foo = 42 });
@@ -131,12 +155,15 @@ public class JourneyCoordinatorTests
             .Setup(mock => mock.GetState(instanceId, journey))
             .Returns(new StateStorageEntry { State = initialState, Path = path });
 
-        var coordinator = new TestJourneyCoordinator
+        var context = new CoordinatorContext
         {
-            Journey = new JourneyDescriptor("test", [], typeof(TestState)),
             InstanceId = instanceId,
-            StateStorage = mockStateStorage.Object
+            Journey = journey,
+            JourneyStateStorage = mockStateStorage.Object,
+            HttpContext = new DefaultHttpContext()
         };
+
+        var coordinator = new TestJourneyCoordinator { Context = context };
 
         // Act
         await coordinator.UpdateStateAsync(async state =>
