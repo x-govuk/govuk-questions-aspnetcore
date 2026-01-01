@@ -1,0 +1,11 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  
+  <ItemGroup>
+    <ProjectReference Include="..\GovUk.Questions.AspNetCore\GovUk.Questions.AspNetCore.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="GovUk.Questions.AspNetCore.Testing.Tests" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,58 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{7FBB5717-B1CC-4A34-871D-C3A5559EBDDD}"
+	ProjectSection(SolutionItems) = preProject
+		global.json = global.json
+		Directory.Build.props = Directory.Build.props
+		.editorconfig = .editorconfig
+		mise.toml = mise.toml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{E1D5AC06-DCB3-48A8-A592-216E9BCAB538}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GovUk.Questions.AspNetCore", "src\GovUk.Questions.AspNetCore\GovUk.Questions.AspNetCore.csproj", "{77C06041-6303-4871-9634-AB8F761082C2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GovUk.Questions.AspNetCore.Tests", "tests\GovUk.Questions.AspNetCore.Tests\GovUk.Questions.AspNetCore.Tests.csproj", "{ABB18E22-BB9F-4C88-B8E4-5BC9FB24868D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{B3E26B05-642C-40CC-ABFC-843779B84938}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GovUk.Questions.AspNetCore.Testing", "src\GovUk.Questions.AspNetCore.Testing\GovUk.Questions.AspNetCore.Testing.csproj", "{3ED72761-B742-4B64-89C6-AA404F56212D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GovUk.Questions.AspNetCore.Testing.Tests", "tests\GovUk.Questions.AspNetCore.Testing.Tests\GovUk.Questions.AspNetCore.Testing.Tests.csproj", "{94D94088-318C-43D1-A11F-C4A5280147D1}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{77C06041-6303-4871-9634-AB8F761082C2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{77C06041-6303-4871-9634-AB8F761082C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{77C06041-6303-4871-9634-AB8F761082C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{77C06041-6303-4871-9634-AB8F761082C2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ABB18E22-BB9F-4C88-B8E4-5BC9FB24868D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ABB18E22-BB9F-4C88-B8E4-5BC9FB24868D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ABB18E22-BB9F-4C88-B8E4-5BC9FB24868D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ABB18E22-BB9F-4C88-B8E4-5BC9FB24868D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3ED72761-B742-4B64-89C6-AA404F56212D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3ED72761-B742-4B64-89C6-AA404F56212D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3ED72761-B742-4B64-89C6-AA404F56212D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3ED72761-B742-4B64-89C6-AA404F56212D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{94D94088-318C-43D1-A11F-C4A5280147D1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{94D94088-318C-43D1-A11F-C4A5280147D1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{94D94088-318C-43D1-A11F-C4A5280147D1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{94D94088-318C-43D1-A11F-C4A5280147D1}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{77C06041-6303-4871-9634-AB8F761082C2} = {E1D5AC06-DCB3-48A8-A592-216E9BCAB538}
+		{ABB18E22-BB9F-4C88-B8E4-5BC9FB24868D} = {B3E26B05-642C-40CC-ABFC-843779B84938}
+		{3ED72761-B742-4B64-89C6-AA404F56212D} = {E1D5AC06-DCB3-48A8-A592-216E9BCAB538}
+		{94D94088-318C-43D1-A11F-C4A5280147D1} = {B3E26B05-642C-40CC-ABFC-843779B84938}
+	EndGlobalSection
+EndGlobal

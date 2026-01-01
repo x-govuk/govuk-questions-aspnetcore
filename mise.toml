@@ -23,8 +23,8 @@ flag "-c --configuration <configuration>" {
 '''
 shell = "pwsh -nop -c"
 run = [
-  "dotnet run --project tests/GovUk.Questions.Mvc.Tests --configuration $env:usage_configuration --no-build",
-  "dotnet run --project tests/GovUk.Questions.Mvc.Testing.Tests --configuration $env:usage_configuration --no-build"
+  "dotnet run --project tests/GovUk.Questions.AspNetCore.Tests --configuration $env:usage_configuration --no-build",
+  "dotnet run --project tests/GovUk.Questions.AspNetCore.Testing.Tests --configuration $env:usage_configuration --no-build"
 ]
 
 [tasks.format]
