@@ -16,5 +16,6 @@
   <PropertyGroup Condition="'$(IsShipping)' == 'true'">
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <AnalysisMode>All</AnalysisMode>
+    <NoWarn>CA1054,CA1056</NoWarn>
   </PropertyGroup>
 </Project>

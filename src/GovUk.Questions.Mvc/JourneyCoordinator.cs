@@ -10,7 +10,6 @@ namespace GovUk.Questions.Mvc;
 /// <summary>
 /// Base class for coordinating a journey's state and behavior.
 /// </summary>
-#pragma warning disable CA1054
 public abstract class JourneyCoordinator
 {
     private CoordinatorContext? _context;
@@ -491,4 +490,3 @@ public abstract class JourneyCoordinator<TState> : JourneyCoordinator where TSta
         return base.UpdateStateAsync(async state => await getNewState((TState)state));
     }
 }
-#pragma warning restore CA1054

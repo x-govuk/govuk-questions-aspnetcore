@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Http.Extensions;
 
 namespace GovUk.Questions.Mvc;
 
-#pragma warning disable CA1054, CA1056
 /// <summary>
 /// Represents the sequence of steps in a journey that are valid for the user to visit.
 /// </summary>
@@ -142,5 +141,3 @@ internal class JourneyPathJsonConverter : JsonConverter<JourneyPath>
         JsonSerializer.Serialize(writer, value.Steps, options);
     }
 }
-
-#pragma warning restore CA1054, CA1056
