@@ -3,7 +3,9 @@ using System.Reflection;
 using GovUk.Questions.AspNetCore.Description;
 using GovUk.Questions.AspNetCore.State;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.WebUtilities;
 
 namespace GovUk.Questions.AspNetCore;
 
@@ -207,6 +209,34 @@ public abstract class JourneyCoordinator
         _deleted = true;
     }
 
+    internal static JourneyPathStep CreateStepFromHttpContext(HttpContext httpContext)
+    {
+        ArgumentNullException.ThrowIfNull(httpContext);
+
+        var url = httpContext.Request.GetEncodedPathAndQuery();
+        return CreateStepFromUrl(url);
+    }
+
+    internal static JourneyPathStep CreateStepFromUrl(string url)
+    {
+        ArgumentNullException.ThrowIfNull(url);
+
+        var stepId = GetUrlWithoutQueryParameters(url, ReturnUrlQueryParameterName);
+        return new JourneyPathStep(stepId, url);
+    }
+
+    /// <summary>
+    /// Finds the current step in the journey path based on the provided <paramref name="httpContext"/>.
+    /// </summary>
+    /// <returns>The <see cref="JourneyPathStep"/> if the step was found; otherwise <see langword="null"/>.</returns>
+    public virtual JourneyPathStep? FindStep(HttpContext httpContext)
+    {
+        ArgumentNullException.ThrowIfNull(httpContext);
+
+        var currentStep = CreateStepFromHttpContext(httpContext);
+        return Path.ContainsStep(currentStep.StepId) ? currentStep : null;
+    }
+
     /// <summary>
     /// Invoked when the current step is not valid for the journey instance.
     /// </summary>
@@ -227,7 +257,7 @@ public abstract class JourneyCoordinator
     {
         ArgumentNullException.ThrowIfNull(step);
 
-        return Path.ContainsStep(step);
+        return Path.ContainsStep(step.StepId);
     }
 
     /// <summary>
@@ -306,6 +336,29 @@ public abstract class JourneyCoordinator
         return UpdateStateStorageEntryCoreAsync(async e => e with { State = await getNewState(e.State) }).AsTask();
     }
 
+    // internal for testing
+    internal static string GetUrlWithoutQueryParameters(string url, params string[] queryParameterNamesToRemove)
+    {
+        ArgumentNullException.ThrowIfNull(url);
+        ArgumentNullException.ThrowIfNull(queryParameterNamesToRemove);
+
+        var queryStringStartIndex = url.IndexOf('?', StringComparison.Ordinal);
+
+        if (queryStringStartIndex == -1)
+        {
+            return url;
+        }
+
+        var qs = QueryHelpers.ParseQuery(url[queryStringStartIndex..]);
+
+        foreach (var param in queryParameterNamesToRemove)
+        {
+            qs.Remove(param);
+        }
+
+        return QueryHelpers.AddQueryString(url[..queryStringStartIndex], qs);
+    }
+
     private static bool IsLocalUrl(string url)
     {
         // https://source.dot.net/#Microsoft.AspNetCore.Http.Results/src/Shared/ResultsHelpers/SharedUrlHelper.cs
@@ -378,8 +431,8 @@ public abstract class JourneyCoordinator
 
         await UpdateStateStorageEntryCoreAsync(async e =>
         {
-            var currentStep = JourneyPathStep.FromHttpContext(HttpContext);
-            var nextStep = new JourneyPathStep(nextStepUrl);
+            var currentStep = FindStep(HttpContext) ?? throw new InvalidOperationException("Current step not found in journey path.");
+            var nextStep = CreateStepFromUrl(nextStepUrl);
             var newPath = e.Path.PushStep(nextStep, currentStep, pushStepOptions);
 
             var newState = await getNewState(e.State);

@@ -98,7 +98,7 @@ internal class JourneyInstanceProvider(IJourneyStateStorage journeyStateStorage,
         }
 
         var firstStepUrl = QueryHelpers.AddQueryString(httpContext.Request.GetEncodedPathAndQuery(), JourneyInstanceId.KeyRouteValueName, instanceId.Key);
-        var firstStep = new JourneyPathStep(firstStepUrl);
+        var firstStep = JourneyCoordinator.CreateStepFromUrl(firstStepUrl);
         var path = new JourneyPath([firstStep]);
 
         var coordinatorFactory = journeyRegistry.GetCoordinatorActivator(journey);

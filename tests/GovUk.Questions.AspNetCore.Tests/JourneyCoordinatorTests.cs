@@ -18,7 +18,7 @@ public class JourneyCoordinatorTests
 
         var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, UUID.New().ToUrlSafeString() } });
 
-        var path = new JourneyPath([new JourneyPathStep("/step1")]);
+        var path = new JourneyPath([new JourneyPathStep("/step1", "/step1")]);
 
         var expectedState = new TestState { Foo = 123 };
         mockStateStorage
@@ -109,7 +109,7 @@ public class JourneyCoordinatorTests
 
         var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, UUID.New().ToUrlSafeString() } });
 
-        var path = new JourneyPath([new JourneyPathStep("/step1"), new JourneyPathStep("/step2")]);
+        var path = new JourneyPath([new JourneyPathStep("/step1", "/step1"), new JourneyPathStep("/step2", "/step2")]);
 
         var initialState = new TestState();
         mockStateStorage
@@ -144,7 +144,7 @@ public class JourneyCoordinatorTests
 
         var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, UUID.New().ToUrlSafeString() } });
 
-        var path = new JourneyPath([new JourneyPathStep("/step1"), new JourneyPathStep("/step2")]);
+        var path = new JourneyPath([new JourneyPathStep("/step1", "/step1"), new JourneyPathStep("/step2", "/step2")]);
 
         var initialState = new TestState();
         mockStateStorage
@@ -162,7 +162,7 @@ public class JourneyCoordinatorTests
         var coordinator = new TestJourneyCoordinator { Context = context };
 
         // Act
-        var result = coordinator.StepIsValid(new JourneyPathStep("/step1"));
+        var result = coordinator.StepIsValid(new JourneyPathStep("/step1", "/step1"));
 
         // Assert
         Assert.True(result);
@@ -178,7 +178,7 @@ public class JourneyCoordinatorTests
 
         var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, UUID.New().ToUrlSafeString() } });
 
-        var path = new JourneyPath([new JourneyPathStep("/step1"), new JourneyPathStep("/step2")]);
+        var path = new JourneyPath([new JourneyPathStep("/step1", "/step1"), new JourneyPathStep("/step2", "/step2")]);
 
         var initialState = new TestState();
         mockStateStorage
@@ -196,7 +196,7 @@ public class JourneyCoordinatorTests
         var coordinator = new TestJourneyCoordinator { Context = context };
 
         // Act
-        var result = coordinator.StepIsValid(new JourneyPathStep("/step3"));
+        var result = coordinator.StepIsValid(new JourneyPathStep("/step3", "/step3"));
 
         // Assert
         Assert.False(result);
@@ -212,7 +212,7 @@ public class JourneyCoordinatorTests
 
         var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, UUID.New().ToUrlSafeString() } });
 
-        var path = new JourneyPath([new JourneyPathStep("/step1")]);
+        var path = new JourneyPath([new JourneyPathStep("/step1", "/step1")]);
 
         var initialState = new TestState();
         mockStateStorage
@@ -229,7 +229,7 @@ public class JourneyCoordinatorTests
 
         var coordinator = new TestJourneyCoordinator { Context = context };
 
-        var newPathSteps = new[] { new JourneyPathStep("/step1"), new JourneyPathStep("/step2") };
+        var newPathSteps = new[] { new JourneyPathStep("/step1", "/step1"), new JourneyPathStep("/step2", "/step2") };
 
         // Act
         coordinator.UnsafeSetPathSteps(newPathSteps);
@@ -248,7 +248,7 @@ public class JourneyCoordinatorTests
 
         var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, UUID.New().ToUrlSafeString() } });
 
-        var path = new JourneyPath([new JourneyPathStep("/step1")]);
+        var path = new JourneyPath([new JourneyPathStep("/step1", "/step1")]);
 
         var initialState = new TestState();
         mockStateStorage
@@ -282,7 +282,7 @@ public class JourneyCoordinatorTests
 
         var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, UUID.New().ToUrlSafeString() } });
 
-        var path = new JourneyPath([new JourneyPathStep("/step1")]);
+        var path = new JourneyPath([new JourneyPathStep("/step1", "/step1")]);
 
         var initialState = new TestState();
         mockStateStorage
@@ -308,6 +308,24 @@ public class JourneyCoordinatorTests
 
         // Assert
         mockStateStorage.Verify(s => s.SetState(instanceId, journey, It.Is<StateStorageEntry>(e => ((TestState)e.State).Foo == 42)), Times.Once);
+    }
+
+    [Theory]
+    [InlineData("path", new[] { "foo" }, "path")]
+    [InlineData("path?foo", new[] { "foo" }, "path")]
+    [InlineData("path?foo=42", new[] { "foo" }, "path")]
+    [InlineData("path?foo=42&bar=69", new[] { "foo" }, "path?bar=69")]
+    [InlineData("path?foo=42&bar=69", new[] { "bar" }, "path?foo=42")]
+    [InlineData("path?foo=42&bar=69&baz=3", new[] { "bar" }, "path?foo=42&baz=3")]
+    public void GetUrlWithoutQueryParameters(string url, string[] queryParamsToRemove, string expectedUrl)
+    {
+        // Arrange
+
+        // Act
+        var result = JourneyCoordinator.GetUrlWithoutQueryParameters(url, queryParamsToRemove);
+
+        // Assert
+        Assert.Equal(expectedUrl, result);
     }
 
     private class TestJourneyCoordinator : JourneyCoordinator<TestState>;

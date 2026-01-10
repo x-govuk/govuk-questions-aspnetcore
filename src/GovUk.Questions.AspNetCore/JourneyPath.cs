@@ -1,7 +1,5 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.Extensions;
 
 namespace GovUk.Questions.AspNetCore;
 
@@ -11,10 +9,6 @@ namespace GovUk.Questions.AspNetCore;
 [JsonConverter(typeof(JourneyPathJsonConverter))]
 public class JourneyPath
 {
-#pragma warning disable CA1859
-    private static readonly IEqualityComparer<JourneyPathStep> _stepComparer = EqualityComparer<JourneyPathStep>.Default;
-#pragma warning restore CA1859
-
     /// <summary>
     /// Creates a new instance of <see cref="JourneyPath"/>.
     /// </summary>
@@ -38,7 +32,17 @@ public class JourneyPath
     {
         ArgumentNullException.ThrowIfNull(step);
 
-        return Steps.Any(s => _stepComparer.Equals(s, step));
+        return ContainsStep(step.StepId);
+    }
+
+    /// <summary>
+    /// Determines whether the journey path contains a step with the specified step ID.
+    /// </summary>
+    public bool ContainsStep(string stepId)
+    {
+        ArgumentNullException.ThrowIfNull(stepId);
+
+        return Steps.Any(s => s.StepId == stepId);
     }
 
     /// <summary>
@@ -54,14 +58,14 @@ public class JourneyPath
 
         var newSteps = new List<JourneyPathStep>(Steps);
 
-        var currentStepIndex = newSteps.FindIndex(0, s => _stepComparer.Equals(s, currentStep));
+        var currentStepIndex = newSteps.FindIndex(0, s => s.StepId == currentStep.StepId);
         if (currentStepIndex == -1)
         {
             throw new InvalidOperationException("The specified current step does not exist in the journey path.");
         }
 
         // Check if the step already exists in the path
-        var stepIndex = newSteps.FindIndex(s => _stepComparer.Equals(s, step));
+        var stepIndex = newSteps.FindIndex(s => s.StepId == step.StepId);
         if (stepIndex != -1 && stepIndex < currentStepIndex)
         {
             throw new InvalidOperationException("Cannot push a step that exists before the current step in the journey path.");
@@ -96,21 +100,9 @@ public class JourneyPath
 /// <summary>
 /// Represents a step in a journey path.
 /// </summary>
+/// <param name="StepId">The ID of the step."></param>
 /// <param name="Url">The URL of the step.</param>
-public record JourneyPathStep(string Url)
-{
-    /// <summary>
-    /// Creates a new instance of <see cref="JourneyPathStep"/> from the specified <see cref="HttpContext"/>.
-    /// </summary>
-    /// <param name="httpContext">The <see cref="HttpContext"/>.</param>
-    public static JourneyPathStep FromHttpContext(HttpContext httpContext)
-    {
-        ArgumentNullException.ThrowIfNull(httpContext);
-
-        var url = httpContext.Request.GetEncodedPathAndQuery();
-        return new JourneyPathStep(url);
-    }
-}
+public record JourneyPathStep(string StepId, string Url);
 
 /// <summary>
 /// Options for configuring the <see cref="JourneyPath.PushStep"/> method.

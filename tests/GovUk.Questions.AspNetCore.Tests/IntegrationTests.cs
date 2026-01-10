@@ -52,6 +52,22 @@ public class IntegrationTests(IntegrationTestFixture fixture) : IClassFixture<In
         Assert.Equal(StatusCodes.Status302Found, (int)secondPagePostResponse.StatusCode);
         Assert.Equal($"/integration-test/123/final?_jid={journeyInstanceKey}", secondPagePostResponse.Headers.Location?.ToString());
 
+        // Go back to the first step with a returnUrl
+        var firstPageWithReturnUrlResponse = await HttpClient.GetAsync(
+            "/integration-test/123/first?_jid=" + journeyInstanceKey + "&returnUrl=" + Uri.EscapeDataString("/integration-test/123/final?_jid=" + journeyInstanceKey),
+            TestContext.Current.CancellationToken);
+        Assert.Equal(StatusCodes.Status200OK, (int)firstPageWithReturnUrlResponse.StatusCode);
+
+        // Re-submit first page with modified state and go to returnUrl
+        var firstPageWithReturnUrlPostResponse = await HttpClient.PostAsync(
+            "/integration-test/123/first?_jid=" + journeyInstanceKey + "&returnUrl=" + Uri.EscapeDataString("/integration-test/123/final?_jid=" + journeyInstanceKey),
+            new FormUrlEncodedContent([
+                KeyValuePair.Create("foo", "100")
+            ]),
+            TestContext.Current.CancellationToken);
+        Assert.Equal(StatusCodes.Status302Found, (int)firstPageWithReturnUrlPostResponse.StatusCode);
+        Assert.Equal($"/integration-test/123/final?_jid={journeyInstanceKey}", firstPageWithReturnUrlPostResponse.Headers.Location?.ToString());
+
         // End the journey
         var finalPagePostResponse = await HttpClient.PostAsync(
             "/integration-test/123/final?_jid=" + journeyInstanceKey,

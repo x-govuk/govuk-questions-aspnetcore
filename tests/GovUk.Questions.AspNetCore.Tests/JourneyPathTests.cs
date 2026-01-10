@@ -8,12 +8,12 @@ public class JourneyPathTests
         // Arrange
         var initialSteps = new List<JourneyPathStep>
         {
-            new("/step-1"),
-            new("/step-2"),
-            new("/step-3")
+            new("Step1", "/step-1"),
+            new("Step2", "/step-2"),
+            new("Step3", "/step-3")
         };
         var journeyPath = new JourneyPath(initialSteps);
-        var stepToCheck = new JourneyPathStep("/step-2");
+        var stepToCheck = new JourneyPathStep("Step2", "/step-2?qs");
 
         // Act
         var result = journeyPath.ContainsStep(stepToCheck);
@@ -28,12 +28,12 @@ public class JourneyPathTests
         // Arrange
         var initialSteps = new List<JourneyPathStep>
         {
-            new("/step-1"),
-            new("/step-2"),
-            new("/step-3")
+            new("Step1", "/step-1"),
+            new("Step2", "/step-2"),
+            new("Step3", "/step-3")
         };
         var journeyPath = new JourneyPath(initialSteps);
-        var stepToCheck = new JourneyPathStep("/step-4");
+        var stepToCheck = new JourneyPathStep("Step4", "/step-4");
 
         // Act
         var result = journeyPath.ContainsStep(stepToCheck);
@@ -48,12 +48,12 @@ public class JourneyPathTests
         // Arrange
         var initialSteps = new List<JourneyPathStep>
         {
-            new("/step-1"),
-            new("/step-2")
+            new("Step1", "/step-1"),
+            new("Step2", "/step-2")
         };
         var journeyPath = new JourneyPath(initialSteps);
-        var newStep = new JourneyPathStep("/step-3");
-        var nonExistentCurrentStep = new JourneyPathStep("/non-existent-step");
+        var newStep = new JourneyPathStep("Step3", "/step-3");
+        var nonExistentCurrentStep = new JourneyPathStep("NonExistentStep", "/non-existent-step");
 
         // Act
         var ex = Record.Exception(() => journeyPath.PushStep(newStep, nonExistentCurrentStep));
@@ -69,11 +69,11 @@ public class JourneyPathTests
         // Arrange
         var initialSteps = new List<JourneyPathStep>
         {
-            new("/step-1"),
-            new("/step-2")
+            new("Step1", "/step-1"),
+            new("Step2", "/step-2")
         };
         var journeyPath = new JourneyPath(initialSteps);
-        var newStep = new JourneyPathStep("/step-3");
+        var newStep = new JourneyPathStep("Step3", "/step-3");
 
         // Act
         var result = journeyPath.PushStep(newStep, currentStep: initialSteps[1]);
@@ -92,12 +92,12 @@ public class JourneyPathTests
         // Arrange
         var initialSteps = new List<JourneyPathStep>
         {
-            new("/step-1"),
-            new("/step-2"),
-            new("/step-3")
+            new("Step1", "/step-1"),
+            new("Step2", "/step-2"),
+            new("Step3", "/step-3")
         };
         var journeyPath = new JourneyPath(initialSteps);
-        var newStep = new JourneyPathStep("/step-4");
+        var newStep = new JourneyPathStep("Step4", "/step-4");
 
         // Act
         var result = journeyPath.PushStep(newStep, currentStep: initialSteps[1]);
@@ -116,11 +116,11 @@ public class JourneyPathTests
         // Arrange
         var initialSteps = new List<JourneyPathStep>
         {
-            new("/step-1"),
-            new("/step-2")
+            new("Step1", "/step-1"),
+            new("Step2", "/step-2")
         };
         var journeyPath = new JourneyPath(initialSteps);
-        var existingStep = new JourneyPathStep("/step-2");
+        var existingStep = new JourneyPathStep("Step2", "/step-2");
 
         // Act
         var result = journeyPath.PushStep(existingStep, currentStep: initialSteps[1]);
@@ -138,12 +138,12 @@ public class JourneyPathTests
         // Arrange
         var initialSteps = new List<JourneyPathStep>
         {
-            new("/step-1"),
-            new("/step-2"),
-            new("/step-3")
+            new("Step1", "/step-1"),
+            new("Step2", "/step-2"),
+            new("Step3", "/step-3")
         };
         var journeyPath = new JourneyPath(initialSteps);
-        var existingStep = new JourneyPathStep("/step-2");
+        var existingStep = new JourneyPathStep("Step2", "/step-2");
 
         // Act
         var result = journeyPath.PushStep(existingStep, currentStep: initialSteps[0], new PushStepOptions { SetAsLastStep = false });
@@ -162,12 +162,12 @@ public class JourneyPathTests
         // Arrange
         var initialSteps = new List<JourneyPathStep>
         {
-            new("/step-1"),
-            new("/step-2"),
-            new("/step-3")
+            new("Step1", "/step-1"),
+            new("Step2", "/step-2"),
+            new("Step3", "/step-3")
         };
         var journeyPath = new JourneyPath(initialSteps);
-        var existingStep = new JourneyPathStep("/step-2");
+        var existingStep = new JourneyPathStep("Step2", "/step-2");
 
         // Act
         var result = journeyPath.PushStep(existingStep, currentStep: initialSteps[0], new PushStepOptions { SetAsLastStep = true });
@@ -185,12 +185,12 @@ public class JourneyPathTests
         // Arrange
         var initialSteps = new List<JourneyPathStep>
         {
-            new("/step-1"),
-            new("/step-2"),
-            new("/step-3")
+            new("Step1", "/step-1"),
+            new("Step2", "/step-2"),
+            new("Step3", "/step-3")
         };
         var journeyPath = new JourneyPath(initialSteps);
-        var existingStep = new JourneyPathStep("/step-1");
+        var existingStep = new JourneyPathStep("Step1", "/step-1");
 
         // Act
         var ex = Record.Exception(() => journeyPath.PushStep(existingStep, currentStep: initialSteps[2]));
@@ -206,13 +206,13 @@ public class JourneyPathTests
         // Arrange
         var initialSteps = new List<JourneyPathStep>
         {
-            new("/step-1"),
-            new("/step-2"),
-            new("/step-3"),
-            new("/step-4")
+            new("Step1", "/step-1"),
+            new("Step2", "/step-2"),
+            new("Step3", "/step-3"),
+            new("Step4", "/step-4")
         };
         var journeyPath = new JourneyPath(initialSteps);
-        var existingStep = new JourneyPathStep("/step-3");
+        var existingStep = new JourneyPathStep("Step3", "/step-3");
 
         // Act
         var result = journeyPath.PushStep(existingStep, currentStep: initialSteps[0]);
@@ -230,11 +230,11 @@ public class JourneyPathTests
         // Arrange
         var initialSteps = new List<JourneyPathStep>
         {
-            new("/step-1"),
-            new("/step-2")
+            new("Step1", "/step-1"),
+            new("Step2", "/step-2")
         };
         var journeyPath = new JourneyPath(initialSteps);
-        var newStep = new JourneyPathStep("/step-3");
+        var newStep = new JourneyPathStep("Step3", "/step-3");
 
         // Act
         var result = journeyPath.PushStep(newStep, currentStep: initialSteps[1], new PushStepOptions { SetAsFirstStep = true });
@@ -251,11 +251,11 @@ public class JourneyPathTests
         // Arrange
         var initialSteps = new List<JourneyPathStep>
         {
-            new("/step-1"),
-            new("/step-2")
+            new("Step1", "/step-1"),
+            new("Step2", "/step-2")
         };
         var journeyPath = new JourneyPath(initialSteps);
-        var newStep = new JourneyPathStep("/step-2");
+        var newStep = new JourneyPathStep("Step2", "/step-2");
 
         // Act
         var result = journeyPath.PushStep(newStep, currentStep: initialSteps[1], new PushStepOptions { SetAsFirstStep = true });
