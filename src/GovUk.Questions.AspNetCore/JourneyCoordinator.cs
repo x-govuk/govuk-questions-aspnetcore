@@ -60,13 +60,13 @@ public abstract class JourneyCoordinator
     /// <summary>
     /// Advances the journey to the specified <paramref name="nextStepUrl"/> without modifying the state.
     /// </summary>
-    public IActionResult Advance(
+    public IActionResult AdvanceTo(
         string nextStepUrl,
         PushStepOptions pushStepOptions = default)
     {
         ArgumentNullException.ThrowIfNull(nextStepUrl);
 
-        var vt = AdvanceCoreAsync(
+        var vt = AdvanceToCoreAsync(
             nextStepUrl,
             ValueTask.FromResult,
             pushStepOptions);
@@ -79,7 +79,7 @@ public abstract class JourneyCoordinator
     /// <summary>
     /// Advances the journey to the specified <paramref name="nextStepUrl"/>, updating the state using the provided <paramref name="updateState"/> action.
     /// </summary>
-    public IActionResult Advance(
+    public IActionResult AdvanceTo(
         string nextStepUrl,
         Action<object> updateState,
         PushStepOptions pushStepOptions = default)
@@ -87,7 +87,7 @@ public abstract class JourneyCoordinator
         ArgumentNullException.ThrowIfNull(nextStepUrl);
         ArgumentNullException.ThrowIfNull(updateState);
 
-        var vt = AdvanceCoreAsync(
+        var vt = AdvanceToCoreAsync(
             nextStepUrl,
             s =>
             {
@@ -104,7 +104,7 @@ public abstract class JourneyCoordinator
     /// <summary>
     /// Advances the journey to the specified <paramref name="nextStepUrl"/>, updating the state using the provided <paramref name="getNewState"/> function.
     /// </summary>
-    public IActionResult Advance(
+    public IActionResult AdvanceTo(
         string nextStepUrl,
         Func<object, object> getNewState,
         PushStepOptions pushStepOptions = default)
@@ -112,7 +112,7 @@ public abstract class JourneyCoordinator
         ArgumentNullException.ThrowIfNull(nextStepUrl);
         ArgumentNullException.ThrowIfNull(getNewState);
 
-        var vt = AdvanceCoreAsync(nextStepUrl, s => ValueTask.FromResult(getNewState(s)), pushStepOptions);
+        var vt = AdvanceToCoreAsync(nextStepUrl, s => ValueTask.FromResult(getNewState(s)), pushStepOptions);
         Debug.Assert(vt.IsCompleted);
 #pragma warning disable VSTHRD002
         return vt.GetAwaiter().GetResult();
@@ -122,7 +122,7 @@ public abstract class JourneyCoordinator
     /// <summary>
     /// Advances the journey to the specified <paramref name="nextStepUrl"/>, updating the state using the provided <paramref name="updateState"/> function.
     /// </summary>
-    public Task<IActionResult> AdvanceAsync(
+    public Task<IActionResult> AdvanceToAsync(
         string nextStepUrl,
         Func<object, Task> updateState,
         PushStepOptions pushStepOptions = default)
@@ -130,7 +130,7 @@ public abstract class JourneyCoordinator
         ArgumentNullException.ThrowIfNull(nextStepUrl);
         ArgumentNullException.ThrowIfNull(updateState);
 
-        return AdvanceCoreAsync(
+        return AdvanceToCoreAsync(
                 nextStepUrl,
                 async s =>
                 {
@@ -144,7 +144,7 @@ public abstract class JourneyCoordinator
     /// <summary>
     /// Advances the journey to the specified <paramref name="nextStepUrl"/>, updating the state using the provided <paramref name="getNewState"/> function.
     /// </summary>
-    public Task<IActionResult> AdvanceAsync(
+    public Task<IActionResult> AdvanceToAsync(
         string nextStepUrl,
         Func<object, Task<object>> getNewState,
         PushStepOptions pushStepOptions = default)
@@ -152,7 +152,7 @@ public abstract class JourneyCoordinator
         ArgumentNullException.ThrowIfNull(nextStepUrl);
         ArgumentNullException.ThrowIfNull(getNewState);
 
-        return AdvanceCoreAsync(
+        return AdvanceToCoreAsync(
                 nextStepUrl,
                 async s => await getNewState(s),
                 pushStepOptions)
@@ -368,7 +368,7 @@ public abstract class JourneyCoordinator
         }
     }
 
-    private async ValueTask<IActionResult> AdvanceCoreAsync(
+    private async ValueTask<IActionResult> AdvanceToCoreAsync(
         string nextStepUrl,
         Func<object, ValueTask<object>> getNewState,
         PushStepOptions pushStepOptions = default)
@@ -445,8 +445,8 @@ public abstract class JourneyCoordinator<TState> : JourneyCoordinator where TSta
     /// </remarks>
     public new TState State => (TState)base.State;
 
-    /// <inheritdoc cref="JourneyCoordinator.Advance(string, Action{object}, PushStepOptions)"/>
-    public IActionResult Advance(
+    /// <inheritdoc cref="JourneyCoordinator.AdvanceTo(string,System.Action{object},GovUk.Questions.AspNetCore.PushStepOptions)"/>
+    public IActionResult AdvanceTo(
         string nextStepUrl,
         Action<TState> updateState,
         PushStepOptions pushStepOptions = default)
@@ -454,14 +454,14 @@ public abstract class JourneyCoordinator<TState> : JourneyCoordinator where TSta
         ArgumentNullException.ThrowIfNull(nextStepUrl);
         ArgumentNullException.ThrowIfNull(updateState);
 
-        return base.Advance(
+        return base.AdvanceTo(
             nextStepUrl,
             state => updateState((TState)state),
             pushStepOptions);
     }
 
-    /// <inheritdoc cref="JourneyCoordinator.Advance(string, Func{object, object}, PushStepOptions)"/>
-    public IActionResult Advance(
+    /// <inheritdoc cref="JourneyCoordinator.AdvanceTo(string,System.Func{object,object},GovUk.Questions.AspNetCore.PushStepOptions)"/>
+    public IActionResult AdvanceTo(
         string nextStepUrl,
         Func<TState, TState> getNewState,
         PushStepOptions pushStepOptions = default)
@@ -469,14 +469,14 @@ public abstract class JourneyCoordinator<TState> : JourneyCoordinator where TSta
         ArgumentNullException.ThrowIfNull(nextStepUrl);
         ArgumentNullException.ThrowIfNull(getNewState);
 
-        return base.Advance(
+        return base.AdvanceTo(
             nextStepUrl,
             state => getNewState((TState)state),
             pushStepOptions);
     }
 
-    /// <inheritdoc cref="JourneyCoordinator.AdvanceAsync(string, Func{object, Task}, PushStepOptions)"/>
-    public Task<IActionResult> AdvanceAsync(
+    /// <inheritdoc cref="JourneyCoordinator.AdvanceToAsync(string,System.Func{object,System.Threading.Tasks.Task},GovUk.Questions.AspNetCore.PushStepOptions)"/>
+    public Task<IActionResult> AdvanceToAsync(
         string nextStepUrl,
         Func<TState, Task> updateState,
         PushStepOptions pushStepOptions = default)
@@ -484,14 +484,14 @@ public abstract class JourneyCoordinator<TState> : JourneyCoordinator where TSta
         ArgumentNullException.ThrowIfNull(nextStepUrl);
         ArgumentNullException.ThrowIfNull(updateState);
 
-        return base.AdvanceAsync(
+        return base.AdvanceToAsync(
             nextStepUrl,
             async state => await updateState((TState)state),
             pushStepOptions);
     }
 
-    /// <inheritdoc cref="JourneyCoordinator.AdvanceAsync(string, Func{object, Task{object}}, PushStepOptions)"/>
-    public Task<IActionResult> AdvanceAsync(
+    /// <inheritdoc cref="JourneyCoordinator.AdvanceToAsync(string,System.Func{object,System.Threading.Tasks.Task{object}},GovUk.Questions.AspNetCore.PushStepOptions)"/>
+    public Task<IActionResult> AdvanceToAsync(
         string nextStepUrl,
         Func<TState, Task<TState>> getNewState,
         PushStepOptions pushStepOptions = default)
@@ -499,7 +499,7 @@ public abstract class JourneyCoordinator<TState> : JourneyCoordinator where TSta
         ArgumentNullException.ThrowIfNull(nextStepUrl);
         ArgumentNullException.ThrowIfNull(getNewState);
 
-        return base.AdvanceAsync(
+        return base.AdvanceToAsync(
             nextStepUrl,
             async state => await getNewState((TState)state),
             pushStepOptions);

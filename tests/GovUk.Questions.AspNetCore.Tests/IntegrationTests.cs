@@ -147,7 +147,7 @@ public class IntegrationTestController(IntegrationTestJourneyCoordinator coordin
 
     [HttpPost("first")]
     public IActionResult FirstPagePost([FromForm] int foo) =>
-        coordinator.Advance(
+        coordinator.AdvanceTo(
             Url.Action("SecondPage", coordinator.InstanceId.RouteValues)!,
             s => s.Foo = foo);
 
@@ -156,7 +156,7 @@ public class IntegrationTestController(IntegrationTestJourneyCoordinator coordin
 
     [HttpPost("second")]
     public IActionResult SecondPagePost() =>
-        coordinator.Advance(Url.Action("FinalPage", coordinator.InstanceId.RouteValues)!);
+        coordinator.AdvanceTo(Url.Action("FinalPage", coordinator.InstanceId.RouteValues)!);
 
     [HttpGet("final")]
     public IActionResult FinalPage() => GetState();
