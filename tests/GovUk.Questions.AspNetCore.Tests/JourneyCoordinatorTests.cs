@@ -310,6 +310,228 @@ public class JourneyCoordinatorTests
         mockStateStorage.Verify(s => s.SetState(instanceId, journey, It.Is<StateStorageEntry>(e => ((TestState)e.State).Foo == 42)), Times.Once);
     }
 
+    [Fact]
+    public void UpdateState_BaseClass_InvokesActionWithCurrentStateAndPersistsChanges()
+    {
+        // Arrange
+        var mockStateStorage = new Mock<IJourneyStateStorage>();
+
+        var journey = new JourneyDescriptor("test", [], typeof(TestState));
+
+        var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, UUID.New().ToUrlSafeString() } });
+
+        var path = new JourneyPath([new JourneyPathStep("/step1", "/step1")]);
+
+        var initialState = new TestState();
+        mockStateStorage
+            .Setup(mock => mock.GetState(instanceId, journey))
+            .Returns(new StateStorageEntry { State = initialState, Path = path });
+
+        var context = new CoordinatorContext
+        {
+            InstanceId = instanceId,
+            Journey = journey,
+            JourneyStateStorage = mockStateStorage.Object,
+            HttpContext = new DefaultHttpContext()
+        };
+
+        var coordinator = new TestJourneyCoordinator { Context = context };
+
+        // Act
+        ((JourneyCoordinator)coordinator).UpdateState(state =>
+        {
+            ((TestState)state).Foo = 42;
+        });
+
+        // Assert
+        mockStateStorage.Verify(s => s.SetState(instanceId, journey, It.Is<StateStorageEntry>(e => ((TestState)e.State).Foo == 42)), Times.Once);
+    }
+
+    [Fact]
+    public void UpdateState_BaseClass_InvokesFunctionWithCurrentStateAndPersistsChanges()
+    {
+        // Arrange
+        var mockStateStorage = new Mock<IJourneyStateStorage>();
+
+        var journey = new JourneyDescriptor("test", [], typeof(TestState));
+
+        var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, UUID.New().ToUrlSafeString() } });
+
+        var path = new JourneyPath([new JourneyPathStep("/step1", "/step1")]);
+
+        var initialState = new TestState();
+        mockStateStorage
+            .Setup(mock => mock.GetState(instanceId, journey))
+            .Returns(new StateStorageEntry { State = initialState, Path = path });
+
+        var context = new CoordinatorContext
+        {
+            InstanceId = instanceId,
+            Journey = journey,
+            JourneyStateStorage = mockStateStorage.Object,
+            HttpContext = new DefaultHttpContext()
+        };
+
+        var coordinator = new TestJourneyCoordinator { Context = context };
+
+        // Act
+        ((JourneyCoordinator)coordinator).UpdateState(state => ((TestState)state) with { Foo = 42 });
+
+        // Assert
+        mockStateStorage.Verify(s => s.SetState(instanceId, journey, It.Is<StateStorageEntry>(e => ((TestState)e.State).Foo == 42)), Times.Once);
+    }
+
+    [Fact]
+    public async Task UpdateStateAsync_BaseClass_InvokesActionWithCurrentStateAndPersistsChanges()
+    {
+        // Arrange
+        var mockStateStorage = new Mock<IJourneyStateStorage>();
+
+        var journey = new JourneyDescriptor("test", [], typeof(TestState));
+
+        var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, UUID.New().ToUrlSafeString() } });
+
+        var path = new JourneyPath([new JourneyPathStep("/step1", "/step1")]);
+
+        var initialState = new TestState();
+        mockStateStorage
+            .Setup(mock => mock.GetState(instanceId, journey))
+            .Returns(new StateStorageEntry { State = initialState, Path = path });
+
+        var context = new CoordinatorContext
+        {
+            InstanceId = instanceId,
+            Journey = journey,
+            JourneyStateStorage = mockStateStorage.Object,
+            HttpContext = new DefaultHttpContext()
+        };
+
+        var coordinator = new TestJourneyCoordinator { Context = context };
+
+        // Act
+        await ((JourneyCoordinator)coordinator).UpdateStateAsync(async state =>
+        {
+            await Task.Yield();
+            ((TestState)state).Foo = 42;
+        });
+
+        // Assert
+        mockStateStorage.Verify(s => s.SetState(instanceId, journey, It.Is<StateStorageEntry>(e => ((TestState)e.State).Foo == 42)), Times.Once);
+    }
+
+    [Fact]
+    public async Task UpdateStateAsync_BaseClass_InvokesFunctionWithCurrentStateAndPersistsChanges()
+    {
+        // Arrange
+        var mockStateStorage = new Mock<IJourneyStateStorage>();
+
+        var journey = new JourneyDescriptor("test", [], typeof(TestState));
+
+        var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, UUID.New().ToUrlSafeString() } });
+
+        var path = new JourneyPath([new JourneyPathStep("/step1", "/step1")]);
+
+        var initialState = new TestState();
+        mockStateStorage
+            .Setup(mock => mock.GetState(instanceId, journey))
+            .Returns(new StateStorageEntry { State = initialState, Path = path });
+
+        var context = new CoordinatorContext
+        {
+            InstanceId = instanceId,
+            Journey = journey,
+            JourneyStateStorage = mockStateStorage.Object,
+            HttpContext = new DefaultHttpContext()
+        };
+
+        var coordinator = new TestJourneyCoordinator { Context = context };
+
+        // Act
+        await ((JourneyCoordinator)coordinator).UpdateStateAsync(async state =>
+        {
+            await Task.Yield();
+            return ((TestState)state) with { Foo = 42 };
+        });
+
+        // Assert
+        mockStateStorage.Verify(s => s.SetState(instanceId, journey, It.Is<StateStorageEntry>(e => ((TestState)e.State).Foo == 42)), Times.Once);
+    }
+
+    [Fact]
+    public void UpdateState_GenericClass_InvokesActionWithCurrentStateAndPersistsChanges()
+    {
+        // Arrange
+        var mockStateStorage = new Mock<IJourneyStateStorage>();
+
+        var journey = new JourneyDescriptor("test", [], typeof(TestState));
+
+        var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, UUID.New().ToUrlSafeString() } });
+
+        var path = new JourneyPath([new JourneyPathStep("/step1", "/step1")]);
+
+        var initialState = new TestState();
+        mockStateStorage
+            .Setup(mock => mock.GetState(instanceId, journey))
+            .Returns(new StateStorageEntry { State = initialState, Path = path });
+
+        var context = new CoordinatorContext
+        {
+            InstanceId = instanceId,
+            Journey = journey,
+            JourneyStateStorage = mockStateStorage.Object,
+            HttpContext = new DefaultHttpContext()
+        };
+
+        var coordinator = new TestJourneyCoordinator { Context = context };
+
+        // Act
+        coordinator.UpdateState(state =>
+        {
+            state.Foo = 42;
+        });
+
+        // Assert
+        mockStateStorage.Verify(s => s.SetState(instanceId, journey, It.Is<StateStorageEntry>(e => ((TestState)e.State).Foo == 42)), Times.Once);
+    }
+
+    [Fact]
+    public async Task UpdateStateAsync_GenericClass_InvokesActionWithCurrentStateAndPersistsChanges()
+    {
+        // Arrange
+        var mockStateStorage = new Mock<IJourneyStateStorage>();
+
+        var journey = new JourneyDescriptor("test", [], typeof(TestState));
+
+        var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, UUID.New().ToUrlSafeString() } });
+
+        var path = new JourneyPath([new JourneyPathStep("/step1", "/step1")]);
+
+        var initialState = new TestState();
+        mockStateStorage
+            .Setup(mock => mock.GetState(instanceId, journey))
+            .Returns(new StateStorageEntry { State = initialState, Path = path });
+
+        var context = new CoordinatorContext
+        {
+            InstanceId = instanceId,
+            Journey = journey,
+            JourneyStateStorage = mockStateStorage.Object,
+            HttpContext = new DefaultHttpContext()
+        };
+
+        var coordinator = new TestJourneyCoordinator { Context = context };
+
+        // Act
+        await coordinator.UpdateStateAsync(async state =>
+        {
+            await Task.Yield();
+            state.Foo = 42;
+        });
+
+        // Assert
+        mockStateStorage.Verify(s => s.SetState(instanceId, journey, It.Is<StateStorageEntry>(e => ((TestState)e.State).Foo == 42)), Times.Once);
+    }
+
     [Theory]
     [InlineData("path", new[] { "foo" }, "path")]
     [InlineData("path?foo", new[] { "foo" }, "path")]
