@@ -5,19 +5,19 @@
 ### Build
 To build the solution, use:
 ```bash
-mise run build --configuration Release
+just --configuration Release
 ```
 
 ### Test
 To test the solution, run:
 ```bash
-mise run test --configuration Release
+just test --configuration Release
 ```
 
 ### Code Formatting
 Any code changes should be formatted with:
 ```bash
-mise format
+just format
 ```
 
 ## Testing Guidelines

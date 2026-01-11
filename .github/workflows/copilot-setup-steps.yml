@@ -19,4 +19,4 @@ jobs:
       - uses: jdx/mise-action@v3
 
       - name: Restore
-        run: dotnet restore  # TODO Convert this to a just recipe
+        run: just restore

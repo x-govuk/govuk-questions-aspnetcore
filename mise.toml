@@ -1,36 +1,4 @@
 [tools]
 dotnet = "8.0.416"
+just = "latest"
 powershell = "latest"
-
-[tasks.build]
-description = "Build the solution"
-usage = '''
-flag "-c --configuration <configuration>" {
-  choices "Debug" "Release"
-  default "Release"
-}
-'''
-shell = "pwsh -nop -c"
-run = "dotnet build --configuration $env:usage_configuration"
-
-[tasks.test]
-description = "Test the solution"
-usage = '''
-flag "-c --configuration <configuration>" {
-  choices "Debug" "Release"
-  default "Release"
-}
-'''
-shell = "pwsh -nop -c"
-run = [
-  "dotnet run --project tests/GovUk.Questions.AspNetCore.Tests --configuration $env:usage_configuration --no-build",
-  "dotnet run --project tests/GovUk.Questions.AspNetCore.Testing.Tests --configuration $env:usage_configuration --no-build"
-]
-
-[tasks.format]
-description = "Format the solution"
-run = "dotnet format"
-
-[tasks.format-check]
-description = "Check code format"
-run = "dotnet format --verify-no-changes"

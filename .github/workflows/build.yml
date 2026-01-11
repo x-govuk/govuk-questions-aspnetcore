@@ -25,11 +25,14 @@ jobs:
 
       - uses: jdx/mise-action@v3
 
-      - name: Check format
-        run: mise run format-check
+      - name: Restore
+        run: just restore
+
+      - name: Format
+        run: just format --verify-no-changes
 
       - name: Build
-        run: mise run build --configuration ${{ matrix.build-configuration }}
+        run: just build --configuration ${{ matrix.build-configuration }}
 
       - name: Test
-        run: mise run test --configuration ${{ matrix.build-configuration }}
+        run: just test --configuration ${{ matrix.build-configuration }}
