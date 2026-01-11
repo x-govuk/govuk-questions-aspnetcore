@@ -1,0 +1,22 @@
+name: "Copilot Setup Steps"
+
+on:
+  workflow_dispatch:
+
+jobs:
+  copilot-setup-steps:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    env:
+      COPILOT_AGENT_FIREWALL_ALLOW_LIST_ADDITIONS: vsblob.vsassets.io,data.jsdelivr.com
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: jdx/mise-action@v3
+
+      - name: Restore
+        run: dotnet restore  # TODO Convert this to a just recipe
