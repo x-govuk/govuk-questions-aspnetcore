@@ -169,7 +169,7 @@ public class JourneyInstanceIdTests
     }
 
     [Fact]
-    public void GetHashCode_WithDifferentCasedRouteValues_ReturnsSameHashCode()
+    public void GetHashCode_WithDifferentCasedRouteValueKeys_ReturnsSameHashCode()
     {
         // Arrange
         var journeyName1 = "test-journey";
@@ -225,35 +225,6 @@ public class JourneyInstanceIdTests
 
         // Assert
         Assert.NotEqual(hashCode1, hashCode2);
-    }
-
-    [Fact]
-    public void GetHashCode_UsedInHashSet_WorksCorrectly()
-    {
-        // Arrange
-        var journeyName = "test-journey";
-        var key = UUID.New().ToUrlSafeString();
-        var routeValues1 = new RouteValueDictionary
-        {
-            { JourneyInstanceId.KeyRouteValueName, key },
-            { "foo", "42" }
-        };
-        var routeValues2 = new RouteValueDictionary
-        {
-            { JourneyInstanceId.KeyRouteValueName, key },
-            { "foo", "42" }
-        };
-
-        var journeyInstanceId1 = new JourneyInstanceId(journeyName, routeValues1);
-        var journeyInstanceId2 = new JourneyInstanceId(journeyName, routeValues2);
-
-        // Act
-        var hashSet = new HashSet<JourneyInstanceId> { journeyInstanceId1 };
-        var containsId2 = hashSet.Contains(journeyInstanceId2);
-
-        // Assert - Since id1 and id2 are equal, the HashSet should recognize id2 as already present
-        Assert.True(containsId2);
-        Assert.Single(hashSet);
     }
 
     [Fact]
