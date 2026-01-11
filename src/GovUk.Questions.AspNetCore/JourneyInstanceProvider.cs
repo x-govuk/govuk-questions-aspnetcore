@@ -78,7 +78,7 @@ internal class JourneyInstanceProvider(IJourneyStateStorage journeyStateStorage,
             return null;
         }
 
-        if (!ActionStartsJourney(httpContext))
+        if (!EndpointStartsJourney(httpContext))
         {
             return null;
         }
@@ -139,7 +139,7 @@ internal class JourneyInstanceProvider(IJourneyStateStorage journeyStateStorage,
         return false;
     }
 
-    private static bool ActionStartsJourney(HttpContext httpContext)
+    private static bool EndpointStartsJourney(HttpContext httpContext)
     {
         var endpoint = httpContext.GetEndpoint();
         if (endpoint is null)
