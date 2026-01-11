@@ -1,4 +1,4 @@
-name: CI
+name: "Build & release"
 
 on:
   push:
@@ -10,7 +10,7 @@ on:
 
 jobs:
   build:
-    name: "Build, test & package"
+    name: "Build library"
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
