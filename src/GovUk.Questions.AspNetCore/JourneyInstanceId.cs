@@ -201,7 +201,7 @@ public sealed class JourneyInstanceId : IEquatable<JourneyInstanceId>, IParsable
     public override bool Equals(object? obj) => ReferenceEquals(this, obj) || obj is JourneyInstanceId other && Equals(other);
 
     /// <inheritdoc/>
-    public override int GetHashCode() => HashCode.Combine(JourneyName, RouteValues);
+    public override int GetHashCode() => ToString().GetHashCode(StringComparison.Ordinal);
 
     /// <inheritdoc/>
     public override string ToString()
