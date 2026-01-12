@@ -15,7 +15,27 @@
 
   <PropertyGroup Condition="'$(IsShipping)' == 'true'">
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Copyright>Copyright © James Gunn</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageProjectUrl>https://github.com/x-govuk/govuk-questions-aspnetcore</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/x-govuk/govuk-questions-aspnetcore</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <MinVerTagPrefix>v</MinVerTagPrefix>
+    <MinVerMinimumMajorMinor>0.1</MinVerMinimumMajorMinor>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <AnalysisMode>All</AnalysisMode>
     <NoWarn>CA1054,CA1056</NoWarn>
   </PropertyGroup>
+
+  <ItemGroup Condition="'$(IsShipping)' == 'true'">
+    <None Include="$(RepoRoot)README.md" Pack="true" PackagePath="" />
+
+    <PackageReference Include="MinVer" Version="2.3.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
 </Project>

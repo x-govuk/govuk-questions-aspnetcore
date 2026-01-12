@@ -36,3 +36,19 @@ jobs:
 
       - name: Test
         run: just test --configuration ${{ matrix.build-configuration }}
+
+      - name: Assign package build metadata
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          echo "MINVERBUILDMETADATA=build.${{ github.run_id }}.${{ github.run_attempt}}" >> $GITHUB_ENV
+
+      - name: Pack
+        if: matrix.build-configuration == 'Release'
+        run: just pack --configuration ${{ matrix.build-configuration }}
+
+      - name: Publish package artifact
+        if: matrix.build-configuration == 'Release'
+        uses: actions/upload-artifact@v6
+        with:
+          name: Packages
+          path: packages/*.nupkg

@@ -16,3 +16,7 @@ test *ARGS:
 # Format the C# code
 format *ARGS:
   @dotnet format {{ARGS}}
+
+# Package the library
+pack *ARGS:
+  @dotnet pack {{ARGS}}

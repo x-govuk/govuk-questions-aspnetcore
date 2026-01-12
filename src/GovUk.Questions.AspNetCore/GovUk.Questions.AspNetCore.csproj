@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <PropertyGroup>
+    <Description>Tools for implementing the question pages pattern in ASP.NET Core.</Description>
     <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
     <NoDefaultLaunchSettingsFile>true</NoDefaultLaunchSettingsFile>
   </PropertyGroup>

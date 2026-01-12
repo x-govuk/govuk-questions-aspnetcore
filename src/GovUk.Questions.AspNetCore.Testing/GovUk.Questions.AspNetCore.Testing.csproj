@@ -1,5 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  
+
+  <PropertyGroup>
+    <Description>Testing helpers for the GovUk.Questions.AspNetCore library.</Description>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\GovUk.Questions.AspNetCore\GovUk.Questions.AspNetCore.csproj" />
   </ItemGroup>
