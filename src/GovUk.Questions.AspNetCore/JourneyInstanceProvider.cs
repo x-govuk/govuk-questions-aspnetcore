@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.WebUtilities;
 
 namespace GovUk.Questions.AspNetCore;
 
-internal class JourneyInstanceProvider(IJourneyStateStorage journeyStateStorage, JourneyRegistry journeyRegistry)
+internal class JourneyInstanceProvider(IJourneyStateStorage journeyStateStorage, JourneyRegistry journeyRegistry) : IJourneyInstanceProvider
 {
     private const string HttpContextItemKey = "GovUk.Questions.AspNetCore.JourneyCoordinator";
 

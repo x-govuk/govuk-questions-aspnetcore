@@ -42,7 +42,7 @@ public static class GovUkQuestionsExtensions
 
         services.AddHttpContextAccessor();
         services.TryAddSingleton<IJourneyStateStorage, SessionJourneyStateStorage>();
-        services.AddTransient<JourneyInstanceProvider>();
+        services.AddTransient<IJourneyInstanceProvider, JourneyInstanceProvider>();
         services.AddTransient<ValidateJourneyFilter>();
 
         services
@@ -84,7 +84,7 @@ public static class GovUkQuestionsExtensions
                 coordinatorType,
                 sp =>
                 {
-                    var instanceProvider = sp.GetRequiredService<JourneyInstanceProvider>();
+                    var instanceProvider = sp.GetRequiredService<IJourneyInstanceProvider>();
 
                     var httpContext = sp.GetRequiredService<IHttpContextAccessor>().HttpContext ??
                         throw new InvalidOperationException("No HttpContext is available.");

@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc.Filters;
 namespace GovUk.Questions.AspNetCore.Filters;
 
 // ReSharper disable once ClassNeverInstantiated.Global
-internal class ValidateJourneyFilter(JourneyInstanceProvider instanceProvider) : IAsyncResourceFilter
+internal class ValidateJourneyFilter(IJourneyInstanceProvider instanceProvider) : IAsyncResourceFilter
 {
     public static int Order => -100;
 
