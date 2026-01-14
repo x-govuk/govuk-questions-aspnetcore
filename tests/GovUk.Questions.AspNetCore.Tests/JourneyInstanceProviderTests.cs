@@ -374,7 +374,7 @@ public class JourneyInstanceProviderTests
     }
 
     [Fact]
-    public void TryGetJourneyName_NoEndpoint_ReturnsFalse()
+    public void GetJourneyInfo_NoEndpoint_ReturnsNull()
     {
         // Arrange
         var stateStorage = new TestableJourneyStateStorage();
@@ -389,15 +389,14 @@ public class JourneyInstanceProviderTests
         // No endpoint set
 
         // Act
-        var result = journeyInstanceProvider.TryGetJourneyName(httpContext, out var journeyName);
+        var result = journeyInstanceProvider.GetJourneyInfo(httpContext);
 
         // Assert
-        Assert.False(result);
-        Assert.Null(journeyName);
+        Assert.Null(result);
     }
 
     [Fact]
-    public void TryGetJourneyName_EndpointDoesNotHaveJourneyMetadata_ReturnsFalse()
+    public void GetJourneyInfo_EndpointDoesNotHaveJourneyMetadata_ReturnsNull()
     {
         // Arrange
         var stateStorage = new TestableJourneyStateStorage();
@@ -413,15 +412,14 @@ public class JourneyInstanceProviderTests
         httpContext.SetEndpoint(endpoint);
 
         // Act
-        var result = journeyInstanceProvider.TryGetJourneyName(httpContext, out var journeyName);
+        var result = journeyInstanceProvider.GetJourneyInfo(httpContext);
 
         // Assert
-        Assert.False(result);
-        Assert.Null(journeyName);
+        Assert.Null(result);
     }
 
     [Fact]
-    public void TryGetJourneyName_EndpointDoesHaveJourneyMetadata_ReturnsTrueAndOutputsJourneyName()
+    public void GetJourneyInfo_EndpointDoesHaveJourneyMetadata_ReturnsJourneyInfo()
     {
         // Arrange
         var stateStorage = new TestableJourneyStateStorage();
@@ -435,16 +433,17 @@ public class JourneyInstanceProviderTests
         httpContext.RequestServices = scope.ServiceProvider;
         var endpoint = new Endpoint(
             null,
-            new EndpointMetadataCollection(new JourneyNameMetadata("TestJourney")),
+            new EndpointMetadataCollection(new JourneyNameMetadata("TestJourney", Optional: true)),
             null);
         httpContext.SetEndpoint(endpoint);
 
         // Act
-        var result = journeyInstanceProvider.TryGetJourneyName(httpContext, out var journeyName);
+        var result = journeyInstanceProvider.GetJourneyInfo(httpContext);
 
         // Assert
-        Assert.True(result);
-        Assert.Equal("TestJourney", journeyName);
+        Assert.NotNull(result);
+        Assert.Equal("TestJourney", result.JourneyName);
+        Assert.True(result.Optional);
     }
 
     [Fact]

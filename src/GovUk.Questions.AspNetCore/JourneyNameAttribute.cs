@@ -15,9 +15,17 @@ public sealed class JourneyNameAttribute(string name) : Attribute, IPageApplicat
     /// </summary>
     public string Name { get; } = name;
 
+    /// <summary>
+    /// Gets or sets a value indicating whether the journey is optional.
+    /// </summary>
+    /// <remarks>
+    /// If the journey is optional then requests that do not have an associated journey instance will still be allowed to proceed.
+    /// </remarks>
+    public bool Optional { get; set; }
+
     void IPageApplicationModelConvention.Apply(PageApplicationModel model)
     {
-        model.EndpointMetadata.Add(new JourneyNameMetadata(Name));
+        model.EndpointMetadata.Add(new JourneyNameMetadata(Name, Optional));
     }
 
     void IControllerModelConvention.Apply(ControllerModel controller)
@@ -32,7 +40,7 @@ public sealed class JourneyNameAttribute(string name) : Attribute, IPageApplicat
                     continue;
                 }
 
-                selector.EndpointMetadata.Add(new JourneyNameMetadata(Name));
+                selector.EndpointMetadata.Add(new JourneyNameMetadata(Name, Optional));
             }
         }
     }
@@ -41,7 +49,7 @@ public sealed class JourneyNameAttribute(string name) : Attribute, IPageApplicat
     {
         foreach (var selector in action.Selectors)
         {
-            selector.EndpointMetadata.Add(new JourneyNameMetadata(Name));
+            selector.EndpointMetadata.Add(new JourneyNameMetadata(Name, Optional));
         }
     }
 }

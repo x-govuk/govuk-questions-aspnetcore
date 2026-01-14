@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using GovUk.Questions.AspNetCore.Description;
 using GovUk.Questions.AspNetCore.State;
 using Microsoft.AspNetCore.Http;
@@ -14,6 +13,24 @@ internal class JourneyInstanceProvider(IJourneyStateStorage journeyStateStorage,
 {
     private const string HttpContextItemKey = "GovUk.Questions.AspNetCore.JourneyCoordinator";
 
+    public RequestJourneyInfo? GetJourneyInfo(HttpContext httpContext)
+    {
+        ArgumentNullException.ThrowIfNull(httpContext);
+
+        var endpoint = httpContext.GetEndpoint();
+        if (endpoint is null)
+        {
+            return null;
+        }
+
+        if (endpoint.Metadata.GetMetadata<JourneyNameMetadata>() is { } journeyNameMetadata)
+        {
+            return new RequestJourneyInfo(journeyNameMetadata.JourneyName, journeyNameMetadata.Optional);
+        }
+
+        return null;
+    }
+
     public JourneyCoordinator? GetJourneyInstance(HttpContext httpContext)
     {
         ArgumentNullException.ThrowIfNull(httpContext);
@@ -24,7 +41,7 @@ internal class JourneyInstanceProvider(IJourneyStateStorage journeyStateStorage,
             return existingCoordinator;
         }
 
-        if (!TryGetJourneyName(httpContext, out var journeyName))
+        if (GetJourneyInfo(httpContext) is not { JourneyName: var journeyName })
         {
             return null;
         }
@@ -73,7 +90,7 @@ internal class JourneyInstanceProvider(IJourneyStateStorage journeyStateStorage,
             throw new InvalidOperationException("A journey instance has already been created for this request.");
         }
 
-        if (!TryGetJourneyName(httpContext, out var journeyName))
+        if (GetJourneyInfo(httpContext) is not { JourneyName: var journeyName })
         {
             return null;
         }
@@ -118,25 +135,6 @@ internal class JourneyInstanceProvider(IJourneyStateStorage journeyStateStorage,
         httpContext.Items[HttpContextItemKey] = coordinator;
 
         return coordinator;
-    }
-
-    public bool TryGetJourneyName(HttpContext httpContext, [NotNullWhen(true)] out string? journeyName)
-    {
-        journeyName = null;
-
-        var endpoint = httpContext.GetEndpoint();
-        if (endpoint is null)
-        {
-            return false;
-        }
-
-        if (endpoint.Metadata.GetMetadata<JourneyNameMetadata>() is { } journeyNameMetadata)
-        {
-            journeyName = journeyNameMetadata.JourneyName;
-            return true;
-        }
-
-        return false;
     }
 
     private static bool EndpointStartsJourney(HttpContext httpContext)

@@ -12,7 +12,7 @@ internal class ValidateJourneyFilter(IJourneyInstanceProvider instanceProvider) 
     {
         var httpContext = context.HttpContext;
 
-        if (!instanceProvider.TryGetJourneyName(httpContext, out _))
+        if (instanceProvider.GetJourneyInfo(httpContext) is not { } journeyInfo)
         {
             // Endpoint is not part of a journey
             await next();
@@ -34,7 +34,7 @@ internal class ValidateJourneyFilter(IJourneyInstanceProvider instanceProvider) 
             context.Result = new RedirectResult(newInstanceCoordinator.Path.Steps.First().Url);
             return;
         }
-        else
+        else if (!journeyInfo.Optional)
         {
             // Unable to get a journey instance
             // TODO Make this configurable
