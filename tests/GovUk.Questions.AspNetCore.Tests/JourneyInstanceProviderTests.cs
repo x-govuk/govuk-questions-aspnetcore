@@ -8,81 +8,6 @@ namespace GovUk.Questions.AspNetCore.Tests;
 
 public class JourneyInstanceProviderTests
 {
-
-
-    [Fact]
-    public void GetJourneyInfo_NoEndpoint_ReturnsNull()
-    {
-        // Arrange
-        var stateStorage = new TestableJourneyStateStorage();
-        var journeyRegistry = new JourneyRegistry();
-        var journeyInstanceProvider = new JourneyInstanceProvider(stateStorage, new DefaultJourneyCoordinatorActivator(journeyRegistry), journeyRegistry);
-
-        var serviceProvider = new ServiceCollection().BuildServiceProvider();
-        using var scope = serviceProvider.CreateScope();
-
-        var httpContext = new DefaultHttpContext();
-        httpContext.RequestServices = scope.ServiceProvider;
-        // No endpoint set
-
-        // Act
-        var result = journeyInstanceProvider.GetJourneyInfo(httpContext);
-
-        // Assert
-        Assert.Null(result);
-    }
-
-    [Fact]
-    public void GetJourneyInfo_EndpointDoesNotHaveJourneyMetadata_ReturnsNull()
-    {
-        // Arrange
-        var stateStorage = new TestableJourneyStateStorage();
-        var journeyRegistry = new JourneyRegistry();
-        var journeyInstanceProvider = new JourneyInstanceProvider(stateStorage, new DefaultJourneyCoordinatorActivator(journeyRegistry), journeyRegistry);
-
-        var serviceProvider = new ServiceCollection().BuildServiceProvider();
-        using var scope = serviceProvider.CreateScope();
-
-        var httpContext = new DefaultHttpContext();
-        httpContext.RequestServices = scope.ServiceProvider;
-        var endpoint = new Endpoint(null, new EndpointMetadataCollection(), null);
-        httpContext.SetEndpoint(endpoint);
-
-        // Act
-        var result = journeyInstanceProvider.GetJourneyInfo(httpContext);
-
-        // Assert
-        Assert.Null(result);
-    }
-
-    [Fact]
-    public void GetJourneyInfo_EndpointDoesHaveJourneyMetadata_ReturnsJourneyInfo()
-    {
-        // Arrange
-        var stateStorage = new TestableJourneyStateStorage();
-        var journeyRegistry = new JourneyRegistry();
-        var journeyInstanceProvider = new JourneyInstanceProvider(stateStorage, new DefaultJourneyCoordinatorActivator(journeyRegistry), journeyRegistry);
-
-        var serviceProvider = new ServiceCollection().BuildServiceProvider();
-        using var scope = serviceProvider.CreateScope();
-
-        var httpContext = new DefaultHttpContext();
-        httpContext.RequestServices = scope.ServiceProvider;
-        var endpoint = new Endpoint(
-            null,
-            new EndpointMetadataCollection(new JourneyNameMetadata("TestJourney", Optional: true)),
-            null);
-        httpContext.SetEndpoint(endpoint);
-
-        // Act
-        var result = journeyInstanceProvider.GetJourneyInfo(httpContext);
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.Equal("TestJourney", result.JourneyName);
-        Assert.True(result.Optional);
-    }
-
     [Fact]
     public void GetJourneyInstance_CoordinatorWithDependencies_ResolvesFromServiceProvider()
     {
@@ -110,7 +35,7 @@ public class JourneyInstanceProviderTests
         httpContext.Request.QueryString = new QueryString($"?_jid={key}");
         var endpoint = new Endpoint(
             null,
-            new EndpointMetadataCollection(new JourneyNameMetadata(journey.JourneyName)),
+            new EndpointMetadataCollection(new EndpointJourneyMetadata { JourneyName = journey.JourneyName }),
             null);
         httpContext.SetEndpoint(endpoint);
 
@@ -192,7 +117,7 @@ public class JourneyInstanceProviderTests
         httpContext.RequestServices = scope.ServiceProvider;
         var endpoint = new Endpoint(
             null,
-            new EndpointMetadataCollection(new JourneyNameMetadata("UnregisteredJourney")),
+            new EndpointMetadataCollection(new EndpointJourneyMetadata { JourneyName = "UnregisteredJourney" }),
             null);
         httpContext.SetEndpoint(endpoint);
 
@@ -223,7 +148,7 @@ public class JourneyInstanceProviderTests
         httpContext.Request.Path = "/test";
         var endpoint = new Endpoint(
             null,
-            new EndpointMetadataCollection(new JourneyNameMetadata(journey.JourneyName)),
+            new EndpointMetadataCollection(new EndpointJourneyMetadata { JourneyName = journey.JourneyName }),
             null);
         httpContext.SetEndpoint(endpoint);
 
@@ -258,7 +183,7 @@ public class JourneyInstanceProviderTests
         httpContext.Request.QueryString = new QueryString($"?_jid={key}");
         var endpoint = new Endpoint(
             null,
-            new EndpointMetadataCollection(new JourneyNameMetadata(journey.JourneyName)),
+            new EndpointMetadataCollection(new EndpointJourneyMetadata { JourneyName = journey.JourneyName }),
             null);
         httpContext.SetEndpoint(endpoint);
 
@@ -293,7 +218,7 @@ public class JourneyInstanceProviderTests
         httpContext.Request.QueryString = new QueryString($"?_jid={key}");
         var endpoint = new Endpoint(
             null,
-            new EndpointMetadataCollection(new JourneyNameMetadata(journey.JourneyName)),
+            new EndpointMetadataCollection(new EndpointJourneyMetadata { JourneyName = journey.JourneyName }),
             null);
         httpContext.SetEndpoint(endpoint);
 
@@ -381,7 +306,7 @@ public class JourneyInstanceProviderTests
         httpContext.Request.Path = "/test/42";
         var endpoint = new Endpoint(
             null,
-            new EndpointMetadataCollection(new JourneyNameMetadata(journey.JourneyName)), // No StartsJourneyMetadata
+            new EndpointMetadataCollection(new EndpointJourneyMetadata { JourneyName = journey.JourneyName }), // No StartsJourneyMetadata
             null);
         httpContext.SetEndpoint(endpoint);
 
@@ -407,9 +332,7 @@ public class JourneyInstanceProviderTests
         httpContext.RequestServices = scope.ServiceProvider;
         var endpoint = new Endpoint(
             null,
-            new EndpointMetadataCollection(
-                new JourneyNameMetadata("UnregisteredJourney"),
-                StartsJourneyMetadata.Instance),
+            new EndpointMetadataCollection(new EndpointJourneyMetadata() { JourneyName = "UnregisteredJourney", StartsJourney = true }),
             null);
         httpContext.SetEndpoint(endpoint);
 
@@ -440,9 +363,7 @@ public class JourneyInstanceProviderTests
         httpContext.Request.Path = "/test";
         var endpoint = new Endpoint(
             null,
-            new EndpointMetadataCollection(
-                new JourneyNameMetadata(journey.JourneyName),
-                StartsJourneyMetadata.Instance),
+            new EndpointMetadataCollection(new EndpointJourneyMetadata { JourneyName = journey.JourneyName, StartsJourney = true }),
             null);
         httpContext.SetEndpoint(endpoint);
 
@@ -475,9 +396,7 @@ public class JourneyInstanceProviderTests
         httpContext.Request.Path = "/test/42";
         var endpoint = new Endpoint(
             null,
-            new EndpointMetadataCollection(
-                new JourneyNameMetadata(journey.JourneyName),
-                StartsJourneyMetadata.Instance),
+            new EndpointMetadataCollection(new EndpointJourneyMetadata() { JourneyName = journey.JourneyName, StartsJourney = true }),
             null);
         httpContext.SetEndpoint(endpoint);
 
@@ -520,9 +439,7 @@ public class JourneyInstanceProviderTests
         httpContext.Request.Path = "/test/42";
         var endpoint = new Endpoint(
             null,
-            new EndpointMetadataCollection(
-                new JourneyNameMetadata(journey.JourneyName),
-                StartsJourneyMetadata.Instance),
+            new EndpointMetadataCollection(new EndpointJourneyMetadata { JourneyName = journey.JourneyName, StartsJourney = true }),
             null);
         httpContext.SetEndpoint(endpoint);
 

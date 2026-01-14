@@ -13,12 +13,18 @@ public sealed class StartsJourneyAttribute : Attribute, IActionModelConvention, 
     {
         foreach (var selector in action.Selectors)
         {
-            selector.EndpointMetadata.Add(StartsJourneyMetadata.Instance);
+            selector.EndpointMetadata.CreateOrUpdateEndpointJourneyMetadata(em =>
+            {
+                em.StartsJourney = true;
+            });
         }
     }
 
     void IPageApplicationModelConvention.Apply(PageApplicationModel model)
     {
-        model.EndpointMetadata.Add(StartsJourneyMetadata.Instance);
+        model.EndpointMetadata.CreateOrUpdateEndpointJourneyMetadata(em =>
+        {
+            em.StartsJourney = true;
+        });
     }
 }

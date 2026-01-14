@@ -8,13 +8,6 @@ namespace GovUk.Questions.AspNetCore;
 public interface IJourneyInstanceProvider
 {
     /// <summary>
-    /// Returns the information about the journey associated with the specified <see cref="HttpContext"/>, if any.
-    /// </summary>
-    /// <param name="httpContext">The <see cref="HttpContext"/>.</param>
-    /// <returns>A <see cref="RequestJourneyInfo"/> instance if the request has an associated journey; otherwise <see langword="null"/>.</returns>
-    RequestJourneyInfo? GetJourneyInfo(HttpContext httpContext);
-
-    /// <summary>
     /// Gets the current journey instance for the specified <see cref="HttpContext"/>, if one exists.
     /// </summary>
     /// <param name="httpContext">The current <see cref="HttpContext"/>.</param>
@@ -37,10 +30,3 @@ public interface IJourneyInstanceProvider
     /// <returns>>The newly created <see cref="JourneyCoordinator{TState}"/>, if one could be created; otherwise <see langword="null"/>.</returns>
     Task<JourneyCoordinator?> TryCreateNewInstanceAsync(HttpContext httpContext, Func<CreateNewInstanceStateContext, Task<object>> createInitialState);
 }
-
-/// <summary>
-/// Information about the journey associated with a request.
-/// </summary>
-/// <param name="JourneyName">The journey name.</param>
-/// <param name="Optional">Whether the journey is optional.</param>
-public sealed record RequestJourneyInfo(string JourneyName, bool Optional);

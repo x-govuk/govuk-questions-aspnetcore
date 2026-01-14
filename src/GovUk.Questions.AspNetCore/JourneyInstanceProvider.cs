@@ -16,24 +16,6 @@ internal class JourneyInstanceProvider(
 {
     private const string HttpContextItemKey = "GovUk.Questions.AspNetCore.JourneyCoordinator";
 
-    public RequestJourneyInfo? GetJourneyInfo(HttpContext httpContext)
-    {
-        ArgumentNullException.ThrowIfNull(httpContext);
-
-        var endpoint = httpContext.GetEndpoint();
-        if (endpoint is null)
-        {
-            return null;
-        }
-
-        if (endpoint.Metadata.GetMetadata<JourneyNameMetadata>() is { } journeyNameMetadata)
-        {
-            return new RequestJourneyInfo(journeyNameMetadata.JourneyName, journeyNameMetadata.Optional);
-        }
-
-        return null;
-    }
-
     public JourneyCoordinator? GetJourneyInstance(HttpContext httpContext)
     {
         ArgumentNullException.ThrowIfNull(httpContext);
@@ -44,7 +26,7 @@ internal class JourneyInstanceProvider(
             return existingCoordinator;
         }
 
-        if (GetJourneyInfo(httpContext) is not { JourneyName: var journeyName })
+        if (GetJourneyMetadata(httpContext) is not { JourneyName: { } journeyName })
         {
             return null;
         }
@@ -108,7 +90,7 @@ internal class JourneyInstanceProvider(
     {
         var endpoint = httpContext.GetEndpoint();
 
-        return endpoint?.Metadata.GetMetadata<StartsJourneyMetadata>() != null;
+        return endpoint?.Metadata.GetMetadata<EndpointJourneyMetadata>()?.StartsJourney is true;
     }
 
     private static RouteValueDictionary GetRouteValues(JourneyDescriptor journey, CompositeValueProvider valueProvider)
@@ -144,6 +126,13 @@ internal class JourneyInstanceProvider(
         return new CompositeValueProvider([routeValueProviderFactory, queryStringValueProvider]);
     }
 
+    private EndpointJourneyMetadata? GetJourneyMetadata(HttpContext httpContext)
+    {
+        ArgumentNullException.ThrowIfNull(httpContext);
+
+        return httpContext.GetEndpoint()?.Metadata.GetMetadata<EndpointJourneyMetadata>();
+    }
+
     private async Task<JourneyCoordinator?> TryCreateNewInstanceCoreAsync(
         HttpContext httpContext,
         Predicate<HttpContext> contextFilter,
@@ -156,7 +145,7 @@ internal class JourneyInstanceProvider(
             throw new InvalidOperationException("A journey instance has already been created for this request.");
         }
 
-        if (GetJourneyInfo(httpContext) is not { JourneyName: var journeyName })
+        if (GetJourneyMetadata(httpContext) is not { JourneyName: { } journeyName })
         {
             return null;
         }

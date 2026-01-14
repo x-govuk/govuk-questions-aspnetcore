@@ -1,22 +1,67 @@
+using GovUk.Questions.AspNetCore.Description;
+using Microsoft.AspNetCore.Mvc.ApplicationModels;
+
 namespace GovUk.Questions.AspNetCore;
 
 /// <summary>
-/// Annotates a <see cref="JourneyCoordinator"/> with metadata about the journey it coordinates.
+/// Specifies the journey associated with this controller, action or page handler.
 /// </summary>
-/// <param name="name">The name of the journey.</param>
-/// <param name="routeValueKeys">The route value keys bound to the journey instance.</param>
-[AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
-#pragma warning disable CA1019
-public sealed class JourneyAttribute(string name, string[] routeValueKeys) : Attribute
-#pragma warning restore CA1019
+/// <param name="journeyName">The journey name.</param>
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
+public sealed class JourneyAttribute(string journeyName) : Attribute, IPageApplicationModelConvention, IControllerModelConvention, IActionModelConvention
 {
     /// <summary>
-    /// Gets the name of the journey.
+    /// The name of the journey.
     /// </summary>
-    public string Name { get; } = name;
+    public string JourneyName { get; } = journeyName;
 
     /// <summary>
-    /// Gets the route value keys to bound to the journey instance.
+    /// Gets or sets a value indicating whether the journey is optional.
     /// </summary>
-    public IReadOnlyCollection<string> RouteValueKeys { get; } = routeValueKeys.ToArray();
+    /// <remarks>
+    /// If the journey is optional then requests that do not have an associated journey instance will still be allowed to proceed.
+    /// </remarks>
+    public bool Optional { get; set; }
+
+    void IPageApplicationModelConvention.Apply(PageApplicationModel model)
+    {
+        model.EndpointMetadata.CreateOrUpdateEndpointJourneyMetadata(em =>
+        {
+            em.JourneyName = JourneyName;
+            em.Optional = Optional;
+        });
+    }
+
+    void IControllerModelConvention.Apply(ControllerModel controller)
+    {
+        foreach (var action in controller.Actions)
+        {
+            foreach (var selector in action.Selectors)
+            {
+                if (selector.EndpointMetadata.OfType<EndpointJourneyMetadata>().Any())
+                {
+                    // An action-level JourneyNameAttribute takes precedence over a controller-level one.
+                    continue;
+                }
+
+                selector.EndpointMetadata.CreateOrUpdateEndpointJourneyMetadata(em =>
+                {
+                    em.JourneyName = JourneyName;
+                    em.Optional = Optional;
+                });
+            }
+        }
+    }
+
+    void IActionModelConvention.Apply(ActionModel action)
+    {
+        foreach (var selector in action.Selectors)
+        {
+            selector.EndpointMetadata.CreateOrUpdateEndpointJourneyMetadata(em =>
+            {
+                em.JourneyName = JourneyName;
+                em.Optional = Optional;
+            });
+        }
+    }
 }

@@ -144,7 +144,7 @@ public record IntegrationTestJourneyState
     public required int Foo { get; set; }
 }
 
-[Journey("IntegrationTestJourney", ["id"])]
+[JourneyCoordinator("IntegrationTestJourney", ["id"])]
 public class IntegrationTestJourneyCoordinator : JourneyCoordinator<IntegrationTestJourneyState>
 {
     public override IntegrationTestJourneyState GetStartingState()
@@ -154,7 +154,7 @@ public class IntegrationTestJourneyCoordinator : JourneyCoordinator<IntegrationT
 }
 
 [Route("integration-test/{id}")]
-[JourneyName("IntegrationTestJourney")]
+[Journey("IntegrationTestJourney")]
 public class IntegrationTestController(IntegrationTestJourneyCoordinator coordinator) : Controller
 {
     [StartsJourney]

@@ -1,3 +1,5 @@
+using GovUk.Questions.AspNetCore.Description;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
@@ -12,7 +14,9 @@ internal class ValidateJourneyFilter(IJourneyInstanceProvider instanceProvider) 
     {
         var httpContext = context.HttpContext;
 
-        if (instanceProvider.GetJourneyInfo(httpContext) is not { } journeyInfo)
+        var endpointJourneyMetadata = httpContext.GetEndpoint()?.Metadata.GetMetadata<EndpointJourneyMetadata>();
+
+        if (endpointJourneyMetadata is null)
         {
             // Endpoint is not part of a journey
             await next();
@@ -34,7 +38,7 @@ internal class ValidateJourneyFilter(IJourneyInstanceProvider instanceProvider) 
             context.Result = new RedirectResult(newInstanceCoordinator.Path.Steps.First().Url);
             return;
         }
-        else if (!journeyInfo.Optional)
+        else if (!endpointJourneyMetadata.Optional)
         {
             // Unable to get a journey instance
             // TODO Make this configurable

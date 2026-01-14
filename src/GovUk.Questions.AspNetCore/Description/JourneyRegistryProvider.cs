@@ -34,7 +34,7 @@ internal class JourneyRegistryProvider
         Type stateType = null!;
         journey = null;
 
-        if (type.GetCustomAttribute<JourneyAttribute>() is not { } journeyAttribute)
+        if (type.GetCustomAttribute<JourneyCoordinatorAttribute>() is not { } journeyAttribute)
         {
             return false;
         }
