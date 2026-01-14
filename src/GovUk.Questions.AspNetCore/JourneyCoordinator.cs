@@ -226,14 +226,12 @@ public abstract class JourneyCoordinator
     }
 
     /// <summary>
-    /// Finds the current step in the journey path based on the provided <paramref name="httpContext"/>.
+    /// Finds the current step in the journey path based on the current request.
     /// </summary>
     /// <returns>The <see cref="JourneyPathStep"/> if the step was found; otherwise <see langword="null"/>.</returns>
-    public virtual JourneyPathStep? FindStep(HttpContext httpContext)
+    public virtual JourneyPathStep? GetCurrentStep()
     {
-        ArgumentNullException.ThrowIfNull(httpContext);
-
-        var currentStep = CreateStepFromHttpContext(httpContext);
+        var currentStep = CreateStepFromHttpContext(HttpContext);
         return Path.ContainsStep(currentStep.StepId) ? currentStep : null;
     }
 
@@ -431,7 +429,7 @@ public abstract class JourneyCoordinator
 
         await UpdateStateStorageEntryCoreAsync(async e =>
         {
-            var currentStep = FindStep(HttpContext) ?? throw new InvalidOperationException("Current step not found in journey path.");
+            var currentStep = GetCurrentStep() ?? throw new InvalidOperationException("Current step not found in journey path.");
             var nextStep = CreateStepFromUrl(nextStepUrl);
             var newPath = e.Path.PushStep(nextStep, currentStep, pushStepOptions);
 

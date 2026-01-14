@@ -21,7 +21,7 @@ internal class ValidateJourneyFilter(IJourneyInstanceProvider instanceProvider) 
 
         if (instanceProvider.GetJourneyInstance(httpContext) is { } coordinator)
         {
-            var currentStep = coordinator.FindStep(context.HttpContext);
+            var currentStep = coordinator.GetCurrentStep();
 
             if (currentStep is null || !coordinator.StepIsValid(currentStep))
             {
