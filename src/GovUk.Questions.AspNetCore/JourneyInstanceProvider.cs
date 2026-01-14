@@ -9,7 +9,10 @@ using Microsoft.AspNetCore.WebUtilities;
 
 namespace GovUk.Questions.AspNetCore;
 
-internal class JourneyInstanceProvider(IJourneyStateStorage journeyStateStorage, JourneyRegistry journeyRegistry) : IJourneyInstanceProvider
+internal class JourneyInstanceProvider(
+    IJourneyStateStorage journeyStateStorage,
+    IJourneyCoordinatorActivator coordinatorActivator,
+    JourneyRegistry journeyRegistry) : IJourneyInstanceProvider
 {
     private const string HttpContextItemKey = "GovUk.Questions.AspNetCore.JourneyCoordinator";
 
@@ -66,15 +69,14 @@ internal class JourneyInstanceProvider(IJourneyStateStorage journeyStateStorage,
             return null;
         }
 
-        var coordinatorFactory = journeyRegistry.GetCoordinatorActivator(journey);
-        var coordinatorContext = new CoordinatorContext
+        var coordinatorContext = new JourneyCoordinatorContext
         {
             InstanceId = instanceId,
             Journey = journey,
             JourneyStateStorage = journeyStateStorage,
             HttpContext = httpContext
         };
-        var coordinator = coordinatorFactory(httpContext.RequestServices, coordinatorContext);
+        var coordinator = coordinatorActivator.CreateCoordinator(coordinatorContext);
 
         httpContext.Items[HttpContextItemKey] = coordinator;
 
@@ -182,15 +184,14 @@ internal class JourneyInstanceProvider(IJourneyStateStorage journeyStateStorage,
         var firstStep = JourneyCoordinator.CreateStepFromUrl(firstStepUrl);
         var path = new JourneyPath([firstStep]);
 
-        var coordinatorFactory = journeyRegistry.GetCoordinatorActivator(journey);
-        var coordinatorContext = new CoordinatorContext
+        var coordinatorContext = new JourneyCoordinatorContext
         {
             InstanceId = instanceId,
             Journey = journey,
             JourneyStateStorage = journeyStateStorage,
             HttpContext = httpContext
         };
-        var coordinator = coordinatorFactory(httpContext.RequestServices, coordinatorContext);
+        var coordinator = coordinatorActivator.CreateCoordinator(coordinatorContext);
 
         var createNewInstanceStateContext = new CreateNewInstanceStateContext(instanceId, httpContext);
         var state = await createInitialStateAsync(coordinator, createNewInstanceStateContext);

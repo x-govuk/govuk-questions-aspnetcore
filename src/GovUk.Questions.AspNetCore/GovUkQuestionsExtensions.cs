@@ -41,6 +41,7 @@ public static class GovUkQuestionsExtensions
 
         services.AddHttpContextAccessor();
         services.TryAddSingleton<IJourneyStateStorage, SessionJourneyStateStorage>();
+        services.AddSingleton<IJourneyCoordinatorActivator, DefaultJourneyCoordinatorActivator>();
         services.AddTransient<IJourneyInstanceProvider, JourneyInstanceProvider>();
         services.AddTransient<ValidateJourneyFilter>();
 
@@ -77,7 +78,7 @@ public static class GovUkQuestionsExtensions
 
         var nonGenericCoordinatorType = typeof(JourneyCoordinator);
 
-        foreach (var coordinatorType in journeyRegistry.GetAllCoordinatorFactoryTypes().Append(nonGenericCoordinatorType))
+        foreach (var coordinatorType in journeyRegistry.GetAllCoordinatorTypes().Append(nonGenericCoordinatorType))
         {
             builder.Services.TryAddTransient(
                 coordinatorType,

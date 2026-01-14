@@ -16,7 +16,7 @@ public class JourneyInstanceProviderTests
         // Arrange
         var stateStorage = new TestableJourneyStateStorage();
         var journeyRegistry = new JourneyRegistry();
-        var journeyInstanceProvider = new JourneyInstanceProvider(stateStorage, journeyRegistry);
+        var journeyInstanceProvider = new JourneyInstanceProvider(stateStorage, new DefaultJourneyCoordinatorActivator(journeyRegistry), journeyRegistry);
 
         var serviceProvider = new ServiceCollection().BuildServiceProvider();
         using var scope = serviceProvider.CreateScope();
@@ -38,7 +38,7 @@ public class JourneyInstanceProviderTests
         // Arrange
         var stateStorage = new TestableJourneyStateStorage();
         var journeyRegistry = new JourneyRegistry();
-        var journeyInstanceProvider = new JourneyInstanceProvider(stateStorage, journeyRegistry);
+        var journeyInstanceProvider = new JourneyInstanceProvider(stateStorage, new DefaultJourneyCoordinatorActivator(journeyRegistry), journeyRegistry);
 
         var serviceProvider = new ServiceCollection().BuildServiceProvider();
         using var scope = serviceProvider.CreateScope();
@@ -61,7 +61,7 @@ public class JourneyInstanceProviderTests
         // Arrange
         var stateStorage = new TestableJourneyStateStorage();
         var journeyRegistry = new JourneyRegistry();
-        var journeyInstanceProvider = new JourneyInstanceProvider(stateStorage, journeyRegistry);
+        var journeyInstanceProvider = new JourneyInstanceProvider(stateStorage, new DefaultJourneyCoordinatorActivator(journeyRegistry), journeyRegistry);
 
         var serviceProvider = new ServiceCollection().BuildServiceProvider();
         using var scope = serviceProvider.CreateScope();
@@ -94,7 +94,7 @@ public class JourneyInstanceProviderTests
         var journeyRegistry = new JourneyRegistry();
         journeyRegistry.RegisterJourney(typeof(TestJourneyCoordinatorWithDependencies), journey);
 
-        var journeyInstanceProvider = new JourneyInstanceProvider(stateStorage, journeyRegistry);
+        var journeyInstanceProvider = new JourneyInstanceProvider(stateStorage, new DefaultJourneyCoordinatorActivator(journeyRegistry), journeyRegistry);
 
         var testService = new TestService();
         var serviceProvider = new ServiceCollection()
@@ -136,7 +136,7 @@ public class JourneyInstanceProviderTests
         // Arrange
         var stateStorage = new TestableJourneyStateStorage();
         var journeyRegistry = new JourneyRegistry();
-        var journeyInstanceProvider = new JourneyInstanceProvider(stateStorage, journeyRegistry);
+        var journeyInstanceProvider = new JourneyInstanceProvider(stateStorage, new DefaultJourneyCoordinatorActivator(journeyRegistry), journeyRegistry);
 
         var serviceProvider = new ServiceCollection().BuildServiceProvider();
         using var scope = serviceProvider.CreateScope();
@@ -160,7 +160,7 @@ public class JourneyInstanceProviderTests
         // Arrange
         var stateStorage = new TestableJourneyStateStorage();
         var journeyRegistry = new JourneyRegistry();
-        var journeyInstanceProvider = new JourneyInstanceProvider(stateStorage, journeyRegistry);
+        var journeyInstanceProvider = new JourneyInstanceProvider(stateStorage, new DefaultJourneyCoordinatorActivator(journeyRegistry), journeyRegistry);
 
         var serviceProvider = new ServiceCollection().BuildServiceProvider();
         using var scope = serviceProvider.CreateScope();
@@ -183,7 +183,7 @@ public class JourneyInstanceProviderTests
         // Arrange
         var stateStorage = new TestableJourneyStateStorage();
         var journeyRegistry = new JourneyRegistry();
-        var journeyInstanceProvider = new JourneyInstanceProvider(stateStorage, journeyRegistry);
+        var journeyInstanceProvider = new JourneyInstanceProvider(stateStorage, new DefaultJourneyCoordinatorActivator(journeyRegistry), journeyRegistry);
 
         var serviceProvider = new ServiceCollection().BuildServiceProvider();
         using var scope = serviceProvider.CreateScope();
@@ -212,7 +212,7 @@ public class JourneyInstanceProviderTests
         var journeyRegistry = new JourneyRegistry();
         journeyRegistry.RegisterJourney(typeof(TestJourneyCoordinator), journey);
 
-        var journeyInstanceProvider = new JourneyInstanceProvider(stateStorage, journeyRegistry);
+        var journeyInstanceProvider = new JourneyInstanceProvider(stateStorage, new DefaultJourneyCoordinatorActivator(journeyRegistry), journeyRegistry);
 
         var serviceProvider = new ServiceCollection().BuildServiceProvider();
         using var scope = serviceProvider.CreateScope();
@@ -245,7 +245,7 @@ public class JourneyInstanceProviderTests
         var journeyRegistry = new JourneyRegistry();
         journeyRegistry.RegisterJourney(typeof(TestJourneyCoordinator), journey);
 
-        var journeyInstanceProvider = new JourneyInstanceProvider(stateStorage, journeyRegistry);
+        var journeyInstanceProvider = new JourneyInstanceProvider(stateStorage, new DefaultJourneyCoordinatorActivator(journeyRegistry), journeyRegistry);
 
         var serviceProvider = new ServiceCollection().BuildServiceProvider();
         using var scope = serviceProvider.CreateScope();
@@ -280,7 +280,7 @@ public class JourneyInstanceProviderTests
         var journeyRegistry = new JourneyRegistry();
         journeyRegistry.RegisterJourney(typeof(TestJourneyCoordinator), journey);
 
-        var journeyInstanceProvider = new JourneyInstanceProvider(stateStorage, journeyRegistry);
+        var journeyInstanceProvider = new JourneyInstanceProvider(stateStorage, new DefaultJourneyCoordinatorActivator(journeyRegistry), journeyRegistry);
 
         var serviceProvider = new ServiceCollection().BuildServiceProvider();
         using var scope = serviceProvider.CreateScope();
@@ -320,7 +320,7 @@ public class JourneyInstanceProviderTests
         // Arrange
         var stateStorage = new TestableJourneyStateStorage();
         var journeyRegistry = new JourneyRegistry();
-        var journeyInstanceProvider = new JourneyInstanceProvider(stateStorage, journeyRegistry);
+        var journeyInstanceProvider = new JourneyInstanceProvider(stateStorage, new DefaultJourneyCoordinatorActivator(journeyRegistry), journeyRegistry);
 
         var serviceProvider = new ServiceCollection().BuildServiceProvider();
         using var scope = serviceProvider.CreateScope();
@@ -342,7 +342,7 @@ public class JourneyInstanceProviderTests
         // Arrange
         var stateStorage = new TestableJourneyStateStorage();
         var journeyRegistry = new JourneyRegistry();
-        var journeyInstanceProvider = new JourneyInstanceProvider(stateStorage, journeyRegistry);
+        var journeyInstanceProvider = new JourneyInstanceProvider(stateStorage, new DefaultJourneyCoordinatorActivator(journeyRegistry), journeyRegistry);
 
         var serviceProvider = new ServiceCollection().BuildServiceProvider();
         using var scope = serviceProvider.CreateScope();
@@ -370,7 +370,7 @@ public class JourneyInstanceProviderTests
         var journeyRegistry = new JourneyRegistry();
         journeyRegistry.RegisterJourney(typeof(TestJourneyCoordinator), journey);
 
-        var journeyInstanceProvider = new JourneyInstanceProvider(stateStorage, journeyRegistry);
+        var journeyInstanceProvider = new JourneyInstanceProvider(stateStorage, new DefaultJourneyCoordinatorActivator(journeyRegistry), journeyRegistry);
 
         var serviceProvider = new ServiceCollection().BuildServiceProvider();
         using var scope = serviceProvider.CreateScope();
@@ -398,7 +398,7 @@ public class JourneyInstanceProviderTests
         // Arrange
         var stateStorage = new TestableJourneyStateStorage();
         var journeyRegistry = new JourneyRegistry();
-        var journeyInstanceProvider = new JourneyInstanceProvider(stateStorage, journeyRegistry);
+        var journeyInstanceProvider = new JourneyInstanceProvider(stateStorage, new DefaultJourneyCoordinatorActivator(journeyRegistry), journeyRegistry);
 
         var serviceProvider = new ServiceCollection().BuildServiceProvider();
         using var scope = serviceProvider.CreateScope();
@@ -429,7 +429,7 @@ public class JourneyInstanceProviderTests
         var journeyRegistry = new JourneyRegistry();
         journeyRegistry.RegisterJourney(typeof(TestJourneyCoordinator), journey);
 
-        var journeyInstanceProvider = new JourneyInstanceProvider(stateStorage, journeyRegistry);
+        var journeyInstanceProvider = new JourneyInstanceProvider(stateStorage, new DefaultJourneyCoordinatorActivator(journeyRegistry), journeyRegistry);
 
         var serviceProvider = new ServiceCollection().BuildServiceProvider();
         using var scope = serviceProvider.CreateScope();
@@ -464,7 +464,7 @@ public class JourneyInstanceProviderTests
         var journeyRegistry = new JourneyRegistry();
         journeyRegistry.RegisterJourney(typeof(TestJourneyCoordinator), journey);
 
-        var journeyInstanceProvider = new JourneyInstanceProvider(stateStorage, journeyRegistry);
+        var journeyInstanceProvider = new JourneyInstanceProvider(stateStorage, new DefaultJourneyCoordinatorActivator(journeyRegistry), journeyRegistry);
 
         var serviceProvider = new ServiceCollection().BuildServiceProvider();
         using var scope = serviceProvider.CreateScope();
@@ -506,7 +506,7 @@ public class JourneyInstanceProviderTests
         var journeyRegistry = new JourneyRegistry();
         journeyRegistry.RegisterJourney(typeof(TestJourneyCoordinatorWithDependencies), journey);
 
-        var journeyInstanceProvider = new JourneyInstanceProvider(stateStorage, journeyRegistry);
+        var journeyInstanceProvider = new JourneyInstanceProvider(stateStorage, new DefaultJourneyCoordinatorActivator(journeyRegistry), journeyRegistry);
 
         var testService = new TestService();
         var serviceProvider = new ServiceCollection()

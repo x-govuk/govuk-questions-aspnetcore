@@ -15,6 +15,7 @@ public class JourneyHelper
 
     private readonly JourneyRegistry _journeyRegistry;
     private readonly IJourneyStateStorage _journeyStateStorage;
+    private readonly TestControllerActivator _coordinatorActivator;
 
     internal JourneyHelper(
         JourneyRegistry journeyRegistry,
@@ -25,6 +26,7 @@ public class JourneyHelper
 
         _journeyRegistry = journeyRegistry;
         _journeyStateStorage = journeyStateStorage;
+        _coordinatorActivator = new TestControllerActivator(journeyRegistry);
     }
 
     /// <summary>
@@ -107,8 +109,6 @@ public class JourneyHelper
         ArgumentNullException.ThrowIfNull(state);
         ArgumentNullException.ThrowIfNull(pathUrls);
 
-        serviceProvider ??= _emptyServiceProvider;
-
         if (!JourneyInstanceId.TryCreateNew(journey, routeValues, out var instanceId))
         {
             throw new ArgumentException("Could not create a new JourneyInstanceId with the provided route values.", nameof(routeValues));
@@ -127,16 +127,32 @@ public class JourneyHelper
 
         _journeyStateStorage.SetState(instanceId, journey, new StateStorageEntry { State = state, Path = path });
 
-        var coordinatorFactory = _journeyRegistry.GetCoordinatorActivator(journey);
-        var coordinatorContext = new CoordinatorContext
+        var coordinatorContext = new JourneyCoordinatorContext
         {
             InstanceId = instanceId,
             Journey = journey,
             JourneyStateStorage = _journeyStateStorage,
             HttpContext = httpContext ?? new DefaultHttpContext()
         };
-        var coordinator = coordinatorFactory(serviceProvider, coordinatorContext);
+        var coordinator = _coordinatorActivator.CreateCoordinator(coordinatorContext, serviceProvider);
 
         return coordinator;
+    }
+
+    private class TestControllerActivator(JourneyRegistry journeyRegistry)
+    {
+        public JourneyCoordinator CreateCoordinator(JourneyCoordinatorContext context, IServiceProvider? serviceProvider)
+        {
+            ArgumentNullException.ThrowIfNull(context);
+
+            serviceProvider ??= _emptyServiceProvider;
+
+            var coordinatorType = journeyRegistry.GetCoordinatorType(context.Journey);
+
+            var coordinator = (JourneyCoordinator)ActivatorUtilities.CreateInstance(serviceProvider, coordinatorType);
+            coordinator.Context = context;
+
+            return coordinator;
+        }
     }
 }

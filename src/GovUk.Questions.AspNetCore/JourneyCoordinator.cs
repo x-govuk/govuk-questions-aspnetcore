@@ -19,11 +19,11 @@ public abstract class JourneyCoordinator
     /// </summary>
     public const string ReturnUrlQueryParameterName = "returnUrl";
 
-    private CoordinatorContext? _context;
+    private JourneyCoordinatorContext? _context;
 
     private bool _deleted;
 
-    internal CoordinatorContext Context
+    internal JourneyCoordinatorContext Context
     {
         get => _context ?? throw new InvalidOperationException("Coordinator context has not been initialized.");
         set => _context = value;

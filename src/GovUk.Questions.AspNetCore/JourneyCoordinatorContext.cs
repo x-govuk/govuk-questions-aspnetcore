@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Http;
 
 namespace GovUk.Questions.AspNetCore;
 
-internal record CoordinatorContext
+internal record JourneyCoordinatorContext
 {
     public required JourneyInstanceId InstanceId { get; init; }
     public required JourneyDescriptor Journey { get; init; }

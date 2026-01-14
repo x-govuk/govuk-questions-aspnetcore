@@ -25,7 +25,7 @@ public class JourneyCoordinatorTests
             .Setup(mock => mock.GetState(instanceId, journey))
             .Returns(new StateStorageEntry { State = expectedState, Path = path });
 
-        var context = new CoordinatorContext
+        var context = new JourneyCoordinatorContext
         {
             InstanceId = instanceId,
             Journey = journey,
@@ -55,7 +55,7 @@ public class JourneyCoordinatorTests
 
         var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, UUID.New().ToUrlSafeString() } });
 
-        var coordinatorContext = new CoordinatorContext
+        var coordinatorContext = new JourneyCoordinatorContext
         {
             InstanceId = instanceId,
             Journey = journey,
@@ -82,7 +82,7 @@ public class JourneyCoordinatorTests
 
         var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, UUID.New().ToUrlSafeString() } });
 
-        var context = new CoordinatorContext
+        var context = new JourneyCoordinatorContext
         {
             InstanceId = instanceId,
             Journey = journey,
@@ -116,7 +116,7 @@ public class JourneyCoordinatorTests
             .Setup(mock => mock.GetState(instanceId, journey))
             .Returns(new StateStorageEntry { State = initialState, Path = path });
 
-        var context = new CoordinatorContext
+        var context = new JourneyCoordinatorContext
         {
             InstanceId = instanceId,
             Journey = journey,
@@ -151,7 +151,7 @@ public class JourneyCoordinatorTests
             .Setup(mock => mock.GetState(instanceId, journey))
             .Returns(new StateStorageEntry { State = initialState, Path = path });
 
-        var context = new CoordinatorContext
+        var context = new JourneyCoordinatorContext
         {
             InstanceId = instanceId,
             Journey = journey,
@@ -185,7 +185,7 @@ public class JourneyCoordinatorTests
             .Setup(mock => mock.GetState(instanceId, journey))
             .Returns(new StateStorageEntry { State = initialState, Path = path });
 
-        var context = new CoordinatorContext
+        var context = new JourneyCoordinatorContext
         {
             InstanceId = instanceId,
             Journey = journey,
@@ -219,7 +219,7 @@ public class JourneyCoordinatorTests
             .Setup(mock => mock.GetState(instanceId, journey))
             .Returns(new StateStorageEntry { State = initialState, Path = path });
 
-        var context = new CoordinatorContext
+        var context = new JourneyCoordinatorContext
         {
             InstanceId = instanceId,
             Journey = journey,
@@ -255,7 +255,7 @@ public class JourneyCoordinatorTests
             .Setup(mock => mock.GetState(instanceId, journey))
             .Returns(new StateStorageEntry { State = initialState, Path = path });
 
-        var context = new CoordinatorContext
+        var context = new JourneyCoordinatorContext
         {
             InstanceId = instanceId,
             Journey = journey,
@@ -289,7 +289,7 @@ public class JourneyCoordinatorTests
             .Setup(mock => mock.GetState(instanceId, journey))
             .Returns(new StateStorageEntry { State = initialState, Path = path });
 
-        var context = new CoordinatorContext
+        var context = new JourneyCoordinatorContext
         {
             InstanceId = instanceId,
             Journey = journey,
@@ -327,7 +327,7 @@ public class JourneyCoordinatorTests
             .Setup(mock => mock.GetState(instanceId, journey))
             .Returns(new StateStorageEntry { State = initialState, Path = path });
 
-        var context = new CoordinatorContext
+        var context = new JourneyCoordinatorContext
         {
             InstanceId = instanceId,
             Journey = journey,
@@ -364,7 +364,7 @@ public class JourneyCoordinatorTests
             .Setup(mock => mock.GetState(instanceId, journey))
             .Returns(new StateStorageEntry { State = initialState, Path = path });
 
-        var context = new CoordinatorContext
+        var context = new JourneyCoordinatorContext
         {
             InstanceId = instanceId,
             Journey = journey,
@@ -398,7 +398,7 @@ public class JourneyCoordinatorTests
             .Setup(mock => mock.GetState(instanceId, journey))
             .Returns(new StateStorageEntry { State = initialState, Path = path });
 
-        var context = new CoordinatorContext
+        var context = new JourneyCoordinatorContext
         {
             InstanceId = instanceId,
             Journey = journey,
@@ -436,7 +436,7 @@ public class JourneyCoordinatorTests
             .Setup(mock => mock.GetState(instanceId, journey))
             .Returns(new StateStorageEntry { State = initialState, Path = path });
 
-        var context = new CoordinatorContext
+        var context = new JourneyCoordinatorContext
         {
             InstanceId = instanceId,
             Journey = journey,
@@ -474,7 +474,7 @@ public class JourneyCoordinatorTests
             .Setup(mock => mock.GetState(instanceId, journey))
             .Returns(new StateStorageEntry { State = initialState, Path = path });
 
-        var context = new CoordinatorContext
+        var context = new JourneyCoordinatorContext
         {
             InstanceId = instanceId,
             Journey = journey,
@@ -511,7 +511,7 @@ public class JourneyCoordinatorTests
             .Setup(mock => mock.GetState(instanceId, journey))
             .Returns(new StateStorageEntry { State = initialState, Path = path });
 
-        var context = new CoordinatorContext
+        var context = new JourneyCoordinatorContext
         {
             InstanceId = instanceId,
             Journey = journey,
@@ -552,7 +552,7 @@ public class JourneyCoordinatorTests
         var httpContext = new DefaultHttpContext();
         httpContext.Request.Path = "/step1";
 
-        var context = new CoordinatorContext
+        var context = new JourneyCoordinatorContext
         {
             InstanceId = instanceId,
             Journey = journey,
@@ -595,7 +595,7 @@ public class JourneyCoordinatorTests
         var httpContext = new DefaultHttpContext();
         httpContext.Request.Path = "/step1";
 
-        var context = new CoordinatorContext
+        var context = new JourneyCoordinatorContext
         {
             InstanceId = instanceId,
             Journey = journey,
@@ -641,7 +641,7 @@ public class JourneyCoordinatorTests
         var httpContext = new DefaultHttpContext();
         httpContext.Request.Path = "/step1";
 
-        var context = new CoordinatorContext
+        var context = new JourneyCoordinatorContext
         {
             InstanceId = instanceId,
             Journey = journey,
@@ -684,7 +684,7 @@ public class JourneyCoordinatorTests
         var httpContext = new DefaultHttpContext();
         httpContext.Request.Path = "/step1";
 
-        var context = new CoordinatorContext
+        var context = new JourneyCoordinatorContext
         {
             InstanceId = instanceId,
             Journey = journey,
@@ -731,7 +731,7 @@ public class JourneyCoordinatorTests
         var httpContext = new DefaultHttpContext();
         httpContext.Request.Path = "/step1";
 
-        var context = new CoordinatorContext
+        var context = new JourneyCoordinatorContext
         {
             InstanceId = instanceId,
             Journey = journey,
@@ -778,7 +778,7 @@ public class JourneyCoordinatorTests
         var httpContext = new DefaultHttpContext();
         httpContext.Request.Path = "/step1";
 
-        var context = new CoordinatorContext
+        var context = new JourneyCoordinatorContext
         {
             InstanceId = instanceId,
             Journey = journey,
@@ -824,7 +824,7 @@ public class JourneyCoordinatorTests
         var httpContext = new DefaultHttpContext();
         httpContext.Request.Path = "/step1";
 
-        var context = new CoordinatorContext
+        var context = new JourneyCoordinatorContext
         {
             InstanceId = instanceId,
             Journey = journey,
@@ -867,7 +867,7 @@ public class JourneyCoordinatorTests
         var httpContext = new DefaultHttpContext();
         httpContext.Request.Path = "/step1";
 
-        var context = new CoordinatorContext
+        var context = new JourneyCoordinatorContext
         {
             InstanceId = instanceId,
             Journey = journey,
@@ -914,7 +914,7 @@ public class JourneyCoordinatorTests
         var httpContext = new DefaultHttpContext();
         httpContext.Request.Path = "/step1";
 
-        var context = new CoordinatorContext
+        var context = new JourneyCoordinatorContext
         {
             InstanceId = instanceId,
             Journey = journey,
