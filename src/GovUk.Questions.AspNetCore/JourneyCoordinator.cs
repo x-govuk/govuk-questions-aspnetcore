@@ -430,6 +430,7 @@ public abstract class JourneyCoordinator
         await UpdateStateStorageEntryCoreAsync(async e =>
         {
             var currentStep = GetCurrentStep() ?? throw new InvalidOperationException("Current step not found in journey path.");
+
             var nextStep = CreateStepFromUrl(nextStepUrl);
             var newPath = e.Path.PushStep(nextStep, currentStep, pushStepOptions);
 

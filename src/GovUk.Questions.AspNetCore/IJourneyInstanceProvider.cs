@@ -27,6 +27,15 @@ public interface IJourneyInstanceProvider
     /// <param name="httpContext">The current <see cref="HttpContext"/>.</param>
     /// <returns>>The newly created <see cref="JourneyCoordinator{TState}"/>, if one could be created; otherwise <see langword="null"/>.</returns>
     Task<JourneyCoordinator?> TryCreateNewInstanceAsync(HttpContext httpContext);
+
+    /// <summary>
+    /// Tries to create a new journey instance for the specified <see cref="HttpContext"/>
+    /// with initial state provided by the specified delegate.
+    /// </summary>
+    /// <param name="httpContext">The current <see cref="HttpContext"/>.</param>
+    /// <param name="createInitialState">A delegate to create the initial state for the journey instance.</param>
+    /// <returns>>The newly created <see cref="JourneyCoordinator{TState}"/>, if one could be created; otherwise <see langword="null"/>.</returns>
+    Task<JourneyCoordinator?> TryCreateNewInstanceAsync(HttpContext httpContext, Func<CreateNewInstanceStateContext, Task<object>> createInitialState);
 }
 
 /// <summary>

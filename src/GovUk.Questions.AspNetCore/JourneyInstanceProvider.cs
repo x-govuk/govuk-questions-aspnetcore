@@ -81,71 +81,32 @@ internal class JourneyInstanceProvider(IJourneyStateStorage journeyStateStorage,
         return coordinator;
     }
 
-    public async Task<JourneyCoordinator?> TryCreateNewInstanceAsync(HttpContext httpContext)
+    public Task<JourneyCoordinator?> TryCreateNewInstanceAsync(
+        HttpContext httpContext,
+        Func<CreateNewInstanceStateContext, Task<object>> createInitialState)
     {
         ArgumentNullException.ThrowIfNull(httpContext);
+        ArgumentNullException.ThrowIfNull(createInitialState);
 
-        if (httpContext.Items.ContainsKey(HttpContextItemKey))
-        {
-            throw new InvalidOperationException("A journey instance has already been created for this request.");
-        }
+        return TryCreateNewInstanceCoreAsync(
+            httpContext,
+            contextFilter: _ => true,
+            (_, ctx) => createInitialState(ctx));
+    }
 
-        if (GetJourneyInfo(httpContext) is not { JourneyName: var journeyName })
-        {
-            return null;
-        }
-
-        if (!EndpointStartsJourney(httpContext))
-        {
-            return null;
-        }
-
-        var journey = journeyRegistry.FindJourneyByName(journeyName);
-        if (journey is null)
-        {
-            throw new InvalidOperationException($"No journey found with name '{journeyName}'.");
-        }
-
-        var valueProvider = CreateValueProvider(httpContext);
-        var routeValues = GetRouteValues(journey, valueProvider);
-
-        if (!JourneyInstanceId.TryCreateNew(journey, routeValues, out var instanceId))
-        {
-            return null;
-        }
-
-        var firstStepUrl = QueryHelpers.AddQueryString(httpContext.Request.GetEncodedPathAndQuery(), JourneyInstanceId.KeyRouteValueName, instanceId.Key);
-        var firstStep = JourneyCoordinator.CreateStepFromUrl(firstStepUrl);
-        var path = new JourneyPath([firstStep]);
-
-        var coordinatorFactory = journeyRegistry.GetCoordinatorActivator(journey);
-        var coordinatorContext = new CoordinatorContext
-        {
-            InstanceId = instanceId,
-            Journey = journey,
-            JourneyStateStorage = journeyStateStorage,
-            HttpContext = httpContext
-        };
-        var coordinator = coordinatorFactory(httpContext.RequestServices, coordinatorContext);
-
-        var state = await coordinator.GetStartingStateSafeAsync();
-        Debug.Assert(state.GetType() == journey.StateType);
-        journeyStateStorage.SetState(instanceId, journey, new StateStorageEntry { State = state, Path = path });
-
-        httpContext.Items[HttpContextItemKey] = coordinator;
-
-        return coordinator;
+    public Task<JourneyCoordinator?> TryCreateNewInstanceAsync(HttpContext httpContext)
+    {
+        return TryCreateNewInstanceCoreAsync(
+            httpContext,
+            contextFilter: EndpointStartsJourney,
+            (coordinator, _) => coordinator.GetStartingStateSafeAsync());
     }
 
     private static bool EndpointStartsJourney(HttpContext httpContext)
     {
         var endpoint = httpContext.GetEndpoint();
-        if (endpoint is null)
-        {
-            return false;
-        }
 
-        return endpoint.Metadata.GetMetadata<StartsJourneyMetadata>() is not null;
+        return endpoint?.Metadata.GetMetadata<StartsJourneyMetadata>() != null;
     }
 
     private static RouteValueDictionary GetRouteValues(JourneyDescriptor journey, CompositeValueProvider valueProvider)
@@ -179,5 +140,65 @@ internal class JourneyInstanceProvider(IJourneyStateStorage journeyStateStorage,
             System.Globalization.CultureInfo.InvariantCulture);
 
         return new CompositeValueProvider([routeValueProviderFactory, queryStringValueProvider]);
+    }
+
+    private async Task<JourneyCoordinator?> TryCreateNewInstanceCoreAsync(
+        HttpContext httpContext,
+        Predicate<HttpContext> contextFilter,
+        Func<JourneyCoordinator, CreateNewInstanceStateContext, Task<object>> createInitialStateAsync)
+    {
+        ArgumentNullException.ThrowIfNull(httpContext);
+
+        if (httpContext.Items.ContainsKey(HttpContextItemKey))
+        {
+            throw new InvalidOperationException("A journey instance has already been created for this request.");
+        }
+
+        if (GetJourneyInfo(httpContext) is not { JourneyName: var journeyName })
+        {
+            return null;
+        }
+
+        if (!contextFilter(httpContext))
+        {
+            return null;
+        }
+
+        var journey = journeyRegistry.FindJourneyByName(journeyName);
+        if (journey is null)
+        {
+            throw new InvalidOperationException($"No journey found with name '{journeyName}'.");
+        }
+
+        var valueProvider = CreateValueProvider(httpContext);
+        var routeValues = GetRouteValues(journey, valueProvider);
+
+        if (!JourneyInstanceId.TryCreateNew(journey, routeValues, out var instanceId))
+        {
+            return null;
+        }
+
+        var firstStepUrl = QueryHelpers.AddQueryString(httpContext.Request.GetEncodedPathAndQuery(), JourneyInstanceId.KeyRouteValueName, instanceId.Key);
+        var firstStep = JourneyCoordinator.CreateStepFromUrl(firstStepUrl);
+        var path = new JourneyPath([firstStep]);
+
+        var coordinatorFactory = journeyRegistry.GetCoordinatorActivator(journey);
+        var coordinatorContext = new CoordinatorContext
+        {
+            InstanceId = instanceId,
+            Journey = journey,
+            JourneyStateStorage = journeyStateStorage,
+            HttpContext = httpContext
+        };
+        var coordinator = coordinatorFactory(httpContext.RequestServices, coordinatorContext);
+
+        var createNewInstanceStateContext = new CreateNewInstanceStateContext(instanceId, httpContext);
+        var state = await createInitialStateAsync(coordinator, createNewInstanceStateContext);
+        Debug.Assert(state.GetType() == journey.StateType);
+        journeyStateStorage.SetState(instanceId, journey, new StateStorageEntry { State = state, Path = path });
+
+        httpContext.Items[HttpContextItemKey] = coordinator;
+
+        return coordinator;
     }
 }
