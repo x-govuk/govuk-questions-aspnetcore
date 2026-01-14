@@ -1,5 +1,4 @@
 using GovUk.Questions.AspNetCore.Description;
-using GovUk.Questions.AspNetCore.Filters;
 using GovUk.Questions.AspNetCore.State;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

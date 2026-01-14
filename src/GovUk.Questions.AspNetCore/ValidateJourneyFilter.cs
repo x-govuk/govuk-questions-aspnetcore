@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
-namespace GovUk.Questions.AspNetCore.Filters;
+namespace GovUk.Questions.AspNetCore;
 
 // ReSharper disable once ClassNeverInstantiated.Global
 internal class ValidateJourneyFilter(IJourneyInstanceProvider instanceProvider) : IAsyncResourceFilter
