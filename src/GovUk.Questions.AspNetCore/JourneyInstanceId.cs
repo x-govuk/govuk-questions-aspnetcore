@@ -127,6 +127,18 @@ public sealed class JourneyInstanceId : IEquatable<JourneyInstanceId>, IParsable
         return true;
     }
 
+    /// <summary>
+    /// Appends the instance key query parameter to the specified URL.
+    /// </summary>
+#pragma warning disable CA1055
+    public string AppendKeyToUrl(string url)
+#pragma warning restore CA1055
+    {
+        ArgumentNullException.ThrowIfNull(url);
+
+        return QueryHelpers.AddQueryString(url, KeyRouteValueName, Key);
+    }
+
     internal static bool TryCreate(JourneyDescriptor journey, RouteValueDictionary routeValues, [NotNullWhen(true)] out JourneyInstanceId? result)
     {
         ArgumentNullException.ThrowIfNull(journey);

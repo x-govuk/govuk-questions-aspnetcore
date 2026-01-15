@@ -1,6 +1,5 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Microsoft.AspNetCore.WebUtilities;
 
 namespace GovUk.Questions.AspNetCore;
 
@@ -114,7 +113,7 @@ public record JourneyPathStep(string StepId, string NormalizedUrl)
     {
         ArgumentNullException.ThrowIfNull(journeyInstanceId);
 
-        return QueryHelpers.AddQueryString(NormalizedUrl, JourneyInstanceId.KeyRouteValueName, journeyInstanceId.Key);
+        return journeyInstanceId.AppendKeyToUrl(NormalizedUrl);
     }
 }
 

@@ -246,5 +246,38 @@ public class JourneyInstanceIdTests
         Assert.Equal("42", result.RouteValues["foo"].ToString());
         Assert.Equal("b&az", result.RouteValues["bar"].ToString());
     }
-}
 
+    [Fact]
+    public void AppendKeyToUrl_WithExistingQueryParameters_AppendsKeyCorrectly()
+    {
+        // Arrange
+        var journeyName = "test-journey";
+        var key = UUID.New().ToUrlSafeString();
+        var routeValues = new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, key } };
+        var journeyInstanceId = new JourneyInstanceId(journeyName, routeValues);
+        var url = "/some/path?foo=bar";
+
+        // Act
+        var result = journeyInstanceId.AppendKeyToUrl(url);
+
+        // Assert
+        Assert.Equal($"/some/path?foo=bar&_jid={key}", result);
+    }
+
+    [Fact]
+    public void AppendKeyToUrl_WithoutExistingQueryParameters_AppendsKeyCorrectly()
+    {
+        // Arrange
+        var journeyName = "test-journey";
+        var key = UUID.New().ToUrlSafeString();
+        var routeValues = new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, key } };
+        var journeyInstanceId = new JourneyInstanceId(journeyName, routeValues);
+        var url = "/some/path";
+
+        // Act
+        var result = journeyInstanceId.AppendKeyToUrl(url);
+
+        // Assert
+        Assert.Equal($"/some/path?_jid={key}", result);
+    }
+}
