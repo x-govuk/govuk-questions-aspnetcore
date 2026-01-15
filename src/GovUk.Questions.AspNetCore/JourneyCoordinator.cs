@@ -208,20 +208,23 @@ public abstract class JourneyCoordinator
         _deleted = true;
     }
 
+    /// <summary>
+    /// Creates a <see cref="JourneyPathStep"/> from the specified <paramref name="url"/>.
+    /// </summary>
+    public static JourneyPathStep CreateStepFromUrl(string url)
+    {
+        ArgumentNullException.ThrowIfNull(url);
+
+        var stepId = GetUrlWithoutQueryParameters(url, ReturnUrlQueryParameterName);
+        return new JourneyPathStep(stepId, url);
+    }
+
     internal static JourneyPathStep CreateStepFromHttpContext(HttpContext httpContext)
     {
         ArgumentNullException.ThrowIfNull(httpContext);
 
         var url = httpContext.Request.GetEncodedPathAndQuery();
         return CreateStepFromUrl(url);
-    }
-
-    internal static JourneyPathStep CreateStepFromUrl(string url)
-    {
-        ArgumentNullException.ThrowIfNull(url);
-
-        var stepId = GetUrlWithoutQueryParameters(url, ReturnUrlQueryParameterName);
-        return new JourneyPathStep(stepId, url);
     }
 
     /// <summary>
