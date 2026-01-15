@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.WebUtilities;
 
 namespace GovUk.Questions.AspNetCore;
 
@@ -101,8 +102,21 @@ public class JourneyPath
 /// Represents a step in a journey path.
 /// </summary>
 /// <param name="StepId">The ID of the step.</param>
-/// <param name="Url">The URL of the step.</param>
-public record JourneyPathStep(string StepId, string Url);
+/// <param name="NormalizedUrl">The normalized URL of the step.</param>
+public record JourneyPathStep(string StepId, string NormalizedUrl)
+{
+    /// <summary>
+    /// Gets the URL for this step within the specified journey instance.
+    /// </summary>
+#pragma warning disable CA1055
+    public string GetUrl(JourneyInstanceId journeyInstanceId)
+#pragma warning restore CA1055
+    {
+        ArgumentNullException.ThrowIfNull(journeyInstanceId);
+
+        return QueryHelpers.AddQueryString(NormalizedUrl, JourneyInstanceId.KeyRouteValueName, journeyInstanceId.Key);
+    }
+}
 
 /// <summary>
 /// Options for configuring the <see cref="JourneyPath.PushStep"/> method.

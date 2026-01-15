@@ -215,7 +215,7 @@ public abstract class JourneyCoordinator
     {
         ArgumentNullException.ThrowIfNull(url);
 
-        var stepId = GetUrlWithoutQueryParameters(url, ReturnUrlQueryParameterName);
+        var stepId = GetUrlWithoutQueryParameters(url, ReturnUrlQueryParameterName, JourneyInstanceId.KeyRouteValueName);
         return new JourneyPathStep(stepId, url);
     }
 
@@ -245,7 +245,9 @@ public abstract class JourneyCoordinator
     /// </remarks>
     public virtual IResult OnInvalidStep()
     {
-        return Path.Steps.Count > 0 ? Results.Redirect(Path.Steps.Last().Url) : Results.BadRequest();
+        return Path.Steps.Count > 0 ?
+            Results.Redirect(Path.Steps.Last().NormalizedUrl) :
+            Results.BadRequest();
     }
 
     /// <summary>

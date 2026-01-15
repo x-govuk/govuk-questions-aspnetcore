@@ -1,3 +1,7 @@
+using System.Diagnostics;
+using GovUk.Questions.AspNetCore.Description;
+using Microsoft.AspNetCore.Routing;
+
 namespace GovUk.Questions.AspNetCore.Tests;
 
 public class JourneyPathTests
@@ -43,6 +47,22 @@ public class JourneyPathTests
     }
 
     [Fact]
+    public void GetUrl_ReturnsUrlWithKeyInQueryParameters()
+    {
+        // Arrange
+        var step = new JourneyPathStep("Step1", "/step-1?foo=bar");
+        var journey = new JourneyDescriptor("Test", ["foo"], typeof(object));
+        JourneyInstanceId.TryCreateNew(journey, new RouteValueDictionary { ["foo"] = "bar" }, out var instanceId);
+        Debug.Assert(instanceId is not null);
+
+        // Act
+        var url = step.GetUrl(instanceId);
+
+        // Assert
+        Assert.Equal($"/step-1?foo=bar&_jid={instanceId.Key}", url);
+    }
+
+    [Fact]
     public void PushStep_CurrentStepDoesNotExistInPath_ThrowsInvalidOperationException()
     {
         // Arrange
@@ -81,9 +101,9 @@ public class JourneyPathTests
         // Assert
         Assert.Collection(
             result.Steps,
-            step => Assert.Equal("/step-1", step.Url),
-            step => Assert.Equal("/step-2", step.Url),
-            step => Assert.Equal("/step-3", step.Url));
+            step => Assert.Equal("/step-1", step.NormalizedUrl),
+            step => Assert.Equal("/step-2", step.NormalizedUrl),
+            step => Assert.Equal("/step-3", step.NormalizedUrl));
     }
 
     [Fact]
@@ -105,9 +125,9 @@ public class JourneyPathTests
         // Assert
         Assert.Collection(
             result.Steps,
-            step => Assert.Equal("/step-1", step.Url),
-            step => Assert.Equal("/step-2", step.Url),
-            step => Assert.Equal("/step-4", step.Url));
+            step => Assert.Equal("/step-1", step.NormalizedUrl),
+            step => Assert.Equal("/step-2", step.NormalizedUrl),
+            step => Assert.Equal("/step-4", step.NormalizedUrl));
     }
 
     [Fact]
@@ -128,8 +148,8 @@ public class JourneyPathTests
         // Assert
         Assert.Collection(
             result.Steps,
-            step => Assert.Equal("/step-1", step.Url),
-            step => Assert.Equal("/step-2", step.Url));
+            step => Assert.Equal("/step-1", step.NormalizedUrl),
+            step => Assert.Equal("/step-2", step.NormalizedUrl));
     }
 
     [Fact]
@@ -151,9 +171,9 @@ public class JourneyPathTests
         // Assert
         Assert.Collection(
             result.Steps,
-            step => Assert.Equal("/step-1", step.Url),
-            step => Assert.Equal("/step-2", step.Url),
-            step => Assert.Equal("/step-3", step.Url));
+            step => Assert.Equal("/step-1", step.NormalizedUrl),
+            step => Assert.Equal("/step-2", step.NormalizedUrl),
+            step => Assert.Equal("/step-3", step.NormalizedUrl));
     }
 
     [Fact]
@@ -175,8 +195,8 @@ public class JourneyPathTests
         // Assert
         Assert.Collection(
             result.Steps,
-            step => Assert.Equal("/step-1", step.Url),
-            step => Assert.Equal("/step-2", step.Url));
+            step => Assert.Equal("/step-1", step.NormalizedUrl),
+            step => Assert.Equal("/step-2", step.NormalizedUrl));
     }
 
     [Fact]
@@ -220,8 +240,8 @@ public class JourneyPathTests
         // Assert
         Assert.Collection(
             result.Steps,
-            step => Assert.Equal("/step-1", step.Url),
-            step => Assert.Equal("/step-3", step.Url));
+            step => Assert.Equal("/step-1", step.NormalizedUrl),
+            step => Assert.Equal("/step-3", step.NormalizedUrl));
     }
 
     [Fact]
@@ -242,7 +262,7 @@ public class JourneyPathTests
         // Assert
         Assert.Collection(
             result.Steps,
-            step => Assert.Equal("/step-3", step.Url));
+            step => Assert.Equal("/step-3", step.NormalizedUrl));
     }
 
     [Fact]
@@ -263,6 +283,6 @@ public class JourneyPathTests
         // Assert
         Assert.Collection(
             result.Steps,
-            step => Assert.Equal("/step-2", step.Url));
+            step => Assert.Equal("/step-2", step.NormalizedUrl));
     }
 }
