@@ -100,7 +100,7 @@ public class JourneyPath
 /// <summary>
 /// Represents a step in a journey path.
 /// </summary>
-/// <param name="StepId">The ID of the step."></param>
+/// <param name="StepId">The ID of the step.</param>
 /// <param name="Url">The URL of the step.</param>
 public record JourneyPathStep(string StepId, string Url);
 
