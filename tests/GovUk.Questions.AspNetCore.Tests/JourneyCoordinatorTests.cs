@@ -238,7 +238,7 @@ public class JourneyCoordinatorTests
     }
 
     [Fact]
-    public void UnsafeSetPathSteps_UpdatesPathInStateStorage()
+    public void UnsafeSetPath_UpdatesPathInStateStorage()
     {
         // Arrange
         var mockStateStorage = new Mock<IJourneyStateStorage>();
@@ -265,9 +265,10 @@ public class JourneyCoordinatorTests
         var coordinator = new TestJourneyCoordinator { Context = context };
 
         var newPathSteps = new[] { new JourneyPathStep("/step1", "/step1"), new JourneyPathStep("/step2", "/step2") };
+        var newPath = new JourneyPath(newPathSteps);
 
         // Act
-        coordinator.UnsafeSetPathSteps(newPathSteps);
+        coordinator.UnsafeSetPath(newPath);
 
         // Assert
         mockStateStorage.Verify(s => s.SetState(instanceId, journey, It.Is<StateStorageEntry>(e => e.Path.Steps.SequenceEqual(newPathSteps))), Times.Once);

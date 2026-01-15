@@ -263,13 +263,13 @@ public abstract class JourneyCoordinator
     }
 
     /// <summary>
-    /// Sets the journey path steps directly, bypassing any validation.
+    /// Sets the journey path directly, bypassing any validation.
     /// </summary>
-    public void UnsafeSetPathSteps(IEnumerable<JourneyPathStep> steps)
+    public void UnsafeSetPath(JourneyPath path)
     {
-        ArgumentNullException.ThrowIfNull(steps);
+        ArgumentNullException.ThrowIfNull(path);
 
-        var vt = UpdateStateStorageEntryCoreAsync(e => ValueTask.FromResult(e with { Path = new JourneyPath(steps) }));
+        var vt = UpdateStateStorageEntryCoreAsync(e => ValueTask.FromResult(e with { Path = path }));
         Debug.Assert(vt.IsCompleted);
 #pragma warning disable VSTHRD002
         vt.GetAwaiter().GetResult();
