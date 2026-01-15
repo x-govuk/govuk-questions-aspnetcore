@@ -1,3 +1,4 @@
+using GovUk.Questions.AspNetCore.Description;
 using GovUk.Questions.AspNetCore.State;
 using GovUk.Questions.AspNetCore.Testing.State;
 using Microsoft.Extensions.DependencyInjection;
@@ -30,7 +31,9 @@ public static class GovUkQuestionsTestingExtensions
     {
         ArgumentNullException.ThrowIfNull(services);
 
-        return services.AddSingleton<JourneyHelper>();
+        return services.AddSingleton<JourneyHelper>(sp => new JourneyHelper(
+            sp.GetRequiredService<JourneyRegistry>(),
+            sp.GetRequiredService<IJourneyStateStorage>()));
     }
 
     /// <summary>
