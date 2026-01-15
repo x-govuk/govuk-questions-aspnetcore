@@ -246,7 +246,7 @@ public abstract class JourneyCoordinator
     public virtual IResult OnInvalidStep()
     {
         return Path.Steps.Count > 0 ?
-            Results.Redirect(Path.Steps.Last().NormalizedUrl) :
+            Results.Redirect(Path.Steps.Last().GetUrl(InstanceId)) :
             Results.BadRequest();
     }
 

@@ -132,7 +132,7 @@ public class JourneyCoordinatorTests
 
         // Assert
         var redirectResult = Assert.IsType<RedirectHttpResult>(result);
-        Assert.Equal("/step2", redirectResult.Url);
+        Assert.Equal($"/step2?_jid={instanceId.Key}", redirectResult.Url);
     }
 
     [Fact]
