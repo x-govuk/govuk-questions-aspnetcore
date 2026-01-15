@@ -101,7 +101,7 @@ public class JourneyCoordinatorTests
     }
 
     [Fact]
-    public void OnInvalidStep_ReturnsRedirectToLastStep()
+    public void OnInvalidStep_WithAtLeastOneStepInPath_ReturnsRedirectToLastStep()
     {
         // Arrange
         var mockStateStorage = new Mock<IJourneyStateStorage>();
@@ -133,6 +133,40 @@ public class JourneyCoordinatorTests
         // Assert
         var redirectResult = Assert.IsType<RedirectHttpResult>(result);
         Assert.Equal("/step2", redirectResult.Url);
+    }
+
+    [Fact]
+    public void OnInvalidStep_WithNoStepsInPath_ReturnsBadRequest()
+    {
+        // Arrange
+        var mockStateStorage = new Mock<IJourneyStateStorage>();
+
+        var journey = new JourneyDescriptor("test", [], typeof(TestState));
+
+        var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, UUID.New().ToUrlSafeString() } });
+
+        var path = new JourneyPath([]);
+
+        var initialState = new TestState();
+        mockStateStorage
+            .Setup(mock => mock.GetState(instanceId, journey))
+            .Returns(new StateStorageEntry { State = initialState, Path = path });
+
+        var context = new JourneyCoordinatorContext
+        {
+            InstanceId = instanceId,
+            Journey = journey,
+            JourneyStateStorage = mockStateStorage.Object,
+            HttpContext = new DefaultHttpContext()
+        };
+
+        var coordinator = new TestJourneyCoordinator { Context = context };
+
+        // Act
+        var result = coordinator.OnInvalidStep();
+
+        // Assert
+        Assert.IsType<BadRequest>(result);
     }
 
     [Fact]
