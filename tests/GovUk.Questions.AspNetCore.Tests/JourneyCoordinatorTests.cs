@@ -1,6 +1,7 @@
 using GovUk.Questions.AspNetCore.Description;
 using GovUk.Questions.AspNetCore.State;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 using Moq;
 
@@ -130,7 +131,7 @@ public class JourneyCoordinatorTests
         var result = coordinator.OnInvalidStep();
 
         // Assert
-        var redirectResult = Assert.IsType<Microsoft.AspNetCore.Mvc.RedirectResult>(result);
+        var redirectResult = Assert.IsType<RedirectHttpResult>(result);
         Assert.Equal("/step2", redirectResult.Url);
     }
 
@@ -566,8 +567,7 @@ public class JourneyCoordinatorTests
         var result = coordinator.AdvanceTo("/step2");
 
         // Assert
-        var redirectResult = Assert.IsType<Microsoft.AspNetCore.Mvc.RedirectResult>(result);
-        Assert.Equal("/step2", redirectResult.Url);
+        Assert.Equal("/step2", result.Url);
         mockStateStorage.Verify(s => s.SetState(instanceId, journey, It.Is<StateStorageEntry>(e =>
             ((TestState)e.State).Foo == 123 && // State should remain unchanged
             e.Path.Steps.Count == 2 &&
@@ -612,8 +612,7 @@ public class JourneyCoordinatorTests
         });
 
         // Assert
-        var redirectResult = Assert.IsType<Microsoft.AspNetCore.Mvc.RedirectResult>(result);
-        Assert.Equal("/step2", redirectResult.Url);
+        Assert.Equal("/step2", result.Url);
         mockStateStorage.Verify(s => s.SetState(instanceId, journey, It.Is<StateStorageEntry>(e =>
             ((TestState)e.State).Foo == 456 &&
             e.Path.Steps.Count == 2 &&
@@ -655,8 +654,7 @@ public class JourneyCoordinatorTests
         var result = ((JourneyCoordinator)coordinator).AdvanceTo("/step2", state => ((TestState)state) with { Foo = 789 });
 
         // Assert
-        var redirectResult = Assert.IsType<Microsoft.AspNetCore.Mvc.RedirectResult>(result);
-        Assert.Equal("/step2", redirectResult.Url);
+        Assert.Equal("/step2", result.Url);
         mockStateStorage.Verify(s => s.SetState(instanceId, journey, It.Is<StateStorageEntry>(e =>
             ((TestState)e.State).Foo == 789 &&
             e.Path.Steps.Count == 2 &&
@@ -702,8 +700,7 @@ public class JourneyCoordinatorTests
         });
 
         // Assert
-        var redirectResult = Assert.IsType<Microsoft.AspNetCore.Mvc.RedirectResult>(result);
-        Assert.Equal("/step2", redirectResult.Url);
+        Assert.Equal("/step2", result.Url);
         mockStateStorage.Verify(s => s.SetState(instanceId, journey, It.Is<StateStorageEntry>(e =>
             ((TestState)e.State).Foo == 999 &&
             e.Path.Steps.Count == 2 &&
@@ -749,8 +746,7 @@ public class JourneyCoordinatorTests
         });
 
         // Assert
-        var redirectResult = Assert.IsType<Microsoft.AspNetCore.Mvc.RedirectResult>(result);
-        Assert.Equal("/step2", redirectResult.Url);
+        Assert.Equal("/step2", result.Url);
         mockStateStorage.Verify(s => s.SetState(instanceId, journey, It.Is<StateStorageEntry>(e =>
             ((TestState)e.State).Foo == 111 &&
             e.Path.Steps.Count == 2 &&
@@ -795,8 +791,7 @@ public class JourneyCoordinatorTests
         });
 
         // Assert
-        var redirectResult = Assert.IsType<Microsoft.AspNetCore.Mvc.RedirectResult>(result);
-        Assert.Equal("/step2", redirectResult.Url);
+        Assert.Equal("/step2", result.Url);
         mockStateStorage.Verify(s => s.SetState(instanceId, journey, It.Is<StateStorageEntry>(e =>
             ((TestState)e.State).Foo == 222 &&
             e.Path.Steps.Count == 2 &&
@@ -838,8 +833,7 @@ public class JourneyCoordinatorTests
         var result = coordinator.AdvanceTo("/step2", state => state with { Foo = 333 });
 
         // Assert
-        var redirectResult = Assert.IsType<Microsoft.AspNetCore.Mvc.RedirectResult>(result);
-        Assert.Equal("/step2", redirectResult.Url);
+        Assert.Equal("/step2", result.Url);
         mockStateStorage.Verify(s => s.SetState(instanceId, journey, It.Is<StateStorageEntry>(e =>
             ((TestState)e.State).Foo == 333 &&
             e.Path.Steps.Count == 2 &&
@@ -885,8 +879,7 @@ public class JourneyCoordinatorTests
         });
 
         // Assert
-        var redirectResult = Assert.IsType<Microsoft.AspNetCore.Mvc.RedirectResult>(result);
-        Assert.Equal("/step2", redirectResult.Url);
+        Assert.Equal("/step2", result.Url);
         mockStateStorage.Verify(s => s.SetState(instanceId, journey, It.Is<StateStorageEntry>(e =>
             ((TestState)e.State).Foo == 444 &&
             e.Path.Steps.Count == 2 &&
@@ -932,8 +925,7 @@ public class JourneyCoordinatorTests
         });
 
         // Assert
-        var redirectResult = Assert.IsType<Microsoft.AspNetCore.Mvc.RedirectResult>(result);
-        Assert.Equal("/step2", redirectResult.Url);
+        Assert.Equal("/step2", result.Url);
         mockStateStorage.Verify(s => s.SetState(instanceId, journey, It.Is<StateStorageEntry>(e =>
             ((TestState)e.State).Foo == 555 &&
             e.Path.Steps.Count == 2 &&

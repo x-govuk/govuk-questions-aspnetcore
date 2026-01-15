@@ -4,7 +4,6 @@ using GovUk.Questions.AspNetCore.Description;
 using GovUk.Questions.AspNetCore.State;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
 
 namespace GovUk.Questions.AspNetCore;
@@ -62,7 +61,7 @@ public abstract class JourneyCoordinator
     /// <summary>
     /// Advances the journey to the specified <paramref name="nextStepUrl"/> without modifying the state.
     /// </summary>
-    public IActionResult AdvanceTo(
+    public AdvanceToResult AdvanceTo(
         string nextStepUrl,
         PushStepOptions pushStepOptions = default)
     {
@@ -81,7 +80,7 @@ public abstract class JourneyCoordinator
     /// <summary>
     /// Advances the journey to the specified <paramref name="nextStepUrl"/>, updating the state using the provided <paramref name="updateState"/> action.
     /// </summary>
-    public IActionResult AdvanceTo(
+    public AdvanceToResult AdvanceTo(
         string nextStepUrl,
         Action<object> updateState,
         PushStepOptions pushStepOptions = default)
@@ -106,7 +105,7 @@ public abstract class JourneyCoordinator
     /// <summary>
     /// Advances the journey to the specified <paramref name="nextStepUrl"/>, updating the state using the provided <paramref name="getNewState"/> function.
     /// </summary>
-    public IActionResult AdvanceTo(
+    public AdvanceToResult AdvanceTo(
         string nextStepUrl,
         Func<object, object> getNewState,
         PushStepOptions pushStepOptions = default)
@@ -124,7 +123,7 @@ public abstract class JourneyCoordinator
     /// <summary>
     /// Advances the journey to the specified <paramref name="nextStepUrl"/>, updating the state using the provided <paramref name="updateState"/> function.
     /// </summary>
-    public Task<IActionResult> AdvanceToAsync(
+    public Task<AdvanceToResult> AdvanceToAsync(
         string nextStepUrl,
         Func<object, Task> updateState,
         PushStepOptions pushStepOptions = default)
@@ -146,7 +145,7 @@ public abstract class JourneyCoordinator
     /// <summary>
     /// Advances the journey to the specified <paramref name="nextStepUrl"/>, updating the state using the provided <paramref name="getNewState"/> function.
     /// </summary>
-    public Task<IActionResult> AdvanceToAsync(
+    public Task<AdvanceToResult> AdvanceToAsync(
         string nextStepUrl,
         Func<object, Task<object>> getNewState,
         PushStepOptions pushStepOptions = default)
@@ -241,9 +240,9 @@ public abstract class JourneyCoordinator
     /// <remarks>
     /// The default implementation redirects to the last step in the journey path.
     /// </remarks>
-    public virtual IActionResult OnInvalidStep()
+    public virtual IResult OnInvalidStep()
     {
-        return new RedirectResult(Path.Steps.Last().Url);
+        return Results.Redirect(Path.Steps.Last().Url);
     }
 
     /// <summary>
@@ -419,7 +418,7 @@ public abstract class JourneyCoordinator
         }
     }
 
-    private async ValueTask<IActionResult> AdvanceToCoreAsync(
+    private async ValueTask<AdvanceToResult> AdvanceToCoreAsync(
         string nextStepUrl,
         Func<object, ValueTask<object>> getNewState,
         PushStepOptions pushStepOptions = default)
@@ -443,10 +442,10 @@ public abstract class JourneyCoordinator
         if (HttpContext.Request.Query.TryGetValue(ReturnUrlQueryParameterName, out var returnUrlValues) &&
             returnUrlValues.ToString() is string returnUrl && IsLocalUrl(returnUrl))
         {
-            return new RedirectResult(returnUrl);
+            return new AdvanceToResult(returnUrl);
         }
 
-        return new RedirectResult(nextStepUrl);
+        return new AdvanceToResult(nextStepUrl);
     }
 
     private StateStorageEntry GetStateStorageEntry() => StateStorage.GetState(InstanceId, Journey)!;
@@ -498,7 +497,7 @@ public abstract class JourneyCoordinator<TState> : JourneyCoordinator where TSta
     public new TState State => (TState)base.State;
 
     /// <inheritdoc cref="JourneyCoordinator.AdvanceTo(string,System.Action{object},GovUk.Questions.AspNetCore.PushStepOptions)"/>
-    public IActionResult AdvanceTo(
+    public AdvanceToResult AdvanceTo(
         string nextStepUrl,
         Action<TState> updateState,
         PushStepOptions pushStepOptions = default)
@@ -513,7 +512,7 @@ public abstract class JourneyCoordinator<TState> : JourneyCoordinator where TSta
     }
 
     /// <inheritdoc cref="JourneyCoordinator.AdvanceTo(string,System.Func{object,object},GovUk.Questions.AspNetCore.PushStepOptions)"/>
-    public IActionResult AdvanceTo(
+    public AdvanceToResult AdvanceTo(
         string nextStepUrl,
         Func<TState, TState> getNewState,
         PushStepOptions pushStepOptions = default)
@@ -528,7 +527,7 @@ public abstract class JourneyCoordinator<TState> : JourneyCoordinator where TSta
     }
 
     /// <inheritdoc cref="JourneyCoordinator.AdvanceToAsync(string,System.Func{object,System.Threading.Tasks.Task},GovUk.Questions.AspNetCore.PushStepOptions)"/>
-    public Task<IActionResult> AdvanceToAsync(
+    public Task<AdvanceToResult> AdvanceToAsync(
         string nextStepUrl,
         Func<TState, Task> updateState,
         PushStepOptions pushStepOptions = default)
@@ -543,7 +542,7 @@ public abstract class JourneyCoordinator<TState> : JourneyCoordinator where TSta
     }
 
     /// <inheritdoc cref="JourneyCoordinator.AdvanceToAsync(string,System.Func{object,System.Threading.Tasks.Task{object}},GovUk.Questions.AspNetCore.PushStepOptions)"/>
-    public Task<IActionResult> AdvanceToAsync(
+    public Task<AdvanceToResult> AdvanceToAsync(
         string nextStepUrl,
         Func<TState, Task<TState>> getNewState,
         PushStepOptions pushStepOptions = default)

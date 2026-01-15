@@ -29,7 +29,7 @@ internal class ValidateJourneyFilter(IJourneyInstanceProvider instanceProvider) 
 
             if (currentStep is null || !coordinator.StepIsValid(currentStep))
             {
-                context.Result = coordinator.OnInvalidStep();
+                context.Result = new HttpResultWrapper(coordinator.OnInvalidStep());
                 return;
             }
         }
@@ -47,5 +47,10 @@ internal class ValidateJourneyFilter(IJourneyInstanceProvider instanceProvider) 
         }
 
         await next();
+    }
+
+    private class HttpResultWrapper(IResult result) : IActionResult
+    {
+        public Task ExecuteResultAsync(ActionContext context) => result.ExecuteAsync(context.HttpContext);
     }
 }
