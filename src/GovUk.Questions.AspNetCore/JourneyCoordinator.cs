@@ -211,7 +211,7 @@ public abstract class JourneyCoordinator
     /// <summary>
     /// Creates a <see cref="JourneyPathStep"/> from the specified <paramref name="url"/>.
     /// </summary>
-    public static JourneyPathStep CreateStepFromUrl(string url)
+    public virtual JourneyPathStep CreateStepFromUrl(string url)
     {
         ArgumentNullException.ThrowIfNull(url);
 
@@ -219,7 +219,7 @@ public abstract class JourneyCoordinator
         return new JourneyPathStep(stepId, url);
     }
 
-    internal static JourneyPathStep CreateStepFromHttpContext(HttpContext httpContext)
+    internal JourneyPathStep CreateStepFromHttpContext(HttpContext httpContext)
     {
         ArgumentNullException.ThrowIfNull(httpContext);
 

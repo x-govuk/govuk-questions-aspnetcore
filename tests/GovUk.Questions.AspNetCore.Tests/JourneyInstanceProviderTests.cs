@@ -42,7 +42,7 @@ public class JourneyInstanceProviderTests
         // Create instance ID and add state to storage
         var instanceId = new JourneyInstanceId(journey.JourneyName, new RouteValueDictionary { ["id"] = "42", [JourneyInstanceId.KeyRouteValueName] = key });
         var state = new TestJourneyState();
-        var path = new JourneyPath([JourneyCoordinator.CreateStepFromUrl($"/test/42?_jid={key}")]);
+        var path = new JourneyPath([new JourneyPathStep("/test/42", $"/test/42?_jid={key}")]);
         stateStorage.SetState(instanceId, journey, new StateStorageEntry { State = state, Path = path });
 
         // Act
@@ -225,7 +225,7 @@ public class JourneyInstanceProviderTests
         // Create instance ID and add state to storage
         var instanceId = new JourneyInstanceId(journey.JourneyName, new RouteValueDictionary { ["id"] = "42", [JourneyInstanceId.KeyRouteValueName] = key });
         var state = new TestJourneyState();
-        var path = new JourneyPath([JourneyCoordinator.CreateStepFromUrl($"/test/42?_jid={key}")]);
+        var path = new JourneyPath([new JourneyPathStep("/test/42", $"/test/42?_jid={key}")]);
         stateStorage.SetState(instanceId, journey, new StateStorageEntry { State = state, Path = path });
 
         // Act

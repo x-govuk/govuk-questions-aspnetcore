@@ -169,10 +169,6 @@ internal class JourneyInstanceProvider(
             return null;
         }
 
-        var firstStepUrl = QueryHelpers.AddQueryString(httpContext.Request.GetEncodedPathAndQuery(), JourneyInstanceId.KeyRouteValueName, instanceId.Key);
-        var firstStep = JourneyCoordinator.CreateStepFromUrl(firstStepUrl);
-        var path = new JourneyPath([firstStep]);
-
         var coordinatorContext = new JourneyCoordinatorContext
         {
             InstanceId = instanceId,
@@ -181,6 +177,10 @@ internal class JourneyInstanceProvider(
             HttpContext = httpContext
         };
         var coordinator = coordinatorActivator.CreateCoordinator(coordinatorContext);
+
+        var firstStepUrl = QueryHelpers.AddQueryString(httpContext.Request.GetEncodedPathAndQuery(), JourneyInstanceId.KeyRouteValueName, instanceId.Key);
+        var firstStep = coordinator.CreateStepFromUrl(firstStepUrl);
+        var path = new JourneyPath([firstStep]);
 
         var createNewInstanceStateContext = new CreateNewInstanceStateContext(instanceId, httpContext);
         var state = await createInitialStateAsync(coordinator, createNewInstanceStateContext);
