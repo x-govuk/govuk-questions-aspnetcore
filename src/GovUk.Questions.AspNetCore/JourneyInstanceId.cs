@@ -128,15 +128,15 @@ public sealed class JourneyInstanceId : IEquatable<JourneyInstanceId>, IParsable
     }
 
     /// <summary>
-    /// Appends the instance key query parameter to the specified URL.
+    /// Appends the instance key query parameter to the specified URL, if it doesn't already contain it.
     /// </summary>
 #pragma warning disable CA1055
-    public string AppendKeyToUrl(string url)
+    public string EnsureUrlHasKey(string url)
 #pragma warning restore CA1055
     {
         ArgumentNullException.ThrowIfNull(url);
 
-        return QueryHelpers.AddQueryString(url, KeyRouteValueName, Key);
+        return url.Contains($"{KeyRouteValueName}=", StringComparison.Ordinal) ? url : QueryHelpers.AddQueryString(url, KeyRouteValueName, Key);
     }
 
     internal static bool TryCreate(JourneyDescriptor journey, RouteValueDictionary routeValues, [NotNullWhen(true)] out JourneyInstanceId? result)

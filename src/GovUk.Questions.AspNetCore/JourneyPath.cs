@@ -113,7 +113,7 @@ public record JourneyPathStep(string StepId, string NormalizedUrl)
     {
         ArgumentNullException.ThrowIfNull(journeyInstanceId);
 
-        return journeyInstanceId.AppendKeyToUrl(NormalizedUrl);
+        return journeyInstanceId.EnsureUrlHasKey(NormalizedUrl);
     }
 }
 

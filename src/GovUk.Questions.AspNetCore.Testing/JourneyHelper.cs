@@ -124,7 +124,8 @@ public class JourneyHelper
                 nameof(getState));
         }
 
-        var path = new JourneyPath(pathUrls.Select(url => new JourneyPathStep(StepId: url, url)));
+        var journeyQualifiedUrls = pathUrls.Select(url => instanceId.EnsureUrlHasKey(url));
+        var path = new JourneyPath(journeyQualifiedUrls.Select(url => new JourneyPathStep(StepId: url, url)));
 
         _journeyStateStorage.SetState(instanceId, journey, new StateStorageEntry { State = state, Path = path });
 

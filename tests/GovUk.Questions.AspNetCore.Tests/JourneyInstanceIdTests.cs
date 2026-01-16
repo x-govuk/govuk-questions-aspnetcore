@@ -248,7 +248,7 @@ public class JourneyInstanceIdTests
     }
 
     [Fact]
-    public void AppendKeyToUrl_WithExistingQueryParameters_AppendsKeyCorrectly()
+    public void EnsureUrlHasKey_WithExistingQueryParameters_AppendsKeyCorrectly()
     {
         // Arrange
         var journeyName = "test-journey";
@@ -258,14 +258,14 @@ public class JourneyInstanceIdTests
         var url = "/some/path?foo=bar";
 
         // Act
-        var result = journeyInstanceId.AppendKeyToUrl(url);
+        var result = journeyInstanceId.EnsureUrlHasKey(url);
 
         // Assert
         Assert.Equal($"/some/path?foo=bar&_jid={key}", result);
     }
 
     [Fact]
-    public void AppendKeyToUrl_WithoutExistingQueryParameters_AppendsKeyCorrectly()
+    public void EnsureUrlHasKey_WithoutExistingQueryParameters_AppendsKeyCorrectly()
     {
         // Arrange
         var journeyName = "test-journey";
@@ -275,9 +275,26 @@ public class JourneyInstanceIdTests
         var url = "/some/path";
 
         // Act
-        var result = journeyInstanceId.AppendKeyToUrl(url);
+        var result = journeyInstanceId.EnsureUrlHasKey(url);
 
         // Assert
         Assert.Equal($"/some/path?_jid={key}", result);
+    }
+
+    [Fact]
+    public void EnsureUrlHasKey_UrlAlreadyHasKey_DoesNotAppendDuplicateKey()
+    {
+        // Arrange
+        var journeyName = "test-journey";
+        var key = UUID.New().ToUrlSafeString();
+        var routeValues = new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, key } };
+        var journeyInstanceId = new JourneyInstanceId(journeyName, routeValues);
+        var url = $"/some/path?_jid={key}";
+
+        // Act
+        var result = journeyInstanceId.EnsureUrlHasKey(url);
+
+        // Assert
+        Assert.Equal(url, result);
     }
 }
