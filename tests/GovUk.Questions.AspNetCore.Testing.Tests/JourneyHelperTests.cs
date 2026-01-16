@@ -137,8 +137,10 @@ public class JourneyHelperTests
 
         string[] pathUrls = ["/step1"];
 
+        var coordinatorFactory = () => ActivatorUtilities.CreateInstance<TestJourneyCoordinatorWithDependency>(services);
+
         // Act
-        var coordinator = journeyHelper.CreateInstance<TestJourneyCoordinatorWithDependency>(routeValues, _ => state, pathUrls, services);
+        var coordinator = journeyHelper.CreateInstance(routeValues, _ => state, pathUrls, coordinatorFactory);
 
         // Assert
         Assert.NotNull(coordinator);

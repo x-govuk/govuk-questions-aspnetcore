@@ -2,7 +2,6 @@ using GovUk.Questions.AspNetCore.Description;
 using GovUk.Questions.AspNetCore.State;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace GovUk.Questions.AspNetCore.Testing;
 
@@ -11,11 +10,8 @@ namespace GovUk.Questions.AspNetCore.Testing;
 /// </summary>
 public class JourneyHelper
 {
-    private static readonly IServiceProvider _emptyServiceProvider = new ServiceCollection().BuildServiceProvider();
-
     private readonly JourneyRegistry _journeyRegistry;
     private readonly IJourneyStateStorage _journeyStateStorage;
-    private readonly TestControllerActivator _coordinatorActivator;
 
     internal JourneyHelper(
         JourneyRegistry journeyRegistry,
@@ -26,7 +22,6 @@ public class JourneyHelper
 
         _journeyRegistry = journeyRegistry;
         _journeyStateStorage = journeyStateStorage;
-        _coordinatorActivator = new TestControllerActivator(journeyRegistry);
     }
 
     /// <summary>
@@ -36,7 +31,7 @@ public class JourneyHelper
         RouteValueDictionary routeValues,
         Func<JourneyInstanceId, object> getState,
         IEnumerable<string> pathUrls,
-        IServiceProvider? serviceProvider = null,
+        Func<TCoordinator>? coordinatorFactory = null,
         HttpContext? httpContext = null)
         where TCoordinator : JourneyCoordinator
     {
@@ -47,7 +42,9 @@ public class JourneyHelper
         var journey = _journeyRegistry.FindJourneyByCoordinatorType(typeof(TCoordinator)) ??
             throw new ArgumentException($"No journey is registered for the coordinator type '{typeof(TCoordinator).FullName}'.", nameof(TCoordinator));
 
-        return (TCoordinator)CreateInstance(journey, routeValues, getState, pathUrls, serviceProvider, httpContext);
+        Func<JourneyCoordinator>? wrappedFactory = coordinatorFactory;
+
+        return (TCoordinator)CreateInstance(journey, routeValues, getState, pathUrls, wrappedFactory, httpContext);
     }
 
     /// <summary>
@@ -58,7 +55,7 @@ public class JourneyHelper
         RouteValueDictionary routeValues,
         Func<JourneyInstanceId, object> getState,
         IEnumerable<string> pathUrls,
-        IServiceProvider? serviceProvider = null,
+        Func<TCoordinator>? coordinatorFactory = null,
         HttpContext? httpContext = null)
         where TCoordinator : JourneyCoordinator
     {
@@ -67,9 +64,9 @@ public class JourneyHelper
         ArgumentNullException.ThrowIfNull(getState);
         ArgumentNullException.ThrowIfNull(pathUrls);
 
-        var coordinator = CreateInstance(journeyName, routeValues, getState, pathUrls, serviceProvider, httpContext);
+        Func<JourneyCoordinator>? wrappedFactory = coordinatorFactory;
 
-        return (TCoordinator)coordinator;
+        return (TCoordinator)CreateInstance(journeyName, routeValues, getState, pathUrls, wrappedFactory, httpContext);
     }
 
     /// <summary>
@@ -80,7 +77,7 @@ public class JourneyHelper
         RouteValueDictionary routeValues,
         Func<JourneyInstanceId, object> getState,
         IEnumerable<string> pathUrls,
-        IServiceProvider? serviceProvider = null,
+        Func<JourneyCoordinator>? coordinatorFactory = null,
         HttpContext? httpContext = null)
     {
         ArgumentNullException.ThrowIfNull(journeyName);
@@ -90,7 +87,7 @@ public class JourneyHelper
         var journey = _journeyRegistry.FindJourneyByName(journeyName) ??
             throw new ArgumentException($"No journey with the name '{journeyName}' is registered.", nameof(journeyName));
 
-        return CreateInstance(journey, routeValues, getState, pathUrls, serviceProvider, httpContext);
+        return CreateInstance(journey, routeValues, getState, pathUrls, coordinatorFactory, httpContext);
     }
 
     /// <summary>
@@ -101,7 +98,7 @@ public class JourneyHelper
         RouteValueDictionary routeValues,
         Func<JourneyInstanceId, object> getState,
         IEnumerable<string> pathUrls,
-        IServiceProvider? serviceProvider = null,
+        Func<JourneyCoordinator>? coordinatorFactory = null,
         HttpContext? httpContext = null)
     {
         ArgumentNullException.ThrowIfNull(journey);
@@ -136,25 +133,23 @@ public class JourneyHelper
             JourneyStateStorage = _journeyStateStorage,
             HttpContext = httpContext ?? new DefaultHttpContext()
         };
-        var coordinator = _coordinatorActivator.CreateCoordinator(coordinatorContext, serviceProvider);
+        var coordinator = ActivateCoordinator(coordinatorContext, coordinatorFactory);
 
         return coordinator;
     }
 
-    private class TestControllerActivator(JourneyRegistry journeyRegistry)
+    private JourneyCoordinator ActivateCoordinator(
+        JourneyCoordinatorContext context,
+        Func<JourneyCoordinator>? factory)
     {
-        public JourneyCoordinator CreateCoordinator(JourneyCoordinatorContext context, IServiceProvider? serviceProvider)
+        if (factory is null)
         {
-            ArgumentNullException.ThrowIfNull(context);
-
-            serviceProvider ??= _emptyServiceProvider;
-
-            var coordinatorType = journeyRegistry.GetCoordinatorType(context.Journey);
-
-            var coordinator = (JourneyCoordinator)ActivatorUtilities.CreateInstance(serviceProvider, coordinatorType);
-            coordinator.Context = context;
-
-            return coordinator;
+            var coordinatorType = _journeyRegistry.GetCoordinatorType(context.Journey);
+            factory = () => (JourneyCoordinator)Activator.CreateInstance(coordinatorType)!;
         }
+
+        var coordinator = factory();
+        coordinator.Context = context;
+        return coordinator;
     }
 }
