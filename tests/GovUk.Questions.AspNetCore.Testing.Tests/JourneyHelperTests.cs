@@ -26,7 +26,7 @@ public class JourneyHelperTests
         string[] pathUrls = ["/step1"];
 
         // Act
-        var ex = Record.Exception(() => journeyHelper.CreateInstance<TestJourneyCoordinator>(routeValues, state, pathUrls));
+        var ex = Record.Exception(() => journeyHelper.CreateInstance<TestJourneyCoordinator>(routeValues, _ => state, pathUrls));
 
         // Assert
         Assert.IsType<ArgumentException>(ex);
@@ -50,7 +50,7 @@ public class JourneyHelperTests
         string[] pathUrls = ["/step1"];
 
         // Act
-        var coordinator = journeyHelper.CreateInstance<TestJourneyCoordinator>(routeValues, state, pathUrls);
+        var coordinator = journeyHelper.CreateInstance<TestJourneyCoordinator>(routeValues, _ => state, pathUrls);
 
         // Assert
         Assert.NotNull(coordinator);
@@ -78,7 +78,7 @@ public class JourneyHelperTests
         string[] pathUrls = ["/step1"];
 
         // Act
-        var coordinator = journeyHelper.CreateInstance<TestJourneyCoordinator>("TestJourney", routeValues, state, pathUrls);
+        var coordinator = journeyHelper.CreateInstance<TestJourneyCoordinator>("TestJourney", routeValues, _ => state, pathUrls);
 
         // Assert
         Assert.NotNull(coordinator);
@@ -106,7 +106,7 @@ public class JourneyHelperTests
         string[] pathUrls = ["/step1"];
 
         // Act
-        var coordinator = journeyHelper.CreateInstance<TestJourneyCoordinator>(routeValues, state, pathUrls);
+        var coordinator = journeyHelper.CreateInstance<TestJourneyCoordinator>(routeValues, _ => state, pathUrls);
 
         // Assert
         Assert.NotNull(coordinator);
@@ -138,7 +138,7 @@ public class JourneyHelperTests
         string[] pathUrls = ["/step1"];
 
         // Act
-        var coordinator = journeyHelper.CreateInstance<TestJourneyCoordinatorWithDependency>(routeValues, state, pathUrls, services);
+        var coordinator = journeyHelper.CreateInstance<TestJourneyCoordinatorWithDependency>(routeValues, _ => state, pathUrls, services);
 
         // Assert
         Assert.NotNull(coordinator);
@@ -163,7 +163,7 @@ public class JourneyHelperTests
         string[] pathUrls = ["/step1"];
 
         // Act
-        var ex = Record.Exception(() => journeyHelper.CreateInstance<TestJourneyCoordinator>(routeValues, invalidState, pathUrls));
+        var ex = Record.Exception(() => journeyHelper.CreateInstance<TestJourneyCoordinator>(routeValues, _ => invalidState, pathUrls));
 
         // Assert
         Assert.IsType<ArgumentException>(ex);

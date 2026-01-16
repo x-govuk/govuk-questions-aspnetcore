@@ -34,20 +34,20 @@ public class JourneyHelper
     /// </summary>
     public TCoordinator CreateInstance<TCoordinator>(
         RouteValueDictionary routeValues,
-        object state,
+        Func<JourneyInstanceId, object> getState,
         IEnumerable<string> pathUrls,
         IServiceProvider? serviceProvider = null,
         HttpContext? httpContext = null)
         where TCoordinator : JourneyCoordinator
     {
         ArgumentNullException.ThrowIfNull(routeValues);
-        ArgumentNullException.ThrowIfNull(state);
+        ArgumentNullException.ThrowIfNull(getState);
         ArgumentNullException.ThrowIfNull(pathUrls);
 
         var journey = _journeyRegistry.FindJourneyByCoordinatorType(typeof(TCoordinator)) ??
             throw new ArgumentException($"No journey is registered for the coordinator type '{typeof(TCoordinator).FullName}'.", nameof(TCoordinator));
 
-        return (TCoordinator)CreateInstance(journey, routeValues, state, pathUrls, serviceProvider);
+        return (TCoordinator)CreateInstance(journey, routeValues, getState, pathUrls, serviceProvider, httpContext);
     }
 
     /// <summary>
@@ -56,7 +56,7 @@ public class JourneyHelper
     public TCoordinator CreateInstance<TCoordinator>(
         string journeyName,
         RouteValueDictionary routeValues,
-        object state,
+        Func<JourneyInstanceId, object> getState,
         IEnumerable<string> pathUrls,
         IServiceProvider? serviceProvider = null,
         HttpContext? httpContext = null)
@@ -64,10 +64,10 @@ public class JourneyHelper
     {
         ArgumentNullException.ThrowIfNull(journeyName);
         ArgumentNullException.ThrowIfNull(routeValues);
-        ArgumentNullException.ThrowIfNull(state);
+        ArgumentNullException.ThrowIfNull(getState);
         ArgumentNullException.ThrowIfNull(pathUrls);
 
-        var coordinator = CreateInstance(journeyName, routeValues, state, pathUrls, serviceProvider);
+        var coordinator = CreateInstance(journeyName, routeValues, getState, pathUrls, serviceProvider, httpContext);
 
         return (TCoordinator)coordinator;
     }
@@ -78,19 +78,19 @@ public class JourneyHelper
     public JourneyCoordinator CreateInstance(
         string journeyName,
         RouteValueDictionary routeValues,
-        object state,
+        Func<JourneyInstanceId, object> getState,
         IEnumerable<string> pathUrls,
         IServiceProvider? serviceProvider = null,
         HttpContext? httpContext = null)
     {
         ArgumentNullException.ThrowIfNull(journeyName);
         ArgumentNullException.ThrowIfNull(routeValues);
-        ArgumentNullException.ThrowIfNull(state);
+        ArgumentNullException.ThrowIfNull(getState);
 
         var journey = _journeyRegistry.FindJourneyByName(journeyName) ??
             throw new ArgumentException($"No journey with the name '{journeyName}' is registered.", nameof(journeyName));
 
-        return CreateInstance(journey, routeValues, state, pathUrls, serviceProvider);
+        return CreateInstance(journey, routeValues, getState, pathUrls, serviceProvider, httpContext);
     }
 
     /// <summary>
@@ -99,14 +99,14 @@ public class JourneyHelper
     public JourneyCoordinator CreateInstance(
         JourneyDescriptor journey,
         RouteValueDictionary routeValues,
-        object state,
+        Func<JourneyInstanceId, object> getState,
         IEnumerable<string> pathUrls,
         IServiceProvider? serviceProvider = null,
         HttpContext? httpContext = null)
     {
         ArgumentNullException.ThrowIfNull(journey);
         ArgumentNullException.ThrowIfNull(routeValues);
-        ArgumentNullException.ThrowIfNull(state);
+        ArgumentNullException.ThrowIfNull(getState);
         ArgumentNullException.ThrowIfNull(pathUrls);
 
         if (!JourneyInstanceId.TryCreateNew(journey, routeValues, out var instanceId))
@@ -114,13 +114,14 @@ public class JourneyHelper
             throw new ArgumentException("Could not create a new JourneyInstanceId with the provided route values.", nameof(routeValues));
         }
 
+        var state = getState(instanceId);
         var stateType = state.GetType();
         if (!journey.IsStateTypeValid(stateType))
         {
             throw new ArgumentException(
                 "State type is not valid; expected " +
                 $"'{journey.StateType.FullName}', but got '{stateType.FullName}'.",
-                nameof(state));
+                nameof(getState));
         }
 
         var path = new JourneyPath(pathUrls.Select(url => new JourneyPathStep(StepId: url, url)));
