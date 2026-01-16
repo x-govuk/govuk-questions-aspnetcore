@@ -3,12 +3,53 @@ using GovUk.Questions.AspNetCore.State;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Primitives;
 using Moq;
 
 namespace GovUk.Questions.AspNetCore.Tests;
 
 public class JourneyCoordinatorTests
 {
+    [Fact]
+    public void CreateStepFromUrl()
+    {
+        // Arrange
+        var mockStateStorage = new Mock<IJourneyStateStorage>();
+
+        var journey = new JourneyDescriptor("test", [], typeof(TestState));
+
+        var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, UUID.New().ToUrlSafeString() } });
+
+        var path = new JourneyPath([new JourneyPathStep("/step1", "/step1")]);
+
+        var expectedState = new TestState { Foo = 123 };
+        mockStateStorage
+            .Setup(mock => mock.GetState(instanceId, journey))
+            .Returns(new StateStorageEntry { State = expectedState, Path = path });
+
+        var context = new JourneyCoordinatorContext
+        {
+            InstanceId = instanceId,
+            Journey = journey,
+            JourneyStateStorage = mockStateStorage.Object,
+            HttpContext = new DefaultHttpContext()
+        };
+
+        var coordinator = new TestJourneyCoordinator
+        {
+            Context = context
+        };
+
+        var url = $"/step1?foo=bar&_jid={instanceId.Key}&returnUrl=someReturnUrl";
+
+        // Act
+        var step = coordinator.CreateStepFromUrl(url);
+
+        // Assert
+        Assert.Equal("/step1?foo=bar", step.StepId);
+        Assert.Equal("/step1?foo=bar", step.NormalizedUrl);
+    }
+
     [Fact]
     public void GetState_GetsStateFromStateStorage()
     {
@@ -587,6 +628,7 @@ public class JourneyCoordinatorTests
 
         var httpContext = new DefaultHttpContext();
         httpContext.Request.Path = "/step1";
+        httpContext.Request.Query = new QueryCollection(new Dictionary<string, StringValues> { ["_jid"] = instanceId.Key });
 
         var context = new JourneyCoordinatorContext
         {
@@ -602,7 +644,7 @@ public class JourneyCoordinatorTests
         var result = coordinator.AdvanceTo("/step2");
 
         // Assert
-        Assert.Equal("/step2", result.Url);
+        Assert.Equal($"/step2?_jid={instanceId.Key}", result.Url);
         mockStateStorage.Verify(s => s.SetState(instanceId, journey, It.Is<StateStorageEntry>(e =>
             ((TestState)e.State).Foo == 123 && // State should remain unchanged
             e.Path.Steps.Count == 2 &&
@@ -629,6 +671,7 @@ public class JourneyCoordinatorTests
 
         var httpContext = new DefaultHttpContext();
         httpContext.Request.Path = "/step1";
+        httpContext.Request.Query = new QueryCollection(new Dictionary<string, StringValues> { ["_jid"] = instanceId.Key });
 
         var context = new JourneyCoordinatorContext
         {
@@ -647,7 +690,7 @@ public class JourneyCoordinatorTests
         });
 
         // Assert
-        Assert.Equal("/step2", result.Url);
+        Assert.Equal($"/step2?_jid={instanceId.Key}", result.Url);
         mockStateStorage.Verify(s => s.SetState(instanceId, journey, It.Is<StateStorageEntry>(e =>
             ((TestState)e.State).Foo == 456 &&
             e.Path.Steps.Count == 2 &&
@@ -674,6 +717,7 @@ public class JourneyCoordinatorTests
 
         var httpContext = new DefaultHttpContext();
         httpContext.Request.Path = "/step1";
+        httpContext.Request.Query = new QueryCollection(new Dictionary<string, StringValues> { ["_jid"] = instanceId.Key });
 
         var context = new JourneyCoordinatorContext
         {
@@ -689,7 +733,7 @@ public class JourneyCoordinatorTests
         var result = ((JourneyCoordinator)coordinator).AdvanceTo("/step2", state => ((TestState)state) with { Foo = 789 });
 
         // Assert
-        Assert.Equal("/step2", result.Url);
+        Assert.Equal($"/step2?_jid={instanceId.Key}", result.Url);
         mockStateStorage.Verify(s => s.SetState(instanceId, journey, It.Is<StateStorageEntry>(e =>
             ((TestState)e.State).Foo == 789 &&
             e.Path.Steps.Count == 2 &&
@@ -716,6 +760,7 @@ public class JourneyCoordinatorTests
 
         var httpContext = new DefaultHttpContext();
         httpContext.Request.Path = "/step1";
+        httpContext.Request.Query = new QueryCollection(new Dictionary<string, StringValues> { ["_jid"] = instanceId.Key });
 
         var context = new JourneyCoordinatorContext
         {
@@ -735,7 +780,7 @@ public class JourneyCoordinatorTests
         });
 
         // Assert
-        Assert.Equal("/step2", result.Url);
+        Assert.Equal($"/step2?_jid={instanceId.Key}", result.Url);
         mockStateStorage.Verify(s => s.SetState(instanceId, journey, It.Is<StateStorageEntry>(e =>
             ((TestState)e.State).Foo == 999 &&
             e.Path.Steps.Count == 2 &&
@@ -762,6 +807,7 @@ public class JourneyCoordinatorTests
 
         var httpContext = new DefaultHttpContext();
         httpContext.Request.Path = "/step1";
+        httpContext.Request.Query = new QueryCollection(new Dictionary<string, StringValues> { ["_jid"] = instanceId.Key });
 
         var context = new JourneyCoordinatorContext
         {
@@ -781,7 +827,7 @@ public class JourneyCoordinatorTests
         });
 
         // Assert
-        Assert.Equal("/step2", result.Url);
+        Assert.Equal($"/step2?_jid={instanceId.Key}", result.Url);
         mockStateStorage.Verify(s => s.SetState(instanceId, journey, It.Is<StateStorageEntry>(e =>
             ((TestState)e.State).Foo == 111 &&
             e.Path.Steps.Count == 2 &&
@@ -808,6 +854,7 @@ public class JourneyCoordinatorTests
 
         var httpContext = new DefaultHttpContext();
         httpContext.Request.Path = "/step1";
+        httpContext.Request.Query = new QueryCollection(new Dictionary<string, StringValues> { ["_jid"] = instanceId.Key });
 
         var context = new JourneyCoordinatorContext
         {
@@ -826,7 +873,7 @@ public class JourneyCoordinatorTests
         });
 
         // Assert
-        Assert.Equal("/step2", result.Url);
+        Assert.Equal($"/step2?_jid={instanceId.Key}", result.Url);
         mockStateStorage.Verify(s => s.SetState(instanceId, journey, It.Is<StateStorageEntry>(e =>
             ((TestState)e.State).Foo == 222 &&
             e.Path.Steps.Count == 2 &&
@@ -853,6 +900,7 @@ public class JourneyCoordinatorTests
 
         var httpContext = new DefaultHttpContext();
         httpContext.Request.Path = "/step1";
+        httpContext.Request.Query = new QueryCollection(new Dictionary<string, StringValues> { ["_jid"] = instanceId.Key });
 
         var context = new JourneyCoordinatorContext
         {
@@ -868,7 +916,7 @@ public class JourneyCoordinatorTests
         var result = coordinator.AdvanceTo("/step2", state => state with { Foo = 333 });
 
         // Assert
-        Assert.Equal("/step2", result.Url);
+        Assert.Equal($"/step2?_jid={instanceId.Key}", result.Url);
         mockStateStorage.Verify(s => s.SetState(instanceId, journey, It.Is<StateStorageEntry>(e =>
             ((TestState)e.State).Foo == 333 &&
             e.Path.Steps.Count == 2 &&
@@ -895,6 +943,7 @@ public class JourneyCoordinatorTests
 
         var httpContext = new DefaultHttpContext();
         httpContext.Request.Path = "/step1";
+        httpContext.Request.Query = new QueryCollection(new Dictionary<string, StringValues> { ["_jid"] = instanceId.Key });
 
         var context = new JourneyCoordinatorContext
         {
@@ -914,7 +963,7 @@ public class JourneyCoordinatorTests
         });
 
         // Assert
-        Assert.Equal("/step2", result.Url);
+        Assert.Equal($"/step2?_jid={instanceId.Key}", result.Url);
         mockStateStorage.Verify(s => s.SetState(instanceId, journey, It.Is<StateStorageEntry>(e =>
             ((TestState)e.State).Foo == 444 &&
             e.Path.Steps.Count == 2 &&
@@ -941,6 +990,7 @@ public class JourneyCoordinatorTests
 
         var httpContext = new DefaultHttpContext();
         httpContext.Request.Path = "/step1";
+        httpContext.Request.Query = new QueryCollection(new Dictionary<string, StringValues> { ["_jid"] = instanceId.Key });
 
         var context = new JourneyCoordinatorContext
         {
@@ -960,7 +1010,7 @@ public class JourneyCoordinatorTests
         });
 
         // Assert
-        Assert.Equal("/step2", result.Url);
+        Assert.Equal($"/step2?_jid={instanceId.Key}", result.Url);
         mockStateStorage.Verify(s => s.SetState(instanceId, journey, It.Is<StateStorageEntry>(e =>
             ((TestState)e.State).Foo == 555 &&
             e.Path.Steps.Count == 2 &&

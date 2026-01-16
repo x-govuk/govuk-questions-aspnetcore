@@ -215,8 +215,8 @@ public abstract class JourneyCoordinator
     {
         ArgumentNullException.ThrowIfNull(url);
 
-        var stepId = GetUrlWithoutQueryParameters(url, ReturnUrlQueryParameterName, JourneyInstanceId.KeyRouteValueName);
-        return new JourneyPathStep(stepId, url);
+        var normalizedUrl = GetUrlWithoutQueryParameters(url, ReturnUrlQueryParameterName, JourneyInstanceId.KeyRouteValueName);
+        return new JourneyPathStep(normalizedUrl, normalizedUrl);
     }
 
     internal JourneyPathStep CreateStepFromHttpContext(HttpContext httpContext)
@@ -450,7 +450,11 @@ public abstract class JourneyCoordinator
             return new AdvanceToResult(returnUrl);
         }
 
-        return new AdvanceToResult(nextStepUrl);
+        // N.B. We can't use Path.Steps.Last().GetUrl() here because there may be query string differences
+        // between the URL we were given and the step's URL
+        var redirectUrl = InstanceId.EnsureUrlHasKey(nextStepUrl);
+
+        return new AdvanceToResult(redirectUrl);
     }
 
     private StateStorageEntry GetStateStorageEntry() => StateStorage.GetState(InstanceId, Journey)!;

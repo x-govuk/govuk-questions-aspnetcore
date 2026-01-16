@@ -35,7 +35,7 @@ internal class ValidateJourneyFilter(IJourneyInstanceProvider instanceProvider) 
         }
         else if (await instanceProvider.TryCreateNewInstanceAsync(httpContext) is JourneyCoordinator newInstanceCoordinator)
         {
-            context.Result = new RedirectResult(newInstanceCoordinator.Path.Steps.First().NormalizedUrl);
+            context.Result = new RedirectResult(newInstanceCoordinator.Path.Steps.First().GetUrl(newInstanceCoordinator.InstanceId));
             return;
         }
         else if (!endpointJourneyMetadata.Optional)
