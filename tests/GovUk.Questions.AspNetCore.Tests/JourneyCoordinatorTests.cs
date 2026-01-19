@@ -93,6 +93,54 @@ public class JourneyCoordinatorTests
     }
 
     [Fact]
+    public void GetBackLink_WithExplicitReturnUrl_ReturnsReturnUrl()
+    {
+        // Arrange
+        var mockStateStorage = new Mock<IJourneyStateStorage>();
+
+        var journey = new JourneyDescriptor("test", [], typeof(TestState));
+
+        var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, UUID.New().ToUrlSafeString() } });
+
+        var path = new JourneyPath([
+            new JourneyPathStep("/step1", "/step1"),
+            new JourneyPathStep("/step2", "/step2")]);
+
+        var expectedState = new TestState { Foo = 123 };
+        mockStateStorage
+            .Setup(mock => mock.GetState(instanceId, journey))
+            .Returns(new StateStorageEntry { State = expectedState, Path = path });
+
+        var httpContext = new DefaultHttpContext();
+        httpContext.Request.Path = "/step2";
+        httpContext.Request.Query = new QueryCollection(
+            new Dictionary<string, StringValues>
+            {
+                ["_jid"] = instanceId.Key,
+                ["returnUrl"] = "/custom-back-link"
+            });
+
+        var context = new JourneyCoordinatorContext
+        {
+            InstanceId = instanceId,
+            Journey = journey,
+            JourneyStateStorage = mockStateStorage.Object,
+            HttpContext = httpContext
+        };
+
+        var coordinator = new TestJourneyCoordinator
+        {
+            Context = context
+        };
+
+        // Act
+        var result = coordinator.GetBackLink();
+
+        // Assert
+        Assert.Equal("/custom-back-link", result);
+    }
+
+    [Fact]
     public void GetBackLink_StepExistsInPathButIsFirst_ReturnsNull()
     {
         // Arrange

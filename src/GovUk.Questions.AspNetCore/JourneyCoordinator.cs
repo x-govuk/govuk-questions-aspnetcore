@@ -241,6 +241,13 @@ public abstract class JourneyCoordinator
             throw new InvalidOperationException("Current step not found in journey path.");
         }
 
+        // Check if there's an explicit return URL provided
+        if (HttpContext.Request.Query.TryGetValue(ReturnUrlQueryParameterName, out var returnUrlValues) &&
+            returnUrlValues.ToString() is string returnUrl && IsLocalUrl(returnUrl))
+        {
+            return returnUrl;
+        }
+
         if (currentStepIndex == 0)
         {
             return null;
