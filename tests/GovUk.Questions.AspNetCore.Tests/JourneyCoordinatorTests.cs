@@ -48,6 +48,7 @@ public class JourneyCoordinatorTests
         // Assert
         Assert.Equal("/step1?foo=bar", step.StepId);
         Assert.Equal("/step1?foo=bar", step.NormalizedUrl);
+        Assert.Equal("/step1?foo=bar&_jid=" + instanceId.Key, step.GetUrl(instanceId));
     }
 
     [Fact]
