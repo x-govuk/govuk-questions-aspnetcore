@@ -51,6 +51,133 @@ public class JourneyCoordinatorTests
     }
 
     [Fact]
+    public void GetBackLink_StepDoesNotExistInPath_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var mockStateStorage = new Mock<IJourneyStateStorage>();
+
+        var journey = new JourneyDescriptor("test", [], typeof(TestState));
+
+        var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, UUID.New().ToUrlSafeString() } });
+
+        var path = new JourneyPath([new JourneyPathStep("/step1", "/step1")]);
+
+        var expectedState = new TestState { Foo = 123 };
+        mockStateStorage
+            .Setup(mock => mock.GetState(instanceId, journey))
+            .Returns(new StateStorageEntry { State = expectedState, Path = path });
+
+        var httpContext = new DefaultHttpContext();
+        httpContext.Request.Path = "/step2";
+        httpContext.Request.Query = new QueryCollection(new Dictionary<string, StringValues> { ["_jid"] = instanceId.Key });
+
+        var context = new JourneyCoordinatorContext
+        {
+            InstanceId = instanceId,
+            Journey = journey,
+            JourneyStateStorage = mockStateStorage.Object,
+            HttpContext = httpContext
+        };
+
+        var coordinator = new TestJourneyCoordinator
+        {
+            Context = context
+        };
+
+        // Act
+        var ex = Record.Exception(() => coordinator.GetBackLink());
+
+        // Assert
+        Assert.IsType<InvalidOperationException>(ex);
+    }
+
+    [Fact]
+    public void GetBackLink_StepExistsInPathButIsFirst_ReturnsNull()
+    {
+        // Arrange
+        var mockStateStorage = new Mock<IJourneyStateStorage>();
+
+        var journey = new JourneyDescriptor("test", [], typeof(TestState));
+
+        var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, UUID.New().ToUrlSafeString() } });
+
+        var path = new JourneyPath([
+            new JourneyPathStep("/step1", "/step1"),
+            new JourneyPathStep("/step2", "/step2")]);
+
+        var expectedState = new TestState { Foo = 123 };
+        mockStateStorage
+            .Setup(mock => mock.GetState(instanceId, journey))
+            .Returns(new StateStorageEntry { State = expectedState, Path = path });
+
+        var httpContext = new DefaultHttpContext();
+        httpContext.Request.Path = "/step1";
+        httpContext.Request.Query = new QueryCollection(new Dictionary<string, StringValues> { ["_jid"] = instanceId.Key });
+
+        var context = new JourneyCoordinatorContext
+        {
+            InstanceId = instanceId,
+            Journey = journey,
+            JourneyStateStorage = mockStateStorage.Object,
+            HttpContext = httpContext
+        };
+
+        var coordinator = new TestJourneyCoordinator
+        {
+            Context = context
+        };
+
+        // Act
+        var result = coordinator.GetBackLink();
+
+        // Assert
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public void GetBackLink_StepExistsInPathAndIsNotFirst_ReturnsPreviousStepUrl()
+    {
+        // Arrange
+        var mockStateStorage = new Mock<IJourneyStateStorage>();
+
+        var journey = new JourneyDescriptor("test", [], typeof(TestState));
+
+        var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, UUID.New().ToUrlSafeString() } });
+
+        var path = new JourneyPath([
+            new JourneyPathStep("/step1", "/step1"),
+            new JourneyPathStep("/step2", "/step2")]);
+
+        var expectedState = new TestState { Foo = 123 };
+        mockStateStorage
+            .Setup(mock => mock.GetState(instanceId, journey))
+            .Returns(new StateStorageEntry { State = expectedState, Path = path });
+
+        var httpContext = new DefaultHttpContext();
+        httpContext.Request.Path = "/step2";
+        httpContext.Request.Query = new QueryCollection(new Dictionary<string, StringValues> { ["_jid"] = instanceId.Key });
+
+        var context = new JourneyCoordinatorContext
+        {
+            InstanceId = instanceId,
+            Journey = journey,
+            JourneyStateStorage = mockStateStorage.Object,
+            HttpContext = httpContext
+        };
+
+        var coordinator = new TestJourneyCoordinator
+        {
+            Context = context
+        };
+
+        // Act
+        var result = coordinator.GetBackLink();
+
+        // Assert
+        Assert.Equal("/step1?_jid=" + instanceId.Key, result);
+    }
+
+    [Fact]
     public void GetState_GetsStateFromStateStorage()
     {
         // Arrange

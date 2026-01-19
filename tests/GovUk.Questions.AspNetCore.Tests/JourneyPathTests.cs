@@ -285,4 +285,44 @@ public class JourneyPathTests
             result.Steps,
             step => Assert.Equal("/step-2", step.NormalizedUrl));
     }
+
+    [Fact]
+    public void FindStepIndex_StepExistsInPath_ReturnsCorrectIndex()
+    {
+        // Arrange
+        var initialSteps = new List<JourneyPathStep>
+        {
+            new("Step1", "/step-1"),
+            new("Step2", "/step-2"),
+            new("Step3", "/step-3")
+        };
+        var journeyPath = new JourneyPath(initialSteps);
+        var stepToFind = new JourneyPathStep("Step2", "/step-2");
+
+        // Act
+        var index = journeyPath.FindStepIndex(stepToFind);
+
+        // Assert
+        Assert.Equal(1, index);
+    }
+
+    [Fact]
+    public void FindStepIndex_StepDoesNotExistInPath_ReturnsMinusOne()
+    {
+        // Arrange
+        var initialSteps = new List<JourneyPathStep>
+        {
+            new("Step1", "/step-1"),
+            new("Step2", "/step-2"),
+            new("Step3", "/step-3")
+        };
+        var journeyPath = new JourneyPath(initialSteps);
+        var stepToFind = new JourneyPathStep("Step4", "/step-4");
+
+        // Act
+        var index = journeyPath.FindStepIndex(stepToFind);
+
+        // Assert
+        Assert.Equal(-1, index);
+    }
 }

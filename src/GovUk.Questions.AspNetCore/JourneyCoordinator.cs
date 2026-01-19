@@ -228,6 +228,29 @@ public abstract class JourneyCoordinator
     }
 
     /// <summary>
+    /// Gets a URL to the previous step in the journey path.
+    /// </summary>
+    /// <returns>A URL if there is a previous step; otherwise <see langword="null"/>.</returns>
+    public virtual string? GetBackLink()
+    {
+        var currentStep = CreateStepFromHttpContext(HttpContext);
+        var currentStepIndex = Path.FindStepIndex(currentStep);
+
+        if (currentStepIndex == -1)
+        {
+            throw new InvalidOperationException("Current step not found in journey path.");
+        }
+
+        if (currentStepIndex == 0)
+        {
+            return null;
+        }
+
+        var previousStep = Path.Steps.ElementAt(currentStepIndex - 1);
+        return previousStep.GetUrl(InstanceId);
+    }
+
+    /// <summary>
     /// Finds the current step in the journey path based on the current request.
     /// </summary>
     /// <returns>The <see cref="JourneyPathStep"/> if the step was found; otherwise <see langword="null"/>.</returns>

@@ -58,14 +58,14 @@ public class JourneyPath
 
         var newSteps = new List<JourneyPathStep>(Steps);
 
-        var currentStepIndex = newSteps.FindIndex(0, s => s.StepId == currentStep.StepId);
+        var currentStepIndex = FindStepIndex(newSteps, currentStep);
         if (currentStepIndex == -1)
         {
             throw new InvalidOperationException("The specified current step does not exist in the journey path.");
         }
 
         // Check if the step already exists in the path
-        var stepIndex = newSteps.FindIndex(s => s.StepId == step.StepId);
+        var stepIndex = FindStepIndex(newSteps, step);
         if (stepIndex != -1 && stepIndex < currentStepIndex)
         {
             throw new InvalidOperationException("Cannot push a step that exists before the current step in the journey path.");
@@ -94,6 +94,23 @@ public class JourneyPath
         }
 
         return new JourneyPath(newSteps);
+    }
+
+    /// <summary>
+    /// Searches for the specified step and returns its zero-based index.
+    /// </summary>
+    /// <param name="step">The step to find.</param>
+    /// <returns>The zero-based index of the step, or -1 if not found.</returns>
+    public int FindStepIndex(JourneyPathStep step)
+    {
+        ArgumentNullException.ThrowIfNull(step);
+
+        return FindStepIndex(Steps, step);
+    }
+
+    private static int FindStepIndex(IEnumerable<JourneyPathStep> steps, JourneyPathStep step)
+    {
+        return steps.ToList().FindIndex(s => s.StepId == step.StepId);
     }
 }
 
