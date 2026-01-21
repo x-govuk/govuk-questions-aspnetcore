@@ -54,7 +54,7 @@ public class JourneyInstanceIdTests
         var str = journeyInstanceId.ToString();
 
         // Assert
-        Assert.Equal($"fdc:x-govuk.org:questions/{journeyName}?bar=b%26az&foo=42&_jid={key.ToLowerInvariant()}", str);
+        Assert.Equal($"fdc:x-govuk.org:questions/{journeyName}?bar=b%26az&foo=42&_jid={key}", str);
     }
 
     [Fact]
@@ -85,7 +85,7 @@ public class JourneyInstanceIdTests
     }
 
     [Fact]
-    public void Equals_WithDifferentCasedJourneyNamesAndKeys_ReturnsTrue()
+    public void Equals_WithDifferentCasedJourneyName_ReturnsTrue()
     {
         // Arrange
         var journeyName1 = "test-journey";
@@ -98,8 +98,8 @@ public class JourneyInstanceIdTests
         };
         var routeValues2 = new RouteValueDictionary
         {
-            { JourneyInstanceId.KeyRouteValueName.ToUpper(), key },
-            { "FOO", "42" }
+            { JourneyInstanceId.KeyRouteValueName, key },
+            { "foo", "42" }
         };
 
         var journeyInstanceId1 = new JourneyInstanceId(journeyName1, routeValues1);
@@ -165,36 +165,6 @@ public class JourneyInstanceIdTests
         var hashCode2 = journeyInstanceId2.GetHashCode();
 
         // Assert
-        Assert.Equal(hashCode1, hashCode2);
-    }
-
-    [Fact]
-    public void GetHashCode_WithDifferentCasedRouteValueKeys_ReturnsSameHashCode()
-    {
-        // Arrange
-        var journeyName1 = "test-journey";
-        var journeyName2 = "TEST-JOURNEY";
-        var key = UUID.New().ToUrlSafeString();
-        var routeValues1 = new RouteValueDictionary
-        {
-            { JourneyInstanceId.KeyRouteValueName, key },
-            { "foo", "42" }
-        };
-        var routeValues2 = new RouteValueDictionary
-        {
-            { JourneyInstanceId.KeyRouteValueName.ToUpper(), key },
-            { "FOO", "42" }
-        };
-
-        var journeyInstanceId1 = new JourneyInstanceId(journeyName1, routeValues1);
-        var journeyInstanceId2 = new JourneyInstanceId(journeyName2, routeValues2);
-
-        // Act
-        var hashCode1 = journeyInstanceId1.GetHashCode();
-        var hashCode2 = journeyInstanceId2.GetHashCode();
-
-        // Assert - These instances are equal per Equals_WithDifferentCasedJourneyNamesAndKeys_ReturnsTrue test
-        // so their hash codes must also be equal
         Assert.Equal(hashCode1, hashCode2);
     }
 

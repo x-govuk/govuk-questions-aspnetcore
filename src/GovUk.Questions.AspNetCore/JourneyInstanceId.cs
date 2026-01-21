@@ -224,14 +224,14 @@ public sealed class JourneyInstanceId : IEquatable<JourneyInstanceId>, IParsable
         }
 
 #pragma warning disable CA1308
-        // Ensure all the query parameters are in a consistent order and lower-cased for equality comparisons.
+        // Ensure all the query parameters are in a consistent order for equality comparisons.
         var qs = RouteValues
             .Where(kvp => !kvp.Key.Equals(KeyRouteValueName, StringComparison.OrdinalIgnoreCase))
             .OrderBy(kvp => kvp.Key)
-            .Aggregate(new QueryString(), (q, kvp) => q.Add(kvp.Key.ToLowerInvariant(), kvp.Value.ToString() ?? string.Empty));
+            .Aggregate(new QueryString(), (q, kvp) => q.Add(kvp.Key, kvp.Value.ToString() ?? string.Empty));
 
-        // Add the key last, lower-cased
-        qs = qs.Add(KeyRouteValueName, Key.ToLowerInvariant());
+        // Add the key last
+        qs = qs.Add(KeyRouteValueName, Key);
 
         return _asString = $"{UriPrefix}/{Uri.EscapeDataString(JourneyName.ToLowerInvariant())}{qs.ToUriComponent()}";
 #pragma warning restore CA1308
