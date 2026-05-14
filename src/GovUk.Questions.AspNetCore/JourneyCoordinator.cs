@@ -268,6 +268,12 @@ public abstract class JourneyCoordinator
     }
 
     /// <summary>
+    /// Gets the collection of step URLs from the journey path.
+    /// </summary>
+    public IReadOnlyCollection<string> GetStepUrls() =>
+        Path.Steps.Select(s => s.GetUrl(InstanceId)).ToArray().AsReadOnly();
+
+    /// <summary>
     /// Invoked when the current step is not valid for the journey instance.
     /// </summary>
     /// <remarks>
