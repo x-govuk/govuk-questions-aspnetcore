@@ -16,7 +16,7 @@ internal class ValidateJourneyFilter(IJourneyInstanceProvider instanceProvider) 
 
         var endpointJourneyMetadata = httpContext.GetEndpoint()?.Metadata.GetMetadata<EndpointJourneyMetadata>();
 
-        if (endpointJourneyMetadata is null)
+        if (endpointJourneyMetadata is null || endpointJourneyMetadata.Excluded)
         {
             // Endpoint is not part of a journey
             await next();

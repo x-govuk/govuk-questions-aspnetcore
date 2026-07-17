@@ -88,6 +88,48 @@ public class IntegrationTests(IntegrationTestFixture fixture) : IClassFixture<In
             Assert.Equal(expectedFoo, state.Foo);
         }
     }
+
+    [Fact]
+    public async Task CompleteJourneyWithConfirmationInSameController()
+    {
+        // Start the journey
+        var startResponse = await HttpClient.GetAsync("exclude-test/start", TestContext.Current.CancellationToken);
+        Assert.Equal(StatusCodes.Status302Found, (int)startResponse.StatusCode);
+        var jid = QueryHelpers.ParseQuery(startResponse.Headers.Location!.OriginalString.Split('?')[1])["_jid"].ToString();
+
+        // Advance to the check-answers step
+        var startPostResponse = await HttpClient.PostAsync(
+            "/exclude-test/start?_jid=" + jid,
+            new FormUrlEncodedContent([]),
+            TestContext.Current.CancellationToken);
+        Assert.Equal($"/exclude-test/check-answers?_jid={jid}", startPostResponse.Headers.Location?.ToString());
+
+        // Submit check-answers, which deletes the instance and redirects to the confirmation page
+        var checkAnswersPostResponse = await HttpClient.PostAsync(
+            "/exclude-test/check-answers?_jid=" + jid,
+            new FormUrlEncodedContent([]),
+            TestContext.Current.CancellationToken);
+        Assert.Equal(StatusCodes.Status302Found, (int)checkAnswersPostResponse.StatusCode);
+        Assert.Equal("/exclude-test/confirmation", checkAnswersPostResponse.Headers.Location?.ToString());
+
+        // The confirmation page is in the same [Journey] controller but opts out with [ExcludeFromJourney],
+        // so it is reachable even though the instance has been deleted.
+        var confirmationResponse = await HttpClient.GetAsync(
+            checkAnswersPostResponse.Headers.Location!,
+            TestContext.Current.CancellationToken);
+        Assert.Equal(StatusCodes.Status200OK, (int)confirmationResponse.StatusCode);
+        Assert.Equal("Confirmed", await confirmationResponse.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public async Task ExcludeFromJourneyOnControllerOptsOutOfInheritedJourney()
+    {
+        // The [Journey] is inherited from the base controller; the derived controller opts every action out
+        // with a class-level [ExcludeFromJourney], so its action is reachable with no journey instance.
+        var response = await HttpClient.GetAsync("/exclude-test-inherited/confirmation", TestContext.Current.CancellationToken);
+        Assert.Equal(StatusCodes.Status200OK, (int)response.StatusCode);
+        Assert.Equal("Confirmed (inherited)", await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+    }
 }
 
 public class IntegrationTestFixture : IAsyncLifetime
@@ -185,4 +227,48 @@ public class IntegrationTestController(IntegrationTestJourneyCoordinator coordin
     }
 
     private IActionResult GetState() => Json(coordinator.State);
+}
+
+[JourneyCoordinator("ExcludeTestJourney", [])]
+public class ExcludeTestJourneyCoordinator : JourneyCoordinator<IntegrationTestJourneyState>
+{
+    public override IntegrationTestJourneyState GetStartingState() => new() { Foo = 1 };
+}
+
+[Route("exclude-test")]
+[Journey("ExcludeTestJourney")]
+public class ExcludeTestController(ExcludeTestJourneyCoordinator coordinator) : Controller
+{
+    [StartsJourney]
+    [HttpGet("start")]
+    public IActionResult Start() => Json(coordinator.State);
+
+    [HttpPost("start")]
+    public IActionResult StartPost() =>
+        coordinator.AdvanceTo(Url.Action(nameof(CheckAnswers), coordinator.InstanceId.RouteValues)!);
+
+    [HttpGet("check-answers")]
+    public IActionResult CheckAnswers() => Json(coordinator.State);
+
+    [HttpPost("check-answers")]
+    public IActionResult CheckAnswersPost()
+    {
+        coordinator.DeleteInstance();
+        return RedirectToAction(nameof(Confirmation));
+    }
+
+    [ExcludeFromJourney]
+    [HttpGet("confirmation")]
+    public IActionResult Confirmation() => Content("Confirmed");
+}
+
+[Journey("ExcludeTestJourney")]
+public abstract class ExcludeTestBaseController : Controller;
+
+[Route("exclude-test-inherited")]
+[ExcludeFromJourney]
+public class ExcludeTestInheritedController(ExcludeTestJourneyCoordinator coordinator) : ExcludeTestBaseController
+{
+    [HttpGet("confirmation")]
+    public IActionResult Confirmation() => Content(coordinator is not null ? "Confirmed (inherited)" : "");
 }
