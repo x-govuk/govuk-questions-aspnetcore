@@ -19,6 +19,15 @@ public sealed record EndpointJourneyMetadata
     /// Indicates whether a journey instance is optional for accessing the endpoint.
     /// </summary>
     public bool Optional { get; set; }
+
+    /// <summary>
+    /// Indicates whether the endpoint has opted out of the journey.
+    /// </summary>
+    /// <remarks>
+    /// When <see langword="true"/> the endpoint is treated as though it is not part of a journey, even if a
+    /// journey has been specified for the controller, action or page handler.
+    /// </remarks>
+    public bool Excluded { get; set; }
 }
 
 internal static class EndpointMetadataExtensions

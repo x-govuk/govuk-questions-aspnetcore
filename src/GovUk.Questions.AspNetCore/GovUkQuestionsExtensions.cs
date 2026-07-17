@@ -91,12 +91,21 @@ public static class GovUkQuestionsExtensions
 
                     var coordinator = instanceProvider.GetJourneyInstance(httpContext);
 
-                    if (coordinator is null || !coordinator.GetType().IsAssignableTo(coordinatorType))
+                    if (coordinator is not null && coordinator.GetType().IsAssignableTo(coordinatorType))
                     {
-                        throw new InvalidOperationException($"Could not resolve journey for '{coordinatorType.FullName}'.");
+                        return coordinator;
                     }
 
-                    return coordinator;
+                    // An endpoint that has opted out of the journey (via [ExcludeFromJourney]) can still have the
+                    // coordinator injected — for example through the controller's constructor — even though there is
+                    // no instance to resolve. Hand back an uninitialized coordinator so activation succeeds; accessing
+                    // its members throws, but an excluded endpoint isn't expected to use it.
+                    if (!coordinatorType.IsAbstract && EndpointIsExcludedFromJourney(httpContext))
+                    {
+                        return (JourneyCoordinator)ActivatorUtilities.CreateInstance(sp, coordinatorType);
+                    }
+
+                    throw new InvalidOperationException($"Could not resolve journey for '{coordinatorType.FullName}'.");
                 });
         }
 
@@ -104,4 +113,7 @@ public static class GovUkQuestionsExtensions
 
         return builder;
     }
+
+    private static bool EndpointIsExcludedFromJourney(HttpContext httpContext) =>
+        httpContext.GetEndpoint()?.Metadata.GetMetadata<EndpointJourneyMetadata>()?.Excluded is true;
 }

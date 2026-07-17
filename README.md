@@ -103,7 +103,7 @@ That's all the setup the library needs. The rest of this guide walks through bui
 
 This example builds a short "Apply" journey with two questions (name and date of birth) followed by a *Check your answers* page.
 
-> The `[Journey]` and `[StartsJourney]` attributes work with Razor Pages handlers too. This guide uses MVC controllers.
+> The `[Journey]`, `[StartsJourney]` and `[ExcludeFromJourney]` attributes work with Razor Pages handlers too. This guide uses MVC controllers.
 
 ### 1. Define the journey state
 
@@ -205,8 +205,13 @@ public class ApplyController(ApplyJourneyCoordinator journey) : Controller
 
         journey.DeleteInstance();
 
-        return RedirectToAction("Index", "Confirmation");
+        return RedirectToAction(nameof(Confirmation));
     }
+
+    // Shown after the instance has been deleted, so it opts out of the journey (see step 6).
+    [HttpGet("confirmation")]
+    [ExcludeFromJourney]
+    public IActionResult Confirmation() => View();
 }
 ```
 
@@ -321,7 +326,17 @@ When the user re-submits that page, `AdvanceTo` sees the `returnUrl` and redirec
 
 When the user submits the *Check your answers* page, save their answers wherever they need to go, then call `DeleteInstance()` to discard the journey state and redirect to a confirmation page.
 
-The confirmation page should sit **outside** the journey (no `[Journey]` attribute), because the instance no longer exists once it has been deleted:
+The confirmation page must not require a journey instance, because the instance no longer exists once it has been deleted. Mark its action with `[ExcludeFromJourney]` so it can live in the same `[Journey]` controller as the rest of the journey:
+
+```csharp
+[HttpGet("confirmation")]
+[ExcludeFromJourney]
+public IActionResult Confirmation() => View();
+```
+
+`[ExcludeFromJourney]` opts a single action — or a whole controller — out of the journey named by its `[Journey]` attribute. The library skips its usual instance checks for that endpoint, so it's reachable without a `_jid`. Because the instance is gone, don't read `journey.State` (or any other coordinator member) from the confirmation action; if the page needs to show something the user entered, stash it before calling `DeleteInstance()` (in `TempData`, for example).
+
+Alternatively, the confirmation page can sit in its own controller with no `[Journey]` attribute at all:
 
 ```csharp
 using Microsoft.AspNetCore.Mvc;
