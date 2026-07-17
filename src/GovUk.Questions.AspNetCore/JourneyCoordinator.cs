@@ -230,22 +230,26 @@ public abstract class JourneyCoordinator
     /// <summary>
     /// Gets a URL to the previous step in the journey path.
     /// </summary>
+    /// <remarks>
+    /// If the current step is not in the journey path, the URL of the last step is returned.
+    /// </remarks>
     /// <returns>A URL if there is a previous step; otherwise <see langword="null"/>.</returns>
     public virtual string? GetBackLink()
     {
         var currentStep = CreateStepFromHttpContext(HttpContext);
         var currentStepIndex = Path.FindStepIndex(currentStep);
 
-        if (currentStepIndex == -1)
-        {
-            throw new InvalidOperationException("Current step not found in journey path.");
-        }
-
         // Check if there's an explicit return URL provided
         if (HttpContext.Request.Query.TryGetValue(ReturnUrlQueryParameterName, out var returnUrlValues) &&
             returnUrlValues.ToString() is string returnUrl && IsLocalUrl(returnUrl))
         {
             return returnUrl;
+        }
+
+        // If the current step isn't in the path, fall back to the last step (or null if there are no steps).
+        if (currentStepIndex == -1)
+        {
+            return Path.Steps.Count > 0 ? Path.Steps.Last().GetUrl(InstanceId) : null;
         }
 
         if (currentStepIndex == 0)
