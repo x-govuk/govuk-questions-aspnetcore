@@ -234,7 +234,15 @@ public class DateOfBirthViewModel
 
 ### 4. Render a question page
 
-Each question page has a back link, a single question, and a **Continue** button. Use `GetBackLink()` for the back link — it returns the previous step's URL, or `null` on the first step (link to your start page instead).
+Each question page has a back link, a single question (its label or legend is the page heading), and a **Continue** button. Use `GetBackLink()` for the back link — it returns the previous step's URL, or `null` on the first step (link to your start page instead).
+
+These views render the GOV.UK Design System components with the [GovUk.Frontend.AspNetCore](https://github.com/x-govuk/govuk-frontend-aspnetcore) tag helpers. Install that package, call `AddGovUkFrontend()` and `UseGovUkFrontend()` in `Program.cs`, and register its tag helpers in `_ViewImports.cshtml`:
+
+```cshtml
+@addTagHelper *, GovUk.Frontend.AspNetCore
+```
+
+The name step uses the text input component. Binding it with `for` wires up the input's `id`, `name`, `value` and validation error message from the model:
 
 ```cshtml
 @model NameViewModel
@@ -244,21 +252,54 @@ Each question page has a back link, a single question, and a **Continue** button
 
 @if (ViewBag.BackLink is not null)
 {
-    <a class="govuk-back-link" href="@ViewBag.BackLink">Back</a>
+    <govuk-back-link href="@ViewBag.BackLink" />
 }
 
-<form method="post">
-    <h1 class="govuk-heading-l">
-        <label class="govuk-label govuk-label--l" for="Name">What is your name?</label>
-    </h1>
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+        <form method="post">
+            <govuk-input for="Name" autocomplete="name" input-class="govuk-!-width-two-thirds">
+                <govuk-input-label is-page-heading="true" class="govuk-label--l">What is your name?</govuk-input-label>
+            </govuk-input>
 
-    <input class="govuk-input" id="Name" name="Name" type="text" value="@Model.Name" />
-
-    <button class="govuk-button" type="submit">Continue</button>
-</form>
+            <govuk-button type="submit">Continue</govuk-button>
+        </form>
+    </div>
+</div>
 ```
 
-This example uses plain GOV.UK Frontend markup. In a real service you would render the input, error summary and button with the tag helpers from [GovUk.Frontend.AspNetCore](https://github.com/x-govuk/govuk-frontend-aspnetcore).
+The date of birth step uses the date input component, with the fieldset legend as the page heading:
+
+```cshtml
+@model DateOfBirthViewModel
+@{
+    ViewData["Title"] = "What is your date of birth?";
+}
+
+@if (ViewBag.BackLink is not null)
+{
+    <govuk-back-link href="@ViewBag.BackLink" />
+}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+        <form method="post">
+            <govuk-date-input for="DateOfBirth">
+                <govuk-date-input-fieldset>
+                    <govuk-date-input-fieldset-legend is-page-heading="true" class="govuk-fieldset__legend--l">
+                        What is your date of birth?
+                    </govuk-date-input-fieldset-legend>
+                    <govuk-date-input-hint>For example, 27 3 2007</govuk-date-input-hint>
+                </govuk-date-input-fieldset>
+            </govuk-date-input>
+
+            <govuk-button type="submit">Continue</govuk-button>
+        </form>
+    </div>
+</div>
+```
+
+Because each field binds with `for`, its validation error message is rendered from `ModelState` automatically, and an error summary is added to the top of the page when there are errors — so the `if (!ModelState.IsValid) return View(model);` checks in the controller are all that's needed to show GOV.UK-styled validation messages.
 
 ### 5. Check your answers and changing answers
 
