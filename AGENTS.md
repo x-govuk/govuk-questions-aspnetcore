@@ -4,19 +4,19 @@
 
 ### Build
 To build the solution, use:
-```bash
+```shell
 just --configuration Release
 ```
 
 ### Test
 To test the solution, run:
-```bash
+```shell
 just test --configuration Release
 ```
 
 ### Code Formatting
 Any code changes should be formatted with:
-```bash
+```shell
 just format
 ```
 
