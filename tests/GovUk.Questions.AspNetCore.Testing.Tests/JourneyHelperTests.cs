@@ -336,6 +336,77 @@ public class JourneyHelperTests
         Assert.IsType<ArgumentException>(exception);
     }
 
+    [Fact]
+    public void CreateInstance_SeedsPathWithStepIdsThatMatchRuntimeNormalization()
+    {
+        // Arrange
+        var journeyRegistry = new JourneyRegistry();
+        var journeyStateStorage = new InMemoryJourneyStateStorage(Options.Create<GovUkQuestionsOptions>(new()));
+        var journeyHelper = new JourneyHelper(journeyRegistry, journeyStateStorage);
+
+        var journeyDescriptor = new JourneyDescriptor("TestJourney", ["id"], typeof(TestState));
+
+        journeyRegistry.RegisterJourney(typeof(TestJourneyCoordinator), journeyDescriptor);
+
+        var routeValues = new RouteValueDictionary { { "id", 123 } };
+        var state = new TestState { Foo = 42 };
+
+        string[] pathUrls = ["/apply/name", "/apply/date-of-birth"];
+
+        // Act
+        var coordinator = journeyHelper.CreateInstance<TestJourneyCoordinator>(routeValues, _ => state, pathUrls);
+
+        // Assert
+        var path = journeyStateStorage.GetState(coordinator.InstanceId, journeyDescriptor)!.Path;
+
+        // The seeded StepIds must omit _jid/returnUrl so they match the current step the runtime
+        // derives from a request URL such as "/apply/name?_jid=<key>".
+        var runtimeStep = coordinator.CreateStepFromUrl(
+            coordinator.InstanceId.EnsureUrlHasKey("/apply/name"));
+        Assert.True(path.ContainsStep(runtimeStep));
+
+        Assert.Collection(
+            path.Steps,
+            step =>
+            {
+                Assert.Equal("/apply/name", step.StepId);
+                Assert.Equal("/apply/name", step.NormalizedUrl);
+            },
+            step =>
+            {
+                Assert.Equal("/apply/date-of-birth", step.StepId);
+                Assert.Equal("/apply/date-of-birth", step.NormalizedUrl);
+            });
+    }
+
+    [Fact]
+    public void CreateInstance_WithUrlsContainingJidAndReturnUrl_StripsThemFromSeededSteps()
+    {
+        // Arrange
+        var journeyRegistry = new JourneyRegistry();
+        var journeyStateStorage = new InMemoryJourneyStateStorage(Options.Create<GovUkQuestionsOptions>(new()));
+        var journeyHelper = new JourneyHelper(journeyRegistry, journeyStateStorage);
+
+        var journeyDescriptor = new JourneyDescriptor("TestJourney", ["id"], typeof(TestState));
+
+        journeyRegistry.RegisterJourney(typeof(TestJourneyCoordinator), journeyDescriptor);
+
+        var routeValues = new RouteValueDictionary { { "id", 123 } };
+        var state = new TestState { Foo = 42 };
+
+        string[] pathUrls = ["/apply/name?_jid=abc&returnUrl=%2Fhome&foo=bar"];
+
+        // Act
+        var coordinator = journeyHelper.CreateInstance<TestJourneyCoordinator>(routeValues, _ => state, pathUrls);
+
+        // Assert
+        var path = journeyStateStorage.GetState(coordinator.InstanceId, journeyDescriptor)!.Path;
+
+        var step = Assert.Single(path.Steps);
+        Assert.Equal("/apply/name?foo=bar", step.StepId);
+        Assert.Equal("/apply/name?foo=bar", step.NormalizedUrl);
+    }
+
     private class TestJourneyCoordinator : JourneyCoordinator<TestState>;
 
     private class TestJourneyCoordinatorWithDependency(Dependency dependency) : JourneyCoordinator<TestState>

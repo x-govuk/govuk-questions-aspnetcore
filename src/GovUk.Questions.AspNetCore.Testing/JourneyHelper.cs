@@ -187,8 +187,7 @@ public class JourneyHelper
                 nameof(getState));
         }
 
-        var journeyQualifiedUrls = pathUrls.Select(url => instanceId.EnsureUrlHasKey(url));
-        var path = new JourneyPath(journeyQualifiedUrls.Select(url => new JourneyPathStep(StepId: url, url)));
+        var path = BuildPath(pathUrls);
 
         _journeyStateStorage.SetState(instanceId, journey, new StateStorageEntry { State = state, Path = path });
 
@@ -235,8 +234,7 @@ public class JourneyHelper
                 nameof(getStateAsync));
         }
 
-        var journeyQualifiedUrls = pathUrls.Select(url => instanceId.EnsureUrlHasKey(url));
-        var path = new JourneyPath(journeyQualifiedUrls.Select(url => new JourneyPathStep(StepId: url, url)));
+        var path = BuildPath(pathUrls);
 
         _journeyStateStorage.SetState(instanceId, journey, new StateStorageEntry { State = state, Path = path });
 
@@ -250,6 +248,22 @@ public class JourneyHelper
         var coordinator = ActivateCoordinator(coordinatorContext, coordinatorFactory);
 
         return coordinator;
+    }
+
+    private static JourneyPath BuildPath(IEnumerable<string> pathUrls)
+    {
+        // Normalize each URL the same way the runtime does when it derives the current step
+        // from the request URL (see JourneyCoordinator.CreateStepFromUrl). This strips the
+        // _jid and returnUrl query parameters so that seeded StepIds match the StepIds the
+        // runtime produces, letting callers pass plain page URLs.
+        return new JourneyPath(pathUrls.Select(url =>
+        {
+            var normalizedUrl = JourneyCoordinator.GetUrlWithoutQueryParameters(
+                url,
+                JourneyCoordinator.ReturnUrlQueryParameterName,
+                JourneyInstanceId.KeyRouteValueName);
+            return new JourneyPathStep(normalizedUrl, normalizedUrl);
+        }));
     }
 
     private JourneyCoordinator ActivateCoordinator(
