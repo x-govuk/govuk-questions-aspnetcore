@@ -1,5 +1,6 @@
 using GovUk.Questions.AspNetCore.Description;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
@@ -35,7 +36,13 @@ internal class ValidateJourneyFilter(IJourneyInstanceProvider instanceProvider) 
         }
         else if (await instanceProvider.TryCreateNewInstanceAsync(httpContext) is JourneyCoordinator newInstanceCoordinator)
         {
-            context.Result = new RedirectResult(newInstanceCoordinator.Path.Steps.First().GetUrl(newInstanceCoordinator.InstanceId));
+            // N.B. We can't use Path.Steps.First().GetUrl() here since the step's URL has been normalized;
+            // redirecting to the requested URL keeps any query parameters that normalization removes (e.g. returnUrl).
+            var requestUrl = JourneyCoordinator.GetUrlWithoutQueryParameters(
+                httpContext.Request.GetEncodedPathAndQuery(),
+                JourneyInstanceId.KeyRouteValueName);
+
+            context.Result = new RedirectResult(newInstanceCoordinator.InstanceId.EnsureUrlHasKey(requestUrl));
             return;
         }
         else if (!endpointJourneyMetadata.Optional)

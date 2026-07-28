@@ -90,6 +90,41 @@ public class IntegrationTests(IntegrationTestFixture fixture) : IClassFixture<In
     }
 
     [Fact]
+    public async Task StartingJourneyPreservesQueryParametersInRedirect()
+    {
+        // Arrange
+        var startUrl = "/integration-test/123/first?colour=blue&returnUrl=" + Uri.EscapeDataString("/somewhere");
+
+        // Act
+        var response = await HttpClient.GetAsync(startUrl, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(StatusCodes.Status302Found, (int)response.StatusCode);
+        var location = response.Headers.Location?.ToString();
+        Assert.NotNull(location);
+        var query = QueryHelpers.ParseQuery(location.Split('?')[1]);
+        Assert.Equal("blue", query["colour"].ToString());
+        Assert.Equal("/somewhere", query["returnUrl"].ToString());
+        Assert.NotEmpty(query["_jid"].ToString());
+    }
+
+    [Fact]
+    public async Task StartingJourneyWithReturnUrlUsesItForTheBackLink()
+    {
+        // Arrange
+        var startUrl = "/integration-test/123/start-with-back-link?returnUrl=" + Uri.EscapeDataString("/somewhere");
+        var startResponse = await HttpClient.GetAsync(startUrl, TestContext.Current.CancellationToken);
+        Assert.Equal(StatusCodes.Status302Found, (int)startResponse.StatusCode);
+
+        // Act
+        var response = await HttpClient.GetAsync(startResponse.Headers.Location!, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(StatusCodes.Status200OK, (int)response.StatusCode);
+        Assert.Equal("/somewhere", await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
     public async Task CompleteJourneyWithConfirmationInSameController()
     {
         // Start the journey
@@ -202,6 +237,10 @@ public class IntegrationTestController(IntegrationTestJourneyCoordinator coordin
     [StartsJourney]
     [HttpGet("first")]
     public IActionResult FirstPage() => GetState();
+
+    [StartsJourney]
+    [HttpGet("start-with-back-link")]
+    public IActionResult StartWithBackLink() => Content(coordinator.GetBackLink() ?? "");
 
     [HttpPost("first")]
     public IActionResult FirstPagePost([FromForm] int foo) =>
