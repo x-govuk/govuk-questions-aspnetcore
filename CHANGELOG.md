@@ -1,8 +1,8 @@
 # Changelog
 
-## Unreleased
+## 1.0.2
 
-Fixed the redirect that assigns an instance ID to a newly-started journey dropping the `returnUrl` query parameter. The redirect was built from the first step's normalized URL, which has `returnUrl` (and `_jid`) stripped to form the step's `StepId`, so linking into a journey's starting endpoint with a `returnUrl` lost it before the endpoint ever ran and `GetBackLink()` could never honour it. The redirect is now built from the requested URL with the instance ID appended.
+Fixes journeys that are started with a URL that includes a `returnUrl` query parameter.
 
 ## 1.0.1
 
