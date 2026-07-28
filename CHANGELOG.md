@@ -1,10 +1,12 @@
 # Changelog
 
-## Unreleased
+## 1.0.3
 
 Fixes `AdvanceTo` redirecting to a `returnUrl` that isn't a step in the journey. A `returnUrl` provided when a journey is started says where to go once the journey is over, so honouring it on the first advance ended the journey before it began. It's now only honoured when it points at a step in the journey path.
 
 `AdvanceTo` also now ignores `returnUrl` when called with `SetAsFirstStep` or `SetAsLastStep`, since those reshape the journey path around the new step.
+
+Allows `State` and `Path` to be read after an instance has just been completed.
 
 ## 1.0.2
 
