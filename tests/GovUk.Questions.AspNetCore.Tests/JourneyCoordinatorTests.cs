@@ -361,6 +361,194 @@ public class JourneyCoordinatorTests
     }
 
     [Fact]
+    public void DeleteInstance_StateAndPathRemainAvailableAfterDeletion()
+    {
+        // Arrange
+        var mockStateStorage = new Mock<IJourneyStateStorage>();
+
+        var journey = new JourneyDescriptor("test", [], typeof(TestState));
+
+        var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, UUID.New().ToUrlSafeString() } });
+
+        var path = new JourneyPath([new JourneyPathStep("/step1", "/step1")]);
+
+        var initialState = new TestState { Foo = 123 };
+        StateStorageEntry? entry = new StateStorageEntry { State = initialState, Path = path };
+        mockStateStorage
+            .Setup(mock => mock.GetState(instanceId, journey))
+            .Returns(() => entry);
+        mockStateStorage
+            .Setup(mock => mock.DeleteState(instanceId, journey))
+            .Callback(() => entry = null);
+
+        var context = new JourneyCoordinatorContext
+        {
+            InstanceId = instanceId,
+            Journey = journey,
+            JourneyStateStorage = mockStateStorage.Object,
+            HttpContext = new DefaultHttpContext()
+        };
+
+        var coordinator = new TestJourneyCoordinator { Context = context };
+
+        // Act
+        coordinator.DeleteInstance();
+
+        // Assert
+        Assert.Equal(123, coordinator.State.Foo);
+        Assert.Equal(path.Steps, coordinator.Path.Steps);
+    }
+
+    [Fact]
+    public void DeleteInstance_CalledTwice_DeletesStateOnceAndKeepsStateAvailable()
+    {
+        // Arrange
+        var mockStateStorage = new Mock<IJourneyStateStorage>();
+
+        var journey = new JourneyDescriptor("test", [], typeof(TestState));
+
+        var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, UUID.New().ToUrlSafeString() } });
+
+        var path = new JourneyPath([new JourneyPathStep("/step1", "/step1")]);
+
+        var initialState = new TestState { Foo = 123 };
+        StateStorageEntry? entry = new StateStorageEntry { State = initialState, Path = path };
+        mockStateStorage
+            .Setup(mock => mock.GetState(instanceId, journey))
+            .Returns(() => entry);
+        mockStateStorage
+            .Setup(mock => mock.DeleteState(instanceId, journey))
+            .Callback(() => entry = null);
+
+        var context = new JourneyCoordinatorContext
+        {
+            InstanceId = instanceId,
+            Journey = journey,
+            JourneyStateStorage = mockStateStorage.Object,
+            HttpContext = new DefaultHttpContext()
+        };
+
+        var coordinator = new TestJourneyCoordinator { Context = context };
+
+        // Act
+        coordinator.DeleteInstance();
+        coordinator.DeleteInstance();
+
+        // Assert
+        mockStateStorage.Verify(s => s.DeleteState(instanceId, journey), Times.Once);
+        Assert.Equal(123, coordinator.State.Foo);
+    }
+
+    [Fact]
+    public void GetState_NoEntryInStateStorage_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var mockStateStorage = new Mock<IJourneyStateStorage>();
+
+        var journey = new JourneyDescriptor("test", [], typeof(TestState));
+
+        var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, UUID.New().ToUrlSafeString() } });
+
+        mockStateStorage
+            .Setup(mock => mock.GetState(instanceId, journey))
+            .Returns((StateStorageEntry?)null);
+
+        var context = new JourneyCoordinatorContext
+        {
+            InstanceId = instanceId,
+            Journey = journey,
+            JourneyStateStorage = mockStateStorage.Object,
+            HttpContext = new DefaultHttpContext()
+        };
+
+        var coordinator = new TestJourneyCoordinator { Context = context };
+
+        // Act
+        var exception = Record.Exception(() => coordinator.State);
+
+        // Assert
+        Assert.NotNull(exception);
+        Assert.IsType<InvalidOperationException>(exception);
+        Assert.Equal("No entry in state storage for the current instance.", exception.Message);
+    }
+
+    [Fact]
+    public void GetPath_NoEntryInStateStorage_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var mockStateStorage = new Mock<IJourneyStateStorage>();
+
+        var journey = new JourneyDescriptor("test", [], typeof(TestState));
+
+        var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, UUID.New().ToUrlSafeString() } });
+
+        mockStateStorage
+            .Setup(mock => mock.GetState(instanceId, journey))
+            .Returns((StateStorageEntry?)null);
+
+        var context = new JourneyCoordinatorContext
+        {
+            InstanceId = instanceId,
+            Journey = journey,
+            JourneyStateStorage = mockStateStorage.Object,
+            HttpContext = new DefaultHttpContext()
+        };
+
+        var coordinator = new TestJourneyCoordinator { Context = context };
+
+        // Act
+        var exception = Record.Exception(() => coordinator.Path);
+
+        // Assert
+        Assert.NotNull(exception);
+        Assert.IsType<InvalidOperationException>(exception);
+        Assert.Equal("No entry in state storage for the current instance.", exception.Message);
+    }
+
+    [Fact]
+    public void UpdateState_AfterDeleteInstance_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var mockStateStorage = new Mock<IJourneyStateStorage>();
+
+        var journey = new JourneyDescriptor("test", [], typeof(TestState));
+
+        var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, UUID.New().ToUrlSafeString() } });
+
+        var path = new JourneyPath([new JourneyPathStep("/step1", "/step1")]);
+
+        var initialState = new TestState { Foo = 123 };
+        StateStorageEntry? entry = new StateStorageEntry { State = initialState, Path = path };
+        mockStateStorage
+            .Setup(mock => mock.GetState(instanceId, journey))
+            .Returns(() => entry);
+        mockStateStorage
+            .Setup(mock => mock.DeleteState(instanceId, journey))
+            .Callback(() => entry = null);
+
+        var context = new JourneyCoordinatorContext
+        {
+            InstanceId = instanceId,
+            Journey = journey,
+            JourneyStateStorage = mockStateStorage.Object,
+            HttpContext = new DefaultHttpContext()
+        };
+
+        var coordinator = new TestJourneyCoordinator { Context = context };
+
+        coordinator.DeleteInstance();
+
+        // Act
+        var exception = Record.Exception(() => coordinator.UpdateState(state => state with { Foo = 42 }));
+
+        // Assert
+        Assert.NotNull(exception);
+        Assert.IsType<InvalidOperationException>(exception);
+        Assert.Equal("Journey instance has been deleted.", exception.Message);
+        mockStateStorage.Verify(s => s.SetState(instanceId, journey, It.IsAny<StateStorageEntry>()), Times.Never);
+    }
+
+    [Fact]
     public void OnInvalidStep_WithAtLeastOneStepInPath_ReturnsRedirectToLastStep()
     {
         // Arrange
