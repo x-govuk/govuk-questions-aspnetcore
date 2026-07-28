@@ -483,9 +483,17 @@ public abstract class JourneyCoordinator
             return new StateStorageEntry { State = newState, Path = newPath };
         });
 
-        // Check if there's an explicit return URL provided
-        if (HttpContext.Request.Query.TryGetValue(ReturnUrlQueryParameterName, out var returnUrlValues) &&
-            returnUrlValues.ToString() is string returnUrl && IsLocalUrl(returnUrl))
+        // Check if there's an explicit return URL provided.
+        // It's only honoured when it points at a step in the journey path; a return URL to somewhere outside
+        // the journey (e.g. one provided when the journey was started) describes where to go once the journey
+        // is over, so advancing a step shouldn't cut the journey short by redirecting to it.
+        // It's also ignored when the caller has reshaped the path with SetAsFirstStep or SetAsLastStep, since
+        // the new step is meant to bound the path rather than be somewhere the user passes through.
+        if (!pushStepOptions.SetAsFirstStep &&
+            !pushStepOptions.SetAsLastStep &&
+            HttpContext.Request.Query.TryGetValue(ReturnUrlQueryParameterName, out var returnUrlValues) &&
+            returnUrlValues.ToString() is string returnUrl && IsLocalUrl(returnUrl) &&
+            Path.ContainsStep(CreateStepFromUrl(returnUrl)))
         {
             return new AdvanceToResult(returnUrl);
         }
