@@ -125,6 +125,112 @@ public class IntegrationTests(IntegrationTestFixture fixture) : IClassFixture<In
     }
 
     [Fact]
+    public async Task StartingJourneyWithReturnUrlOutsideJourneyStillAdvances()
+    {
+        // Arrange
+        // The starting endpoint advances as soon as it runs; the returnUrl points outside the journey,
+        // so it describes where to go once the journey is over and must not short-circuit the first step.
+        var startUrl = "/integration-test/123/start-and-advance?returnUrl=" + Uri.EscapeDataString("/somewhere");
+        var startResponse = await HttpClient.GetAsync(startUrl, TestContext.Current.CancellationToken);
+        Assert.Equal(StatusCodes.Status302Found, (int)startResponse.StatusCode);
+        var jid = QueryHelpers.ParseQuery(startResponse.Headers.Location!.OriginalString.Split('?')[1])["_jid"].ToString();
+
+        // Act
+        var response = await HttpClient.GetAsync(startResponse.Headers.Location!, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(StatusCodes.Status302Found, (int)response.StatusCode);
+        Assert.Equal($"/integration-test/123/second?_jid={jid}", response.Headers.Location?.ToString());
+    }
+
+    [Fact]
+    public async Task AdvanceToIgnoresReturnUrlOutsideJourney()
+    {
+        // Arrange
+        var startResponse = await HttpClient.GetAsync(
+            "/integration-test/123/first?returnUrl=" + Uri.EscapeDataString("/somewhere"),
+            TestContext.Current.CancellationToken);
+        Assert.Equal(StatusCodes.Status302Found, (int)startResponse.StatusCode);
+        var jid = QueryHelpers.ParseQuery(startResponse.Headers.Location!.OriginalString.Split('?')[1])["_jid"].ToString();
+
+        // Act
+        var response = await HttpClient.PostAsync(
+            "/integration-test/123/first?returnUrl=" + Uri.EscapeDataString("/somewhere") + "&_jid=" + jid,
+            new FormUrlEncodedContent([
+                KeyValuePair.Create("foo", "7")
+            ]),
+            TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(StatusCodes.Status302Found, (int)response.StatusCode);
+        Assert.Equal($"/integration-test/123/second?_jid={jid}", response.Headers.Location?.ToString());
+    }
+
+    [Fact]
+    public async Task AdvanceToIgnoresReturnUrlWhenSettingTheStepAsTheFirstStep()
+    {
+        // Arrange
+        // Walk the journey so the path is [first, second, final], then go back to the first step with a
+        // returnUrl pointing at the final step. SetAsFirstStep drops the steps before the new one, leaving
+        // [second, final] — the returnUrl is still a step in the path, but the caller is reshaping the path.
+        var jid = await StartJourneyAndBuildFullPathAsync();
+        var returnUrl = Uri.EscapeDataString($"/integration-test/123/final?_jid={jid}");
+
+        // Act
+        var response = await HttpClient.PostAsync(
+            $"/integration-test/123/first?_jid={jid}&returnUrl={returnUrl}",
+            new FormUrlEncodedContent([
+                KeyValuePair.Create("foo", "1"),
+                KeyValuePair.Create("setAsFirstStep", "true")
+            ]),
+            TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(StatusCodes.Status302Found, (int)response.StatusCode);
+        Assert.Equal($"/integration-test/123/second?_jid={jid}", response.Headers.Location?.ToString());
+    }
+
+    [Fact]
+    public async Task AdvanceToIgnoresReturnUrlWhenSettingTheStepAsTheLastStep()
+    {
+        // Arrange
+        // The path is [first, second, final]; advancing from the second step to the final step with
+        // SetAsLastStep leaves it unchanged, so the returnUrl's first step is still in the path.
+        var jid = await StartJourneyAndBuildFullPathAsync();
+        var returnUrl = Uri.EscapeDataString($"/integration-test/123/first?_jid={jid}");
+
+        // Act
+        var response = await HttpClient.PostAsync(
+            $"/integration-test/123/second?_jid={jid}&returnUrl={returnUrl}",
+            new FormUrlEncodedContent([
+                KeyValuePair.Create("setAsLastStep", "true")
+            ]),
+            TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(StatusCodes.Status302Found, (int)response.StatusCode);
+        Assert.Equal($"/integration-test/123/final?_jid={jid}", response.Headers.Location?.ToString());
+    }
+
+    private async Task<string> StartJourneyAndBuildFullPathAsync()
+    {
+        var startResponse = await HttpClient.GetAsync("/integration-test/123/first", TestContext.Current.CancellationToken);
+        var jid = QueryHelpers.ParseQuery(startResponse.Headers.Location!.OriginalString.Split('?')[1])["_jid"].ToString();
+
+        await HttpClient.PostAsync(
+            $"/integration-test/123/first?_jid={jid}",
+            new FormUrlEncodedContent([KeyValuePair.Create("foo", "69")]),
+            TestContext.Current.CancellationToken);
+
+        await HttpClient.PostAsync(
+            $"/integration-test/123/second?_jid={jid}",
+            new FormUrlEncodedContent([]),
+            TestContext.Current.CancellationToken);
+
+        return jid;
+    }
+
+    [Fact]
     public async Task CompleteJourneyWithConfirmationInSameController()
     {
         // Start the journey
@@ -242,18 +348,28 @@ public class IntegrationTestController(IntegrationTestJourneyCoordinator coordin
     [HttpGet("start-with-back-link")]
     public IActionResult StartWithBackLink() => Content(coordinator.GetBackLink() ?? "");
 
+    [StartsJourney]
+    [HttpGet("start-and-advance")]
+    public IActionResult StartAndAdvance() =>
+        coordinator.AdvanceTo(Url.Action(nameof(SecondPage), coordinator.InstanceId.RouteValues)!);
+
+    // N.B. The push step options are bound from the form rather than the query string; a query parameter
+    // would change the request's normalized URL and so stop it matching the step in the journey path.
     [HttpPost("first")]
-    public IActionResult FirstPagePost([FromForm] int foo) =>
+    public IActionResult FirstPagePost([FromForm] int foo, [FromForm] bool setAsFirstStep, [FromForm] bool setAsLastStep) =>
         coordinator.AdvanceTo(
             Url.Action("SecondPage", coordinator.InstanceId.RouteValues)!,
-            s => s.Foo = foo);
+            s => s.Foo = foo,
+            new PushStepOptions { SetAsFirstStep = setAsFirstStep, SetAsLastStep = setAsLastStep });
 
     [HttpGet("second")]
     public IActionResult SecondPage() => GetState();
 
     [HttpPost("second")]
-    public IActionResult SecondPagePost() =>
-        coordinator.AdvanceTo(Url.Action("FinalPage", coordinator.InstanceId.RouteValues)!);
+    public IActionResult SecondPagePost([FromForm] bool setAsFirstStep, [FromForm] bool setAsLastStep) =>
+        coordinator.AdvanceTo(
+            Url.Action("FinalPage", coordinator.InstanceId.RouteValues)!,
+            new PushStepOptions { SetAsFirstStep = setAsFirstStep, SetAsLastStep = setAsLastStep });
 
     [HttpGet("final")]
     public IActionResult FinalPage() => GetState();
