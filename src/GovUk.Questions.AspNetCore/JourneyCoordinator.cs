@@ -21,6 +21,7 @@ public abstract class JourneyCoordinator
     private JourneyCoordinatorContext? _context;
 
     private bool _deleted;
+    private StateStorageEntry? _lastStateStorageEntry;
 
     internal JourneyCoordinatorContext Context
     {
@@ -204,6 +205,8 @@ public abstract class JourneyCoordinator
             return;
         }
 
+        // Stash the last storage entry so that State and Path properties return values just after the instance is deleted
+        _lastStateStorageEntry = StateStorage.GetState(InstanceId, Journey);
         StateStorage.DeleteState(InstanceId, Journey);
         _deleted = true;
     }
@@ -497,7 +500,10 @@ public abstract class JourneyCoordinator
         return new AdvanceToResult(redirectUrl);
     }
 
-    private StateStorageEntry GetStateStorageEntry() => StateStorage.GetState(InstanceId, Journey)!;
+    private StateStorageEntry GetStateStorageEntry() =>
+        StateStorage.GetState(InstanceId, Journey) ??
+        _lastStateStorageEntry ??
+        throw new InvalidOperationException("No entry in state storage for the current instance.");
 
     private async ValueTask UpdateStateStorageEntryCoreAsync(
         Func<StateStorageEntry, ValueTask<StateStorageEntry>> getNewEntry)
