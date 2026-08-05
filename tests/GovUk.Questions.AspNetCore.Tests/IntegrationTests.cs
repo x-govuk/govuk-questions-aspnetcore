@@ -90,6 +90,41 @@ public class IntegrationTests(IntegrationTestFixture fixture) : IClassFixture<In
     }
 
     [Fact]
+    public async Task CompleteJourneyWithReservedCharactersInARouteValue()
+    {
+        // Arrange
+        // The route value contains characters that link generation escapes ("%3A") but the request path reports
+        // intact (':'). Every step's URL carries the route value, so the two forms have to agree.
+        const string id = "urn:fdc:gov.uk:2022:abc";
+        var escapedId = Uri.EscapeDataString(id);
+
+        var startResponse = await HttpClient.GetAsync($"/integration-test/{escapedId}/first", TestContext.Current.CancellationToken);
+        Assert.Equal(StatusCodes.Status302Found, (int)startResponse.StatusCode);
+        var jid = QueryHelpers.ParseQuery(startResponse.Headers.Location!.OriginalString.Split('?')[1])["_jid"].ToString();
+
+        // Act
+        var advanceResponse = await HttpClient.PostAsync(
+            startResponse.Headers.Location,
+            new FormUrlEncodedContent([
+                KeyValuePair.Create("foo", "69")
+            ]),
+            TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(StatusCodes.Status302Found, (int)advanceResponse.StatusCode);
+
+        // The step we advanced to has to serve the page rather than redirect back to itself
+        var secondPageResponse = await HttpClient.GetAsync(advanceResponse.Headers.Location, TestContext.Current.CancellationToken);
+        Assert.Equal(StatusCodes.Status200OK, (int)secondPageResponse.StatusCode);
+        var state = await secondPageResponse.Content.ReadFromJsonAsync<IntegrationTestJourneyState>(TestContext.Current.CancellationToken);
+        Assert.Equal(69, state?.Foo);
+
+        // Both spellings of the route value address the same step
+        var unescapedPageResponse = await HttpClient.GetAsync($"/integration-test/{id}/second?_jid={jid}", TestContext.Current.CancellationToken);
+        Assert.Equal(StatusCodes.Status200OK, (int)unescapedPageResponse.StatusCode);
+    }
+
+    [Fact]
     public async Task StartingJourneyPreservesQueryParametersInRedirect()
     {
         // Arrange

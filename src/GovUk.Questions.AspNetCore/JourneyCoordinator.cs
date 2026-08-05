@@ -218,7 +218,7 @@ public abstract class JourneyCoordinator
     {
         ArgumentNullException.ThrowIfNull(url);
 
-        var normalizedUrl = GetUrlWithoutQueryParameters(url, ReturnUrlQueryParameterName, JourneyInstanceId.KeyRouteValueName);
+        var normalizedUrl = NormalizeUrl(url);
         return new JourneyPathStep(normalizedUrl, normalizedUrl);
     }
 
@@ -379,6 +379,45 @@ public abstract class JourneyCoordinator
         ArgumentNullException.ThrowIfNull(getNewState);
 
         return UpdateStateStorageEntryCoreAsync(async e => e with { State = await getNewState(e.State) }).AsTask();
+    }
+
+    /// <summary>
+    /// Normalizes a URL into the form used to identify a step, so that the same page always yields the same step ID
+    /// however its URL was produced.
+    /// </summary>
+    internal static string NormalizeUrl(string url)
+    {
+        ArgumentNullException.ThrowIfNull(url);
+
+        var withoutJourneyQueryParameters =
+            GetUrlWithoutQueryParameters(url, ReturnUrlQueryParameterName, JourneyInstanceId.KeyRouteValueName);
+
+        return NormalizePathEncoding(withoutJourneyQueryParameters);
+    }
+
+    // A step's ID is a URL that comes from one of two places: the request, which ASP.NET Core reports with only the
+    // characters that are illegal in a path escaped, or link generation, which escapes route values far more
+    // aggressively (a ':' in a route value becomes "%3A"). Comparing the two forms as strings means a step pushed
+    // from a generated URL never matches the request it redirects to, so the request is treated as an invalid step,
+    // redirected to the same URL, and the browser bounces between the two until it gives up. Re-encoding the path
+    // the way ASP.NET Core reports it puts both forms in the same shape.
+    private static string NormalizePathEncoding(string url)
+    {
+        var queryStringStartIndex = url.IndexOf('?', StringComparison.Ordinal);
+
+        var path = queryStringStartIndex == -1 ? url : url[..queryStringStartIndex];
+        var queryString = queryStringStartIndex == -1 ? "" : url[queryStringStartIndex..];
+
+        // PathString only represents an absolute path; leave anything else (e.g. a relative URL) alone.
+        if (!path.StartsWith('/'))
+        {
+            return url;
+        }
+
+        // The Uri overload of FromUriComponent needs an absolute URI; we only ever have a path here
+#pragma warning disable CA2234
+        return PathString.FromUriComponent(path).ToUriComponent() + queryString;
+#pragma warning restore CA2234
     }
 
     // internal for testing

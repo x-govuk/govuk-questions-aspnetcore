@@ -258,10 +258,7 @@ public class JourneyHelper
         // runtime produces, letting callers pass plain page URLs.
         return new JourneyPath(pathUrls.Select(url =>
         {
-            var normalizedUrl = JourneyCoordinator.GetUrlWithoutQueryParameters(
-                url,
-                JourneyCoordinator.ReturnUrlQueryParameterName,
-                JourneyInstanceId.KeyRouteValueName);
+            var normalizedUrl = JourneyCoordinator.NormalizeUrl(url);
             return new JourneyPathStep(normalizedUrl, normalizedUrl);
         }));
     }
