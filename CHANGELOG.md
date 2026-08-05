@@ -1,8 +1,8 @@
 # Changelog
 
-## Unreleased
+## 1.0.4
 
-Fixes journeys redirecting forever when a route value contains characters that are reserved in a URL, such as a GOV.UK One Login subject (`urn:fdc:gov.uk:2022:…`). A step's ID is a URL, and the two places one comes from disagree about escaping: link generation escapes a route value's `:` to `%3A`, while the request that generated URL is followed by reports the path with the `:` intact. A step pushed by `AdvanceTo` therefore never matched the request it redirected to, so that request was treated as an invalid step and redirected to the same URL again. URLs are now re-encoded the way ASP.NET Core reports them before being turned into a step ID.
+Fixes journeys redirecting forever when a route value contains characters that are reserved in a URL.
 
 ## 1.0.3
 
