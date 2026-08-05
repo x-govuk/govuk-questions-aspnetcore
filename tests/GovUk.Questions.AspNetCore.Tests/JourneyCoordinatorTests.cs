@@ -52,6 +52,47 @@ public class JourneyCoordinatorTests
     }
 
     [Fact]
+    public void CreateStepFromUrl_UrlHasEscapedReservedCharactersInPath_MatchesTheUnescapedForm()
+    {
+        // Arrange
+        // Link generation escapes reserved characters in a route value (':' becomes "%3A") but the request the
+        // generated URL is followed by reports the path with them intact, so both must yield the same step ID.
+        var mockStateStorage = new Mock<IJourneyStateStorage>();
+
+        var journey = new JourneyDescriptor("test", [], typeof(TestState));
+
+        var instanceId = new JourneyInstanceId("test", new RouteValueDictionary { { JourneyInstanceId.KeyRouteValueName, UUID.New().ToUrlSafeString() } });
+
+        var path = new JourneyPath([new JourneyPathStep("/step1", "/step1")]);
+
+        mockStateStorage
+            .Setup(mock => mock.GetState(instanceId, journey))
+            .Returns(new StateStorageEntry { State = new TestState { Foo = 123 }, Path = path });
+
+        var context = new JourneyCoordinatorContext
+        {
+            InstanceId = instanceId,
+            Journey = journey,
+            JourneyStateStorage = mockStateStorage.Object,
+            HttpContext = new DefaultHttpContext()
+        };
+
+        var coordinator = new TestJourneyCoordinator
+        {
+            Context = context
+        };
+
+        // Act
+        var stepFromGeneratedUrl = coordinator.CreateStepFromUrl("/urn%3Afdc%3Agov.uk%3A2022%3Aabc/step1");
+        var stepFromRequestUrl = coordinator.CreateStepFromUrl("/urn:fdc:gov.uk:2022:abc/step1");
+
+        // Assert
+        Assert.Equal("/urn:fdc:gov.uk:2022:abc/step1", stepFromGeneratedUrl.StepId);
+        Assert.Equal(stepFromRequestUrl.StepId, stepFromGeneratedUrl.StepId);
+        Assert.Equal(stepFromRequestUrl.NormalizedUrl, stepFromGeneratedUrl.NormalizedUrl);
+    }
+
+    [Fact]
     public void GetBackLink_StepDoesNotExistInPath_ReturnsLastStepUrl()
     {
         // Arrange
