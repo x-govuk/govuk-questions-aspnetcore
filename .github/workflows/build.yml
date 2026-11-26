@@ -63,6 +63,21 @@ jobs:
             packages/*.nupkg
             packages/*.snupkg
 
+      # Unzipped, one artifact per package (named after the file). Each glob must match exactly one file.
+      - name: Publish GovUk.Questions.AspNetCore package
+        if: matrix.build-configuration == 'Release'
+        uses: actions/upload-artifact@v7
+        with:
+          path: packages/GovUk.Questions.AspNetCore.[0-9]*.nupkg
+          archive: false
+
+      - name: Publish GovUk.Questions.AspNetCore.Testing package
+        if: matrix.build-configuration == 'Release'
+        uses: actions/upload-artifact@v7
+        with:
+          path: packages/GovUk.Questions.AspNetCore.Testing.[0-9]*.nupkg
+          archive: false
+
   release:
     name: "Publish packages to NuGet"
     runs-on: ubuntu-latest
